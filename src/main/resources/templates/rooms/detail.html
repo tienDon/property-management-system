@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <!-- Success Message -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Room <span th:text="${room.roomNumber}">101</span></h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <img th:if="${!room.images.isEmpty()}" th:src="${room.images[0].imageUrl}" class="img-fluid rounded mb-3" alt="Room Image">
+                    <img th:if="${room.images.isEmpty()}" src="https://via.placeholder.com/600x400?text=No+Image" class="img-fluid rounded mb-3" alt="No Image">
+                </div>
+                <div class="col-md-6">
+                    <h4 class="text-primary" th:text="${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">5,000,000 VND</h4>
+                    <p><strong>Category:</strong> <span th:text="${room.category.name}">Studio</span></p>
+                    <p><strong>Area:</strong> <span th:text="${room.area}">30</span> m²</p>
+                    <p><strong>Address:</strong> <span th:text="${room.property.addressNumber}">123 Main Street</span></p>
+                    <p><strong>Description:</strong> <span th:text="${room.property.description}">Luxury apartment</span></p>
+                    
+                    <hr>
+                    
+                    <a th:href="@{/contact/room/{id}(id=${room.id})}" class="btn btn-success btn-lg w-100">
+                        Contact Owner
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

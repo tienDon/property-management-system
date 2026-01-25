@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Inquiry Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="mb-3">
+                <a th:href="@{/contact/all}" class="btn btn-outline-secondary">&larr; Back to List</a>
+            </div>
+
+            <!-- Alert Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}">Success message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Inquiry #<span th:text="${inquiry.id}">1</span></h4>
+                    <span th:text="${#temporals.format(inquiry.createdAt, 'dd-MM-yyyy HH:mm')}" class="badge bg-light text-primary">Date</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left Column: Inquiry Details -->
+                        <div class="col-md-8 border-end">
+                            <h5 class="text-primary mb-3">Message Content</h5>
+                            <div class="p-3 bg-light rounded mb-4">
+                                <p class="lead mb-0" th:text="${inquiry.message}">Content of the message goes here...</p>
+                            </div>
+
+                            <h5 class="text-secondary mb-3">Contact Information</h5>
+                            <ul class="list-group mb-4">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Phone</span>
+                                    <strong th:text="${inquiry.contactPhone}">0909123456</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Email</span>
+                                    <strong th:text="${inquiry.contactEmail ?: 'N/A'}">email@example.com</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Preferred Time</span>
+                                    <strong th:text="${inquiry.preferredContactTime ?: 'Anytime'}">Morning</strong>
+                                </li>
+                            </ul>
+
+                            <h5 class="text-secondary mb-3">Room Information</h5>
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Room <span th:text="${inquiry.room.roomNumber}">101</span></h6>
+                                    <p class="card-text text-muted" th:text="${inquiry.property.name}">Building Name</p>
+                                    <a th:href="@{/rooms/{id}(id=${inquiry.room.id})}" class="btn btn-sm btn-outline-primary" target="_blank">View Room Detail</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Status & Actions -->
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Current Status</strong>
+                                </div>
+                                <div class="card-body text-center">
+                                    <h3 class="mb-3">
+                                        <span th:if="${inquiry.status == 'PENDING'}" class="badge bg-warning text-dark">PENDING</span>
+                                        <span th:if="${inquiry.status == 'CONTACTED'}" class="badge bg-info text-dark">CONTACTED</span>
+                                        <span th:if="${inquiry.status == 'CLOSED'}" class="badge bg-success">CLOSED</span>
+                                    </h3>
+                                    
+                                    <hr>
+                                    
+                                    <form th:action="@{/contact/{id}/status(id=${inquiry.id})}" method="post">
+                                        <label for="status" class="form-label text-start d-block">Update Status:</label>
+                                        <select name="status" id="status" class="form-select mb-3">
+                                            <option value="PENDING" th:selected="${inquiry.status == 'PENDING'}">PENDING</option>
+                                            <option value="CONTACTED" th:selected="${inquiry.status == 'CONTACTED'}">CONTACTED</option>
+                                            <option value="CLOSED" th:selected="${inquiry.status == 'CLOSED'}">CLOSED</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary w-100">Update Status</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
