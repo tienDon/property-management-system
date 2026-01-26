@@ -28,6 +28,14 @@
                     <h4 class="text-primary" th:text="${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">5,000,000 VND</h4>
                     <p><strong>Category:</strong> <span th:text="${room.category.name}">Studio</span></p>
                     <p><strong>Area:</strong> <span th:text="${room.area}">30</span> m²</p>
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="badge"
+                              th:text="${room.status}"
+                              th:classappend="${room.status == 'AVAILABLE'} ? ' bg-success' : (${room.status == 'RENTED'} ? ' bg-danger' : ' bg-warning text-dark')">
+                            AVAILABLE
+                        </span>
+                    </p>
                     <p><strong>Address:</strong> <span th:text="${room.property.addressNumber}">123 Main Street</span></p>
                     <p><strong>Description:</strong> <span th:text="${room.property.description}">Luxury apartment</span></p>
                     
@@ -36,6 +44,7 @@
                     <a th:href="@{/contact/room/{id}(id=${room.id})}" class="btn btn-success btn-lg w-100">
                         Contact Owner
                     </a>
+
                 </div>
             </div>
         </div>

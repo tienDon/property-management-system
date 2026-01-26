@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách hợp đồng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Danh sách hợp đồng</h2>
+        <a th:if="${roomId != null}" th:href="@{/rooms/{id}(id=${roomId})}" class="btn btn-outline-secondary">
+            Về phòng
+        </a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}">Success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Mã</th>
+                        <th>Phòng</th>
+                        <th>Người thuê</th>
+                        <th>Trạng thái</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${contracts}">
+                        <td th:text="${c.id}">1</td>
+                        <td th:text="${c.contractCode}">HD...</td>
+                        <td th:text="${c.room != null ? c.room.roomNumber : 'N/A'}">101</td>
+                        <td th:text="${c.tenant != null ? c.tenant.username : 'N/A'}">tenant</td>
+                        <td><span class="badge bg-secondary" th:text="${c.status}">PENDING</span></td>
+                        <td>
+                            <a th:href="@{/contracts/{id}(id=${c.id})}" class="btn btn-sm btn-primary">Xem</a>
+                            <a th:if="${c.status == 'PENDING'}" th:href="@{/contracts/{id}/approve(id=${c.id})}" class="btn btn-sm btn-warning">Phê duyệt</a>
+                            <a th:if="${c.status == 'APPROVED'}" th:href="@{/contracts/{id}/activate(id=${c.id})}" class="btn btn-sm btn-success">Kích hoạt</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${contracts == null || contracts.isEmpty()}">
+                        <td colspan="6" class="text-center py-4 text-muted">Chưa có hợp đồng.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

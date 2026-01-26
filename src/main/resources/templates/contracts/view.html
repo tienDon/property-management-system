@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết hợp đồng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="mb-4">Chi tiết hợp đồng</h2>
+
+    <div th:if="${success}" class="alert alert-success" role="alert">
+        <span th:text="${success}">Success</span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}">Error</span>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div>Mã HĐ: <strong th:text="${contract.contractCode}">HD</strong></div>
+            <div>Phòng: <span th:text="${contract.room != null ? contract.room.roomNumber : 'N/A'}">101</span></div>
+            <div>Người thuê: <span th:text="${contract.tenant != null ? contract.tenant.username : 'N/A'}">tenant</span></div>
+            <div>Trạng thái: <span class="badge bg-secondary" th:text="${contract.status}">PENDING</span></div>
+            <div>Thời gian: <span th:text="${contract.startDate}"></span> - <span th:text="${contract.endDate}"></span></div>
+            <div>Tiền thuê: <span th:text="${contract.monthlyRent}">0</span> VND</div>
+            <div>Tiền cọc: <span th:text="${contract.depositAmount}">0</span> VND</div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <a th:if="${contract.room != null}" th:href="@{/rooms/{id}(id=${contract.room.id})}" class="btn btn-outline-secondary">Về phòng</a>
+        <a th:href="@{/contracts/list(roomId=${contract.room != null ? contract.room.id : null})}" class="btn btn-outline-primary">Danh sách hợp đồng</a>
+        <a th:if="${contract.status == 'PENDING'}" th:href="@{/contracts/{id}/approve(id=${contract.id})}" class="btn btn-warning">Phê duyệt</a>
+        <a th:if="${contract.status == 'APPROVED'}" th:href="@{/contracts/{id}/activate(id=${contract.id})}" class="btn btn-success">Kích hoạt</a>
+    </div>
+
+    <div th:if="${contract.historyNote}" class="card">
+        <div class="card-header">
+            <strong>Lịch sử</strong>
+        </div>
+        <div class="card-body">
+            <pre class="mb-0" th:text="${contract.historyNote}">Lịch sử</pre>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

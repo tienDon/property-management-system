@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
 
@@ -24,12 +25,13 @@ public class ContractHistory {
     @JoinColumn(name = "contract_id")
     private Contract contract;
 
-    private String action; // CREATED, APPROVED, ACTIVATED, TERMINATED
+    private String action;
 
     @ManyToOne
     @JoinColumn(name = "performed_by")
     private User performedBy; //nguoi thuc hien
-
+    
+    @Column(columnDefinition = "NVARCHAR(MAX)")
     private String note;
 
     @Column(name = "created_at")

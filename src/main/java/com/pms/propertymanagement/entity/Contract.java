@@ -6,11 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "contracts")
@@ -97,19 +96,8 @@ public class Contract {
     @JoinColumn(name = "created_by")
     private User createdBy;//nguoi tao hop dong
 
-    // Danh sach dieu khoan
-    @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL)
-    @OrderBy("orderIndex ASC")
-    private List<ContractTerm> terms = new ArrayList<>();
-
-    // Danh Sach nguoi o cung
-    @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL)
-    private List<ContractCotenant> cotenants = new ArrayList<>();
-
-    // Lch sư thay doi
-    @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL)
-    @OrderBy("createdAt DESC")
-    private List<ContractHistory> history = new ArrayList<>();
+    @Nationalized
+    private String historyNote;
 
     @PrePersist
     void onCreate() {

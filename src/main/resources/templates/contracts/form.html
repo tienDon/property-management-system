@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tạo hợp đồng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="mb-4">Tạo hợp đồng</h2>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}">Lỗi</div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/contracts}" th:object="${contract}" method="post">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Mã phòng</label>
+                        <input type="number" name="roomId" th:value="${roomId}" required class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Mã tenant</label>
+                        <input type="number" name="tenantId" required class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Ngày bắt đầu</label>
+                        <input type="date" th:field="*{startDate}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Ngày kết thúc</label>
+                        <input type="date" th:field="*{endDate}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tiền thuê (VND)</label>
+                        <input type="number" step="0.01" th:field="*{monthlyRent}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tiền cọc (VND)</label>
+                        <input type="number" step="0.01" th:field="*{depositAmount}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Kỳ hạn (tháng)</label>
+                        <input type="number" th:field="*{contractTermMonth}" class="form-control">
+                        <div class="form-text">Từ 6 đến 12</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ngày thanh toán</label>
+                        <input type="number" th:field="*{paymentDate}" class="form-control">
+                        <div class="form-text">Từ 28 đến 31</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Phương thức</label>
+                        <select th:field="*{paymentMethod}" class="form-select">
+                            <option value="CASH">CASH</option>
+                            <option value="BANK_TRANSFER">BANK_TRANSFER</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea th:field="*{note}" rows="3" class="form-control"></textarea>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Tạo</button>
+                    <a th:href="@{/rooms/{id}(id=${roomId})}" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

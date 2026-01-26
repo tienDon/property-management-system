@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Nationalized;
 
 import java.time.LocalDateTime;
 
@@ -41,6 +42,7 @@ public class ContactInquiry {
 
     private String subject;
 
+    @Nationalized
     @NotBlank(message = "Message is required")
     @Size(min = 10, max = 5000, message = "Message must be 10-5000 characters")
     private String message;
@@ -55,6 +57,7 @@ public class ContactInquiry {
     private String contactEmail;
 
     @Column(name = "preferred_contact_time")
+    @Nationalized
     private String preferredContactTime; // Thời gian liên hệ mong muốn
 
     private String status = "PENDING"; // PENDING, CONTACTED, CLOSED

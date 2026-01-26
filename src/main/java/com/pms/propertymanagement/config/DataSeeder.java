@@ -13,6 +13,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -25,26 +26,41 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        ensureUsers();
         if (roomRepository.count() == 0) {
             seedData();
         }
     }
 
-    private void seedData() {
-        // 1. Create Host/Owner
-        User host = new User();
-        host.setUsername("host_user");
-        host.setPassword("password123"); // In real app, use BCrypt
-        host.setRole("HOST");
-        host.setActive(true);
-        userRepository.save(host);
+    private void ensureUsers() {
+        createUserIfMissing("host_user", "HOST");
+        createUserIfMissing("host_01", "HOST");
+        createUserIfMissing("tenant_user", "TENANT");
+        createUserIfMissing("tenant_01", "TENANT");
+        createUserIfMissing("tenant_02", "TENANT");
+        createUserIfMissing("tenant_03", "TENANT");
+    }
 
-        // 2. Create Categories
+    private void createUserIfMissing(String username, String role) {
+        Optional<User> existing = userRepository.findByUsername(username);
+        if (existing.isPresent()) {
+            return;
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword("password123");
+        user.setRole(role);
+        user.setActive(true);
+        userRepository.save(user);
+    }
+
+    private void seedData() {
+        User host = userRepository.findByUsername("host_user").orElseThrow();
+
         Category studio = new Category(null, "Studio");
         Category apartment = new Category(null, "Apartment");
         categoryRepository.saveAll(Arrays.asList(studio, apartment));
 
-        // 3. Create Property (Building)
         Property property = Property.builder()
                 .name("Sunshine Building")
                 .addressNumber("123 Main Street")
@@ -54,7 +70,6 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
         propertyRepository.save(property);
 
-        // 4. Create Rooms
         Room room101 = Room.builder()
                 .roomNumber("101")
                 .property(property)
@@ -79,8 +94,6 @@ public class DataSeeder implements CommandLineRunner {
 
         roomRepository.saveAll(Arrays.asList(room101, room102));
 
-        System.out.println(">>> Sample data seeded successfully!");
-        System.out.println(">>> Room 101 ID: " + room101.getId());
-        System.out.println(">>> Room 102 ID: " + room102.getId());
+        System.out.println("Sample data seeded successfully!");
     }
 }

@@ -4,24 +4,38 @@
     <meta charset="UTF-8">
     <title>Inquiry List</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container">
-        <a class="navbar-brand" href="#">PMS Admin</a>
+        <a class="navbar-brand" href="/contact/received">PMS</a>
     </div>
 </nav>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Contact Inquiries</h2>
+        <h2 th:text="${pageTitle != null ? pageTitle : 'Contact Inquiries'}">Contact Inquiries</h2>
+        <div class="text-end">
+            <span class="badge bg-warning text-dark" th:text="${'PENDING: ' + pendingCount}">PENDING: 0</span>
+        </div>
     </div>
 
-    <!-- Alert Messages -->
+    <form class="row g-2 mb-3" method="get" action="/contact/received">
+        <div class="col-auto">
+            <input class="form-control" type="number" name="hostId" placeholder="Host ID" th:value="${hostId}">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary" type="submit">Xem contact nhận</button>
+        </div>
+    </form>
+
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}">Error message</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
@@ -44,21 +58,21 @@
                     <tr th:each="inquiry : ${inquiries}">
                         <td th:text="${inquiry.id}">1</td>
                         <td>
-                            <span class="badge bg-secondary" th:text="${inquiry.room.roomNumber}">101</span>
+                            <span class="badge bg-secondary" th:text="${inquiry.room != null ? inquiry.room.roomNumber : 'N/A'}">101</span>
                             <br>
-                            <small class="text-muted" th:text="${inquiry.property.name}">Building A</small>
+                            <small class="text-muted" th:text="${inquiry.property != null ? inquiry.property.name : 'N/A'}">Building A</small>
                         </td>
                         <td>
                             <div th:if="${inquiry.sender != null}">
-                                <i class="bi bi-person-fill"></i> <span th:text="${inquiry.sender.username}">User</span>
+                                <span th:text="${inquiry.sender.username}">User</span>
                             </div>
-                            <div><i class="bi bi-telephone"></i> <span th:text="${inquiry.contactPhone}">0909...</span></div>
-                            <div th:if="${inquiry.contactEmail}"><i class="bi bi-envelope"></i> <span th:text="${inquiry.contactEmail}">email@...</span></div>
+                            <div><span th:text="${inquiry.contactPhone}">0909...</span></div>
+                            <div th:if="${inquiry.contactEmail}"><span th:text="${inquiry.contactEmail}">email@...</span></div>
                         </td>
                         <td>
-                            <span th:text="${#strings.abbreviate(inquiry.message, 50)}">Short message...</span>
+                            <span th:text="${inquiry.message != null ? #strings.abbreviate(inquiry.message, 50) : ''}">Short message...</span>
                         </td>
-                        <td th:text="${#temporals.format(inquiry.createdAt, 'dd-MM-yyyy HH:mm')}">2023-01-01 12:00</td>
+                        <td th:text="${inquiry.createdAt != null ? #temporals.format(inquiry.createdAt, 'dd-MM-yyyy HH:mm') : ''}">2023-01-01 12:00</td>
                         <td>
                             <span th:if="${inquiry.status == 'PENDING'}" class="badge bg-warning text-dark">PENDING</span>
                             <span th:if="${inquiry.status == 'CONTACTED'}" class="badge bg-info text-dark">CONTACTED</span>
@@ -66,11 +80,25 @@
                         </td>
                         <td>
                             <a th:href="@{/contact/{id}(id=${inquiry.id})}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-eye"></i> View
+                                Xem
                             </a>
+                            <a th:if="${inquiry.room != null}"
+                               th:href="@{/contracts/create/{roomId}(roomId=${inquiry.room.id})}"
+                               class="btn btn-sm btn-success ms-2">
+                                Tạo hợp đồng
+                            </a>
+                            <form class="d-inline-block ms-2" th:action="@{/contact/{id}/status(id=${inquiry.id})}" method="post">
+                                <input type="hidden" name="hostId" th:value="${hostId}">
+                                <select name="status" class="form-select form-select-sm d-inline-block" style="width: 140px">
+                                    <option value="PENDING" th:selected="${inquiry.status == 'PENDING'}">PENDING</option>
+                                    <option value="CONTACTED" th:selected="${inquiry.status == 'CONTACTED'}">CONTACTED</option>
+                                    <option value="CLOSED" th:selected="${inquiry.status == 'CLOSED'}">CLOSED</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Cập nhật</button>
+                            </form>
                         </td>
                     </tr>
-                    <tr th:if="${inquiries.isEmpty()}">
+                    <tr th:if="${inquiries == null || inquiries.isEmpty()}">
                         <td colspan="7" class="text-center py-4 text-muted">No inquiries found.</td>
                     </tr>
                     </tbody>
