@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "properties")
 @Data
@@ -13,17 +16,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Property {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
-    @Column(name = "address_number")
-    private  String addressNumber;
-    @Column(name = "ward_code")
-    private String wardCode;
+    private String addressNumber; // số nhà + tên đường
+
     @ManyToOne
-    @JoinColumn(name ="owner_id")
-    private  User owner;
+    @JoinColumn(name = "ward_code")
+    private Ward ward;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
     private String description;
 
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
+    private List<Room> rooms = new ArrayList<>();
 }
+

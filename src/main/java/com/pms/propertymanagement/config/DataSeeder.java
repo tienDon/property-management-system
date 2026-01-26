@@ -1,13 +1,7 @@
 package com.pms.propertymanagement.config;
 
-import com.pms.propertymanagement.entity.Category;
-import com.pms.propertymanagement.entity.Property;
-import com.pms.propertymanagement.entity.Room;
-import com.pms.propertymanagement.entity.User;
-import com.pms.propertymanagement.repository.CategoryRepository;
-import com.pms.propertymanagement.repository.PropertyRepository;
-import com.pms.propertymanagement.repository.RoomRepository;
-import com.pms.propertymanagement.repository.UserRepository;
+import com.pms.propertymanagement.entity.*;
+import com.pms.propertymanagement.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -23,43 +17,62 @@ public class DataSeeder implements CommandLineRunner {
     private final PropertyRepository propertyRepository;
     private final RoomRepository roomRepository;
 
+    private final ProvinceRepository provinceRepository;
+    private final DistrictRepository districtRepository;
+    private final WardRepository wardRepository;
+    private final RoleRepository roleRepository;
+
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         if (roomRepository.count() == 0) {
             seedData();
         }
     }
 
     private void seedData() {
-        // 1. Create Host/Owner
+
+        Ward ward = wardRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No ward found in DB"));
+
+        // 2️⃣ USER
         User host = new User();
         host.setUsername("host_user");
-        host.setPassword("password123"); // In real app, use BCrypt
-        host.setRole("HOST");
-        host.setActive(true);
+        host.setPassword("password123");
+        host.setIsActive(true);
+
+        Role hostRole = new Role();
+        hostRole.setName("ROLE_HOST");
+        roleRepository.save(hostRole);
+
+        host.getRoles().add(hostRole);
         userRepository.save(host);
 
-        // 2. Create Categories
-        Category studio = new Category(null, "Studio");
-        Category apartment = new Category(null, "Apartment");
+        // 3️⃣ CATEGORY
+        Category studio = new Category();
+        studio.setName("Studio");
+
+        Category apartment = new Category();
+        apartment.setName("Apartment");
+
         categoryRepository.saveAll(Arrays.asList(studio, apartment));
 
-        // 3. Create Property (Building)
-        Property property = Property.builder()
+        // 4️⃣ PROPERTY #1
+        Property sunshine = Property.builder()
                 .name("Sunshine Building")
                 .addressNumber("123 Main Street")
-                .wardCode("W01")
+                .ward(ward)   // ✅ FIX
                 .owner(host)
                 .description("Luxury apartments in city center")
                 .build();
-        propertyRepository.save(property);
+        propertyRepository.save(sunshine);
 
-        // 4. Create Rooms
         Room room101 = Room.builder()
                 .roomNumber("101")
-                .property(property)
+                .property(sunshine)
                 .category(studio)
-                .price(5000000.0)
+                .price(5_000_000.0)
                 .area(30.0)
                 .maxPeople(2)
                 .status("AVAILABLE")
@@ -68,9 +81,9 @@ public class DataSeeder implements CommandLineRunner {
 
         Room room102 = Room.builder()
                 .roomNumber("102")
-                .property(property)
+                .property(sunshine)
                 .category(apartment)
-                .price(8000000.0)
+                .price(8_000_000.0)
                 .area(50.0)
                 .maxPeople(4)
                 .status("AVAILABLE")
@@ -79,8 +92,40 @@ public class DataSeeder implements CommandLineRunner {
 
         roomRepository.saveAll(Arrays.asList(room101, room102));
 
-        System.out.println(">>> Sample data seeded successfully!");
-        System.out.println(">>> Room 101 ID: " + room101.getId());
-        System.out.println(">>> Room 102 ID: " + room102.getId());
+        // 5️⃣ PROPERTY #2
+        Property minhTam = Property.builder()
+                .name("Nhà trọ Minh Tâm")
+                .addressNumber("456 Cách Mạng Tháng 8")
+                .ward(ward)   // ✅ FIX
+                .owner(host)
+                .description("Nhà trọ giá rẻ, gần trung tâm")
+                .build();
+        propertyRepository.save(minhTam);
+
+        Room room201 = Room.builder()
+                .roomNumber("201")
+                .property(minhTam)
+                .category(studio)
+                .price(3_500_000.0)
+                .area(25.0)
+                .maxPeople(2)
+                .status("AVAILABLE")
+                .isDeleted(false)
+                .build();
+
+        Room room202 = Room.builder()
+                .roomNumber("202")
+                .property(minhTam)
+                .category(studio)
+                .price(4_200_000.0)
+                .area(28.0)
+                .maxPeople(3)
+                .status("AVAILABLE")
+                .isDeleted(false)
+                .build();
+
+        roomRepository.saveAll(Arrays.asList(room201, room202));
+
+        System.out.println(">>> DataSeeder completed!");
     }
 }

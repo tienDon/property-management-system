@@ -16,25 +16,31 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Room {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne
     @JoinColumn(name = "property_id")
     private Property property;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
-    @Column(name = "room_number")
-    private String roomNumber;//so phong
-    private Double price;// gia thue phong
-    private Double area;// dien tich
-    private String status = "AVAILABLE"; // AVAILABLE, RENTED, MAINTENANCE
-    @Column(name = "max_people")
-    private Integer maxPeople = 1; // Số người tối đa
 
-    @Column(name = "is_deleted")
+    private String roomNumber;
+
+    private Double price;
+    private Double area;
+
+    private String status = "AVAILABLE";
+
+    private Integer maxPeople = 1;
+
     private Boolean isDeleted = false;
-    @OneToMany(mappedBy = "room")
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     private List<RoomImage> images = new ArrayList<>();
 }
+
