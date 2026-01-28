@@ -1,0 +1,235 @@
+<div th:fragment="content" class="space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-900">Quản lý hợp đồng</h1>
+    <a
+      th:href="@{/owner/contracts/create}"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
+    >
+      <i class="fa-solid fa-plus"></i>
+      Lập hợp đồng
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+    <label class="block text-sm font-medium text-gray-700 mb-2"
+      >Trạng thái</label
+    >
+    <div class="flex flex-wrap gap-4">
+      <a
+        th:href="@{/owner/contracts(status='ACTIVE')}"
+        th:class="${status != null and status.name() == 'ACTIVE'} ? 'flex items-center gap-2 px-3 py-1.5 rounded bg-blue-50 text-blue-700 border border-blue-200' : 'flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-600 border border-transparent'"
+      >
+        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+        <span class="text-sm">Đang hiệu lực</span>
+      </a>
+      <a
+        th:href="@{/owner/contracts(status='EXPIRING_SOON')}"
+        th:class="${status != null and status.name() == 'EXPIRING_SOON'} ? 'flex items-center gap-2 px-3 py-1.5 rounded bg-blue-50 text-blue-700 border border-blue-200' : 'flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-600 border border-transparent'"
+      >
+        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+        <span class="text-sm">Sắp hết hạn</span>
+      </a>
+      <a
+        th:href="@{/owner/contracts(status='EXPIRED')}"
+        th:class="${status != null and status.name() == 'EXPIRED'} ? 'flex items-center gap-2 px-3 py-1.5 rounded bg-blue-50 text-blue-700 border border-blue-200' : 'flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-600 border border-transparent'"
+      >
+        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+        <span class="text-sm">Đã hết hạn</span>
+      </a>
+      <a
+        th:href="@{/owner/contracts(status='TERMINATED')}"
+        th:class="${status != null and status.name() == 'TERMINATED'} ? 'flex items-center gap-2 px-3 py-1.5 rounded bg-blue-50 text-blue-700 border border-blue-200' : 'flex items-center gap-2 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-600 border border-transparent'"
+      >
+        <div class="w-2 h-2 rounded-full bg-gray-500"></div>
+        <span class="text-sm">Đã kết thúc</span>
+      </a>
+      <a
+        th:href="@{/owner/contracts}"
+        th:if="${status != null}"
+        class="text-sm text-gray-500 hover:text-gray-700 underline flex items-center"
+      >
+        Xóa bộ lọc
+      </a>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div
+    class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+  >
+    <div
+      class="p-4 border-b border-gray-200 flex justify-between items-center gap-4"
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-600">Hiển thị</span>
+        <select
+          class="border-gray-300 rounded text-sm focus:ring-blue-500 focus:border-blue-500"
+          onchange="window.location.href = this.value"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <form th:action="@{/owner/contracts}" class="flex-1 max-w-sm">
+        <input
+          type="hidden"
+          name="status"
+          th:value="${status}"
+          th:if="${status != null}"
+        />
+        <div class="relative">
+          <input
+            type="text"
+            name="keyword"
+            th:value="${keyword}"
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Nhập từ khóa tìm kiếm (Mã, Phòng, Người dd...)"
+          />
+          <i
+            class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400"
+          ></i>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead
+          class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200"
+        >
+          <tr>
+            <th class="px-6 py-3 font-medium">Mã</th>
+            <th class="px-6 py-3 font-medium">Nhà trọ</th>
+            <th class="px-6 py-3 font-medium">Phòng</th>
+            <th class="px-6 py-3 font-medium">Người đại diện</th>
+            <th class="px-6 py-3 font-medium">Ngày bắt đầu</th>
+            <th class="px-6 py-3 font-medium">Ngày kết thúc</th>
+            <th class="px-6 py-3 font-medium">Trạng thái</th>
+            <th class="px-6 py-3 font-medium text-center">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr th:if="${contracts.empty}">
+            <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+              Chưa có dữ liệu
+            </td>
+          </tr>
+          <tr th:each="contract : ${contracts}" class="hover:bg-gray-50">
+            <td
+              class="px-6 py-4 font-medium text-blue-600"
+              th:text="${contract.code}"
+            ></td>
+            <td
+              class="px-6 py-4 text-gray-900"
+              th:text="${contract.room.property.name}"
+            ></td>
+            <td
+              class="px-6 py-4 text-gray-900"
+              th:text="${contract.room.name}"
+            ></td>
+            <td class="px-6 py-4">
+              <div
+                class="flex items-center gap-2"
+                th:if="${contract.representative != null}"
+              >
+                <div
+                  class="w-6 h-6 rounded-full bg-gray-200 overflow-hidden flex-shrink-0"
+                >
+                  <!-- Placeholder avatar -->
+                  <i class="fa-solid fa-user text-xs text-gray-500 p-1"></i>
+                </div>
+                <span th:text="${contract.representative.fullName}"></span>
+              </div>
+            </td>
+            <td
+              class="px-6 py-4 text-gray-600"
+              th:text="${#temporals.format(contract.startDate, 'dd/MM/yyyy')}"
+            ></td>
+            <td
+              class="px-6 py-4 text-gray-600"
+              th:text="${#temporals.format(contract.endDate, 'dd/MM/yyyy')}"
+            ></td>
+            <td class="px-6 py-4">
+              <span
+                th:if="${contract.status.name() == 'ACTIVE'}"
+                class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                >Hiệu lực</span
+              >
+              <span
+                th:if="${contract.status.name() == 'EXPIRING_SOON'}"
+                class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                >Sắp hết hạn</span
+              >
+              <span
+                th:if="${contract.status.name() == 'EXPIRED'}"
+                class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                >Hết hạn</span
+              >
+              <span
+                th:if="${contract.status.name() == 'TERMINATED'}"
+                class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                >Đã kết thúc</span
+              >
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex justify-center gap-2">
+                <a
+                  href="#"
+                  class="text-gray-500 hover:text-blue-600"
+                  title="Chi tiết"
+                  ><i class="fa-regular fa-eye"></i
+                ></a>
+                <form
+                  th:if="${contract.status.name() == 'ACTIVE'}"
+                  th:action="@{/owner/contracts/{id}/terminate(id=${contract.id})}"
+                  method="post"
+                  onsubmit="
+                    return confirm(
+                      'Bạn có chắc chắn muốn kết thúc hợp đồng này?',
+                    );
+                  "
+                >
+                  <button
+                    type="submit"
+                    class="text-gray-500 hover:text-red-600"
+                    title="Kết thúc"
+                  >
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (Simplified) -->
+    <div
+      class="p-4 border-t border-gray-200 flex justify-between items-center"
+      th:if="${contracts.totalPages > 1}"
+    >
+      <span class="text-sm text-gray-600">
+        Trang <span th:text="${currentPage}"></span> /
+        <span th:text="${contracts.totalPages}"></span>
+      </span>
+      <div class="flex gap-1">
+        <a
+          th:if="${currentPage > 1}"
+          th:href="@{/owner/contracts(page=${currentPage - 1}, status=${status}, keyword=${keyword})}"
+          class="px-3 py-1 border rounded hover:bg-gray-50 text-sm"
+          >Trước</a
+        >
+        <a
+          th:if="${currentPage < contracts.totalPages}"
+          th:href="@{/owner/contracts(page=${currentPage + 1}, status=${status}, keyword=${keyword})}"
+          class="px-3 py-1 border rounded hover:bg-gray-50 text-sm"
+          >Sau</a
+        >
+      </div>
+    </div>
+  </div>
+</div>

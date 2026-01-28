@@ -1,15 +1,21 @@
 package com.pms.propertymanagement.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PropertyResponse {
 
     private Long id;
-    private String name;
-    private String addressNumber;
-    private String formattedCreatedAt;
+    private String title;
+    private int price;
     private String categoryName;
+    private double acreage;
+    private String wardName;
+    private String provinceName;
+    private String imageUrl;
+    private String slug;
 }

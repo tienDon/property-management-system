@@ -17,4 +17,9 @@ public class UserServiceImpl implements UserService {
         System.out.println("UserServiceImpl authenticate" + username + password);
         return userRepository.findByUsername(username).filter(user -> user.getPassword().equals(password)).orElse(null);
     }
+
+    @Override
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
 }

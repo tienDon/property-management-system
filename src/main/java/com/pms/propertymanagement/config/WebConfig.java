@@ -3,10 +3,11 @@ package com.pms.propertymanagement.config;
 import com.pms.propertymanagement.interceptor.AuthInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configurable
+@Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired

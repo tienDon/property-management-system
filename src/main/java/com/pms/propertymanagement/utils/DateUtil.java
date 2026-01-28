@@ -26,6 +26,13 @@ public class DateUtil {
     }
 
     /**
+     * Format LocalDate
+     */
+    public static String formatDate(java.time.LocalDate date) {
+        return date.format(DATE_FORMATTER);
+    }
+
+    /**
      * Format với pattern tuỳ ý
      */
     public static String format(LocalDateTime dateTime, String pattern) {

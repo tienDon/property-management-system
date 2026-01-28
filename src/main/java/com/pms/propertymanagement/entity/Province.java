@@ -24,7 +24,10 @@ public class Province {
     @Column(unique = true, nullable = false, columnDefinition = "nvarchar(255)")
     private String name;
 
-
+    public Province(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
 
     @OneToMany(mappedBy = "province", cascade = CascadeType.ALL)
     @OnDelete(action = OnDeleteAction.CASCADE)

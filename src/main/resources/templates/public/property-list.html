@@ -1,0 +1,31 @@
+<div th:fragment="content">
+
+    <section class="bg-blue-700 py-6 shadow-inner">
+        <div th:replace="~{layout/parts/search-bar :: search}"></div>
+    </section>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+
+            <aside class="w-full md:w-1/4">
+                <div th:replace="~{layout/parts/filter-sidebar :: sidebar}"></div>
+            </aside>
+
+            <main class="w-full md:w-3/4">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-xl font-bold text-gray-800">
+                        Tìm nhà trọ, phòng trọ giá rẻ mới nhất [[${#calendars.format(#calendars.createNow(), 'MM/yyyy')}]]
+                    </h1>
+                </div>
+
+                <div th:each="prop : ${properties}">
+                    <div th:replace="~{layout/parts/property-card :: card(${prop})}"></div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(properties)}" class="text-center py-20 bg-white rounded-lg border">
+                    <p class="text-gray-400">Không tìm thấy kết quả phù hợp với bộ lọc.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>

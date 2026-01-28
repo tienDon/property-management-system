@@ -15,4 +15,6 @@ public class Role {
 
     @Column(length = 50, unique = true, nullable = false)
     private String name; // Ví dụ: ROLE_ADMIN, ROLE_HOST, ROLE_TENANT
+
+
 }

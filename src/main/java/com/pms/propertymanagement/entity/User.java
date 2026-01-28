@@ -34,6 +34,8 @@ public class User {
     @Column(unique = true)
     private String phone;
 
+
+
     @Column(name = "is_active")
     private boolean isActive = true;
 

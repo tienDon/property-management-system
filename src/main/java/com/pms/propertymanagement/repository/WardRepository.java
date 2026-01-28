@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface WardRepository extends JpaRepository<Ward,String> {
-    List<Ward> findByProvinceCode(String provinceCode);
+    List<Ward> findByProvince_Code(String provinceCode);
 
     //hỗ trợ filter trên search
-    List<Ward> findByNameIgnoreCaseAndProvinceCode(String name,String provinceCode);
+    List<Ward> findByNameIgnoreCaseAndProvince_Code(String name,String provinceCode);
 }

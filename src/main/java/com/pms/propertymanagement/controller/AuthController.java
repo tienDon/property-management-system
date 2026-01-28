@@ -20,26 +20,23 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping("/owner")
     public String login() {
         return "public/login";
     }
 
-    @PostMapping
+    @PostMapping("/owner")
     public String login(@RequestParam("username") String username, @RequestParam("password") String password, HttpSession session, Model model) {
         User  user = userService.authenticate(username, password);
         if (user != null) {
             session.setAttribute("user", user);
             if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-                return "owner/owner-page";
+                return "redirect:/owner";
             }
         }
 
             model.addAttribute("error", "Sai gi do: " + username + " " + password);
             return "public/login";
-
-
-
     }
 
 }
