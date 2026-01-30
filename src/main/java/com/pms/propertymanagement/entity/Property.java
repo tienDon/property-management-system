@@ -56,11 +56,11 @@ public class Property {
 
 
 
-    @ManyToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ward_code")
     private Ward ward; // Phường/Xã
 
-    @ManyToOne(fetch = FetchType.LAZY,   cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner; // Chủ nhà
 

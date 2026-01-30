@@ -58,7 +58,7 @@ public class OwnerController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        model.addAttribute("property", new PropertyRequest());
+        model.addAttribute("propertyRequest", new PropertyRequest());
         model.addAttribute("actionUrl", "/owner/properties/create");
         
         // Pass reference data via Services
@@ -74,7 +74,7 @@ public class OwnerController {
     }
 
     @PostMapping("/properties/create")
-    public String createProperty(@ModelAttribute("property") PropertyRequest propertyRequest, HttpSession session) {
+    public String createProperty(@ModelAttribute("propertyRequest") PropertyRequest propertyRequest, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
@@ -87,7 +87,7 @@ public class OwnerController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        model.addAttribute("property", propertyService.getPropertyForEdit(id));
+        model.addAttribute("propertyRequest", propertyService.getPropertyForEdit(id));
         model.addAttribute("actionUrl", "/owner/properties/edit/" + id);
         
         model.addAttribute("categories", categoryService.findAll());
@@ -101,7 +101,7 @@ public class OwnerController {
     }
 
     @PostMapping("/properties/edit/{id}")
-    public String updateProperty(@PathVariable Long id, @ModelAttribute("property") PropertyRequest propertyRequest, HttpSession session) {
+    public String updateProperty(@PathVariable Long id, @ModelAttribute("propertyRequest") PropertyRequest propertyRequest, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
