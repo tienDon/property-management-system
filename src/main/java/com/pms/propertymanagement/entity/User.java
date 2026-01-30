@@ -53,6 +53,9 @@ public class User {
     @OneToMany(mappedBy = "owner")
     private Set<Property> properties = new HashSet<>();
 
+    @OneToMany(mappedBy = "owner")
+    private Set<Contact> contacts = new HashSet<>();
+
 
     @PrePersist
     protected void onCreate(){

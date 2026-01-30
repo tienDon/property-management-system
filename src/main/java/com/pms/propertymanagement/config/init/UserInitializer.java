@@ -15,7 +15,7 @@ public class UserInitializer {
 
     public void init() {
         createAdmin();
-        createOwner();
+        createOwner1();
     }
 
     private void createAdmin() {
@@ -30,7 +30,7 @@ public class UserInitializer {
         userRepository.save(admin);
     }
 
-    private void createOwner() {
+    private void createOwner1() {
         if (userRepository.findByUsername("owner1").isPresent()) return;
 
         User owner = new User();
@@ -39,6 +39,48 @@ public class UserInitializer {
         owner.setFullName("owner1");
         owner.setPhone("0975893248");
         owner.setEmail("don@gmail.com");
+        owner.getRoles().add(roleRepository.findByName("OWNER").get());
+
+        userRepository.save(owner);
+    }
+
+    private void createOwner2() {
+        if (userRepository.findByUsername("owner2").isPresent()) return;
+
+        User owner = new User();
+        owner.setUsername("owner2");
+        owner.setPassword("123");
+        owner.setFullName("owner2");
+        owner.setPhone("0909090909");
+        owner.setEmail("kiet@gmail.com");
+        owner.getRoles().add(roleRepository.findByName("OWNER").get());
+
+        userRepository.save(owner);
+    }
+
+    private void createOwner3() {
+        if (userRepository.findByUsername("owner3").isPresent()) return;
+
+        User owner = new User();
+        owner.setUsername("owner3");
+        owner.setPassword("123");
+        owner.setFullName("owner3");
+        owner.setPhone("0707070707");
+        owner.setEmail("thach@gmail.com");
+        owner.getRoles().add(roleRepository.findByName("OWNER").get());
+
+        userRepository.save(owner);
+    }
+
+    private void createOwner4() {
+        if (userRepository.findByUsername("owner4").isPresent()) return;
+
+        User owner = new User();
+        owner.setUsername("owner4");
+        owner.setPassword("123");
+        owner.setFullName("owner4");
+        owner.setPhone("0975893248");
+        owner.setEmail("an@gmail.com");
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);

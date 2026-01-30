@@ -41,6 +41,11 @@ public class DataInitializer implements CommandLineRunner {
     private final AmenityInitializer amenityInitializer;
     private final SurroundingInitializer surroundingInitializer;
     private final TargetTenantInitializer targetTenantInitializer;
+    private final TenantInitializer tenantInitializer;
+    private final ServiceInitializer serviceInitializer;
+    private final ContactInitializer contactInitializer;
+    private final RoomInitializer roomInitializer;
+    private final ContractInitializer contractInitializer;
 
 
 
@@ -53,12 +58,20 @@ public class DataInitializer implements CommandLineRunner {
         userInitializer.init();
         locationInitializer.init();
         categoryInitializer.init();
-        propertyInitializer.init();
         amenityInitializer.init();
         surroundingInitializer.init();
         targetTenantInitializer.init();
+        propertyInitializer.init();
+        serviceInitializer.init();
+        roomInitializer.init();
+        tenantInitializer.init();
+        contactInitializer.init();
+        contractInitializer.init();
 
 
         System.out.println("Hệ thống đã sẵn sàng");
     }}
+
+
+
 

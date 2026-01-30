@@ -5,6 +5,7 @@ import com.pms.propertymanagement.dto.response.IconResponse;
 import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
 import com.pms.propertymanagement.dto.response.PropertyOwnerResponse;
 import com.pms.propertymanagement.dto.response.PropertyResponse;
+import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.entity.*;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
 import com.pms.propertymanagement.repository.*;
@@ -79,6 +80,17 @@ public class PropertyServiceImpl implements PropertyService
                     if (p.getImages() != null && !p.getImages().isEmpty()) {
                         dto.setImg_url(p.getImages().get(0).getImageUrl());
                     }
+
+                    // Tính số lượng phòng
+                    dto.setTotalRooms(p.getNumberOfRooms());
+                    
+                    int rentedCount = 0;
+                    if (p.getRooms() != null) {
+                        rentedCount = (int) p.getRooms().stream()
+                                .filter(r -> r.getStatus() == RoomStatus.RENTED)
+                                .count();
+                    }
+                    dto.setRentedRooms(rentedCount);
 
                     return dto;
                 })
@@ -251,6 +263,7 @@ public class PropertyServiceImpl implements PropertyService
         return PropertyDetailResponse.builder()
                 .id(p.getId())
                 .title(p.getTitle())
+                .slug(p.getSlug())
                 .price(p.getPrice())
                 .description(p.getDescription())
                 .addressNumber(p.getAddressNumber())
@@ -267,5 +280,10 @@ public class PropertyServiceImpl implements PropertyService
                 .acreage(p.getAcreage())
                 .numberOfRooms(p.getNumberOfRooms())
                 .build();
+    }
+
+    @Override
+    public User getOwnerByPropertySlug(String propertySlug) {
+        return propertyRepository.findBySlug(propertySlug).map(Property::getOwner).orElse(null);
     }
 }

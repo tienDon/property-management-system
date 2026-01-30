@@ -17,4 +17,6 @@ public class PropertyOwnerResponse {
     private String formattedCreatedAt; // Ngày đăng bài
     private String img_url; // Thumbnail nhỏ để chủ nhà nhận diện phòng
     // Có thể thêm: private String status; (Đang hiển thị/Đã ẩn)
+    private Integer totalRooms; // Tổng số phòng
+    private Integer rentedRooms; // Số phòng đã cho thuê
 }

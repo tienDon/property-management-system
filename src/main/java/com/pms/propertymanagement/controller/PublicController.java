@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.controller;
 
+import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
 import com.pms.propertymanagement.dto.response.PropertyResponse;
 import com.pms.propertymanagement.entity.Property;
@@ -57,6 +58,8 @@ public class PublicController {
 
         // 3. Layout fragment (giống các trang trước bạn làm)
         model.addAttribute("content", "public/property-detail");
+
+        model.addAttribute("contact", new ContactRequest());
 
         return "layout/public-main";
     }

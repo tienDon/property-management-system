@@ -33,4 +33,6 @@ public interface PropertyService {
     List<Surrounding> getAllSurroundings();
     List<TargetTenant> getAllTargetTenants();
     List<Province> getAllProvinces();
+
+    User getOwnerByPropertySlug(String propertySlug);
 }

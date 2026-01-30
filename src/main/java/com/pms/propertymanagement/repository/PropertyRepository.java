@@ -29,5 +29,8 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
             "WHERE p.slug = :slug")
     Optional<Property> findBySlugWithDetails(@Param("slug") String slug);
 
+    Optional<Property> findBySlug(String slug);
+
+
 
 }

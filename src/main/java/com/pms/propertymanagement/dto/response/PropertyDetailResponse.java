@@ -22,6 +22,7 @@ public class PropertyDetailResponse {
     private String wardName;
     private String provinceName; // Tỉnh/Thành phố
     private String formattedCreatedAt; // "Ngày đăng: 27-01-2026"
+    private String slug; 
 
     private int numberOfRooms;
 

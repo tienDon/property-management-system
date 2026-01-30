@@ -12,7 +12,11 @@
       class="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-tm-blue transition"
     >
       <i class="fa-solid fa-chart-pie w-5"></i>
-      <span class="font-medium" th:classappend="${#strings.isEmpty(activeMenu)}?'text-blue-500 font-semibold':''">Tổng quan</span>
+      <span
+        class="font-medium"
+        th:classappend="${#strings.isEmpty(activeMenu)}?'text-blue-500 font-semibold':''"
+        >Tổng quan</span
+      >
     </a>
 
     <a
@@ -20,7 +24,7 @@
       class="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-tm-blue transition"
     >
       <i class="fa-solid fa-rectangle-ad w-5"></i>
-      <span class="font-medium" >Quảng cáo</span>
+      <span class="font-medium">Quảng cáo</span>
     </a>
 
     <div class="pt-2">
@@ -34,33 +38,36 @@
         <i class="fa-solid fa-chevron-down text-xs"></i>
       </button>
       <div class="ml-11 space-y-1 mt-1">
-          <a
-                  href="/owner/properties"
-                  class="block p-2 pl-4 hover:text-tm-blue"
-                  th:classappend="${activeMenu == 'properties'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
-          >
-              Nhà trọ
-          </a>
+        <a
+          href="/owner/properties"
+          class="block p-2 pl-4 hover:text-tm-blue"
+          th:classappend="${activeMenu == 'properties'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+        >
+          Nhà trọ
+        </a>
         <a
           href="/owner/rooms"
           class="block p-2 pl-4 hover:text-tm-blue"
           th:classappend="${activeMenu == 'rooms'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
-
-        >Phòng</a
+          >Phòng</a
         >
         <a
           href="/owner/tenants"
           class="block p-2 pl-4 hover:text-tm-blue"
           th:classappend="${activeMenu == 'tenants'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
-
-        >Khách thuê</a
+          >Khách thuê</a
+        >
+        <a
+          href="/owner/contacts"
+          class="block p-2 pl-4 hover:text-tm-blue"
+          th:classappend="${activeMenu == 'contacts'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+          >Liên hệ</a
         >
         <a
           href="/owner/contracts"
           class="block p-2 pl-4 hover:text-tm-blue"
           th:classappend="${activeMenu == 'contracts'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
-
-        >Hợp đồng</a
+          >Hợp đồng</a
         >
         <a href="#" class="block p-2 text-gray-500 hover:text-tm-blue pl-4"
           >Hóa đơn</a
@@ -72,7 +79,7 @@
           href="/owner/services"
           class="block p-2 pl-4 hover:text-tm-blue"
           th:classappend="${activeMenu == 'services'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
-        >Dịch vụ</a
+          >Dịch vụ</a
         >
         <a href="#" class="block p-2 text-gray-500 hover:text-tm-blue pl-4"
           >Báo cáo</a

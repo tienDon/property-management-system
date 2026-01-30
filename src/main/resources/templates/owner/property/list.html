@@ -1,103 +1,180 @@
 <div th:fragment="content">
-
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Quản lý tài sản</h1>
-            <p class="text-sm text-gray-500">
-                Tổng cộng: <span class="font-semibold text-blue-600" th:text="${properties.size()}">0</span> bài đăng đang hoạt động
-            </p>
-        </div>
-
-        <a th:href="@{/owner/properties/create}"
-           class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all active:scale-95">
-            <i class="fa-solid fa-plus text-xs"></i>
-            Đăng tin mới
-        </a>
+  <div
+    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Quản lý tài sản</h1>
+      <p class="text-sm text-gray-500">
+        Tổng cộng:
+        <span class="font-semibold text-blue-600" th:text="${properties.size()}"
+          >0</span
+        >
+        bài đăng đang hoạt động
+      </p>
     </div>
 
-    <div th:if="${successMessage}"
-         class="mb-6 flex items-center p-4 rounded-xl bg-green-50 border border-green-100 text-green-700 animate-fade-in">
-        <i class="fa-solid fa-circle-check mr-3 text-lg"></i>
-        <span class="font-medium" th:text="${successMessage}">Thao tác thành công!</span>
+    <a
+      th:href="@{/owner/properties/create}"
+      class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-md transition-all active:scale-95"
+    >
+      <i class="fa-solid fa-plus text-xs"></i>
+      Đăng tin mới
+    </a>
+  </div>
+
+  <div
+    th:if="${successMessage}"
+    class="mb-6 flex items-center p-4 rounded-xl bg-green-50 border border-green-100 text-green-700 animate-fade-in"
+  >
+    <i class="fa-solid fa-circle-check mr-3 text-lg"></i>
+    <span class="font-medium" th:text="${successMessage}"
+      >Thao tác thành công!</span
+    >
+  </div>
+
+  <div
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+  >
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50/50 border-b border-gray-100">
+          <tr class="text-gray-500 uppercase text-[11px] tracking-wider">
+            <th class="px-6 py-4 font-bold">Thông tin tài sản</th>
+            <th class="px-6 py-4 font-bold">Vị trí</th>
+            <th class="px-6 py-4 font-bold">Loại hình</th>
+            <th class="px-6 py-4 font-bold">Tình trạng phòng</th>
+            <th class="px-6 py-4 font-bold">Ngày đăng</th>
+            <th class="px-6 py-4 font-bold text-center">Hành động</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-50">
+          <tr
+            th:each="prop : ${properties}"
+            class="hover:bg-blue-50/30 transition-colors group"
+          >
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-4">
+                <div
+                  class="h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
+                >
+                  <img
+                    th:src="${prop.img_url != null ? prop.img_url : '/images/no-image.jpg'}"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
+                <div class="max-w-[250px]">
+                  <div
+                    class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors"
+                    th:text="${prop.title}"
+                  >
+                    Tiêu đề tài sản
+                  </div>
+                  <div
+                    class="text-[11px] text-gray-400 mt-0.5"
+                    th:text="'ID: #' + ${prop.id}"
+                  >
+                    ID: #123
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td class="px-6 py-4">
+              <span
+                class="text-sm text-gray-600 line-clamp-1"
+                th:text="${prop.addressNumber}"
+                >123 Lê Văn Việt</span
+              >
+            </td>
+
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600"
+                th:text="${prop.categoryName}"
+                >Nhà trọ</span
+              >
+            </td>
+
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-sm font-semibold text-gray-700"
+                  th:text="${prop.rentedRooms} + '/' + ${prop.totalRooms}"
+                  >2/10</span
+                >
+                <span class="text-xs text-gray-500">đã thuê</span>
+              </div>
+              <!-- Simple progress bar -->
+              <div
+                class="w-24 h-1.5 bg-gray-100 rounded-full mt-1.5 overflow-hidden"
+              >
+                <div
+                  class="h-full bg-blue-500 rounded-full"
+                  th:style="'width: ' + (${prop.totalRooms > 0 ? (prop.rentedRooms * 100.0 / prop.totalRooms) : 0}) + '%'"
+                ></div>
+              </div>
+            </td>
+
+            <td class="px-6 py-4">
+              <span
+                class="text-sm text-gray-500 font-medium"
+                th:text="${prop.formattedCreatedAt}"
+                >25/01/2026</span
+              >
+            </td>
+
+            <td class="px-6 py-4">
+              <div class="flex justify-center items-center gap-4">
+                <a
+                  th:href="@{/owner/properties/edit/{id}(id=${prop.id})}"
+                  class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                  title="Chỉnh sửa"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+
+                <form
+                  th:action="@{/owner/properties/delete/{id}(id=${prop.id})}"
+                  method="post"
+                  class="inline"
+                  onsubmit="
+                    return confirm(
+                      'Bạn có chắc chắn muốn xóa vĩnh viễn tài sản này?',
+                    );
+                  "
+                >
+                  <button
+                    type="submit"
+                    class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                    title="Xóa"
+                  >
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+
+          <tr th:if="${#lists.isEmpty(properties)}">
+            <td colspan="5" class="py-20 text-center">
+              <div class="flex flex-col items-center">
+                <div
+                  class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4"
+                >
+                  <i
+                    class="fa-regular fa-folder-open text-2xl text-gray-300"
+                  ></i>
+                </div>
+                <h3 class="text-gray-900 font-semibold">Chưa có tài sản nào</h3>
+                <p class="text-gray-400 text-sm mt-1">
+                  Bắt đầu đăng tin đầu tiên để tiếp cận khách hàng!
+                </p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-50/50 border-b border-gray-100">
-                <tr class="text-gray-500 uppercase text-[11px] tracking-wider">
-                    <th class="px-6 py-4 font-bold">Thông tin tài sản</th>
-                    <th class="px-6 py-4 font-bold">Vị trí</th>
-                    <th class="px-6 py-4 font-bold">Loại hình</th>
-                    <th class="px-6 py-4 font-bold">Ngày đăng</th>
-                    <th class="px-6 py-4 font-bold text-center">Hành động</th>
-                </tr>
-                </thead>
-
-                <tbody class="divide-y divide-gray-50">
-                <tr th:each="prop : ${properties}" class="hover:bg-blue-50/30 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-4">
-                            <div class="h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
-                                <img th:src="${prop.img_url != null ? prop.img_url : '/images/no-image.jpg'}"
-                                     class="h-full w-full object-cover">
-                            </div>
-                            <div class="max-w-[250px]">
-                                <div class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors"
-                                     th:text="${prop.title}">Tiêu đề tài sản</div>
-                                <div class="text-[11px] text-gray-400 mt-0.5" th:text="'ID: #' + ${prop.id}">ID: #123</div>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <span class="text-sm text-gray-600 line-clamp-1" th:text="${prop.addressNumber}">123 Lê Văn Việt</span>
-                    </td>
-
-                    <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-600"
-                                  th:text="${prop.categoryName}">Nhà trọ</span>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <span class="text-sm text-gray-500 font-medium" th:text="${prop.formattedCreatedAt}">25/01/2026</span>
-                    </td>
-
-                    <td class="px-6 py-4">
-                        <div class="flex justify-center items-center gap-4">
-                            <a th:href="@{/owner/properties/edit/{id}(id=${prop.id})}"
-                               class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                               title="Chỉnh sửa">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-
-                            <form th:action="@{/owner/properties/delete/{id}(id=${prop.id})}"
-                                  method="post"
-                                  class="inline"
-                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tài sản này?')">
-                                <button type="submit"
-                                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Xóa">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr th:if="${#lists.isEmpty(properties)}">
-                    <td colspan="5" class="py-20 text-center">
-                        <div class="flex flex-col items-center">
-                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                <i class="fa-regular fa-folder-open text-2xl text-gray-300"></i>
-                            </div>
-                            <h3 class="text-gray-900 font-semibold">Chưa có tài sản nào</h3>
-                            <p class="text-gray-400 text-sm mt-1">Bắt đầu đăng tin đầu tiên để tiếp cận khách hàng!</p>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+  </div>
 </div>

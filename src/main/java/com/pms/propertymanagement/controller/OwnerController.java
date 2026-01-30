@@ -1,9 +1,12 @@
 package com.pms.propertymanagement.controller;
 
+import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.dto.request.PropertyRequest;
 import com.pms.propertymanagement.dto.response.PropertyOwnerResponse;
+import com.pms.propertymanagement.entity.Contact;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.service.CategoryService;
+import com.pms.propertymanagement.service.ContactService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -15,7 +18,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-        
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.List;
 
 @Controller
@@ -26,6 +30,7 @@ public class OwnerController {
     private final PropertyService propertyService;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final ContactService contactService;
 
     @GetMapping
     public String dashboard(Model model, HttpSession session) {
@@ -112,9 +117,35 @@ public class OwnerController {
     @PostMapping("/properties/delete/{id}")
     public String deleteProperty(@PathVariable Long id, HttpSession session) {
          User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login/owner";
-        
+
         propertyService.deleteProperty(id);
         return "redirect:/owner/properties";
+    }
+
+    @PostMapping("/contact/{slug}")
+    public String createContact(@ModelAttribute("contact") ContactRequest contact, @PathVariable("slug") String slug, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
+        contactService.createContact(slug, contact);
+        redirectAttributes.addFlashAttribute("contactSuccess", true);
+        return "redirect:/public/property/"+slug;
+    }
+
+    @GetMapping("/contacts")
+    public String listContacts(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        model.addAttribute("contacts", contactService.getContactsByOwner(user.getId()));
+        model.addAttribute("content", "owner/contact/list");
+        model.addAttribute("activeMenu", "contacts");
+        return "layout/owner-layout";
+    }
+
+    @GetMapping("/contact/toggle/{id}")
+    public String toggleContact(@PathVariable("id") Long id, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+        
+        contactService.changeStatus(id);
+        return "redirect:/owner/contacts";
     }
 }
