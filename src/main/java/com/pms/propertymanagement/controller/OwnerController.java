@@ -3,21 +3,13 @@ package com.pms.propertymanagement.controller;
 import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.dto.request.PropertyRequest;
 import com.pms.propertymanagement.dto.response.PropertyOwnerResponse;
-import com.pms.propertymanagement.entity.Contact;
 import com.pms.propertymanagement.entity.User;
-import com.pms.propertymanagement.service.CategoryService;
-import com.pms.propertymanagement.service.ContactService;
-import com.pms.propertymanagement.service.PropertyService;
-import com.pms.propertymanagement.service.UserService;
+import com.pms.propertymanagement.service.*;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -31,13 +23,13 @@ public class OwnerController {
     private final UserService userService;
     private final CategoryService categoryService;
     private final ContactService contactService;
+    private final PostingOrderService postingOrderService;
 
     @GetMapping
     public String dashboard(Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
-        
-        // Redirect to properties for now or show a dashboard page
+
         model.addAttribute("content", "owner/dashboard");
         return "layout/owner-layout";
     }
@@ -47,43 +39,58 @@ public class OwnerController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        // Refresh user from DB if strictly needed, or just use session user
-        // user = userService.findByUsername(user.getUsername()); 
-        
         List<PropertyOwnerResponse> properties = propertyService.getPropertiesByOwner(user);
         model.addAttribute("properties", properties);
         model.addAttribute("activeMenu", "properties");
-        
+
+        boolean canPost = postingOrderService.canPost(user.getId());
+        model.addAttribute("canPost", canPost);
+
         model.addAttribute("content", "owner/property/list");
         return "layout/owner-layout";
     }
 
     @GetMapping("/properties/create")
-    public String showCreatePropertyForm(Model model, HttpSession session) {
+    public String showCreatePropertyForm(Model model, HttpSession session, RedirectAttributes ra) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
+        // CHẶN nếu hết lượt
+        if (!postingOrderService.canPost(user.getId())) {
+            ra.addFlashAttribute("errorMessage", "Bạn phải mua gói đăng tin mới.");
+            return "redirect:/owner/properties";
+        }
+
         model.addAttribute("propertyRequest", new PropertyRequest());
         model.addAttribute("actionUrl", "/owner/properties/create");
-        
-        // Pass reference data via Services
+
         model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("amenities", propertyService.getAllAmenities());
         model.addAttribute("provinces", propertyService.getAllProvinces());
         model.addAttribute("surroundings", propertyService.getAllSurroundings());
         model.addAttribute("targetTenants", propertyService.getAllTargetTenants());
-        
+
         model.addAttribute("content", "owner/property/create");
         model.addAttribute("activeMenu", "properties");
         return "layout/owner-layout";
     }
 
     @PostMapping("/properties/create")
-    public String createProperty(@ModelAttribute("propertyRequest") PropertyRequest propertyRequest, HttpSession session) {
+    public String createProperty(
+            @ModelAttribute("propertyRequest") PropertyRequest propertyRequest,
+            HttpSession session,
+            RedirectAttributes ra
+    ) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        propertyService.createProperty(propertyRequest, user);
+        try {
+            propertyService.createProperty(propertyRequest, user);
+            ra.addFlashAttribute("successMessage", "Đăng tin thành công!");
+        } catch (IllegalStateException ex) {
+            ra.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+
         return "redirect:/owner/properties";
     }
 
@@ -94,13 +101,13 @@ public class OwnerController {
 
         model.addAttribute("propertyRequest", propertyService.getPropertyForEdit(id));
         model.addAttribute("actionUrl", "/owner/properties/edit/" + id);
-        
+
         model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("amenities", propertyService.getAllAmenities());
         model.addAttribute("provinces", propertyService.getAllProvinces());
         model.addAttribute("surroundings", propertyService.getAllSurroundings());
         model.addAttribute("targetTenants", propertyService.getAllTargetTenants());
-        
+
         model.addAttribute("content", "owner/property/create"); // Re-using create form - Note: naming should probably be form.html
         return "layout/owner-layout";
     }
@@ -116,7 +123,7 @@ public class OwnerController {
 
     @PostMapping("/properties/delete/{id}")
     public String deleteProperty(@PathVariable Long id, HttpSession session) {
-         User user = (User) session.getAttribute("user");
+        User user = (User) session.getAttribute("user");
 
         propertyService.deleteProperty(id);
         return "redirect:/owner/properties";
@@ -144,7 +151,7 @@ public class OwnerController {
     public String toggleContact(@PathVariable("id") Long id, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
-        
+
         contactService.changeStatus(id);
         return "redirect:/owner/contacts";
     }

@@ -46,7 +46,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ContactInitializer contactInitializer;
     private final RoomInitializer roomInitializer;
     private final ContractInitializer contractInitializer;
-
+    private final PostingPackageInitializer postingPackageInitializer;
 
 
     @Override
@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
         tenantInitializer.init();
         contactInitializer.init();
         contractInitializer.init();
-
+        postingPackageInitializer.init();
 
         System.out.println("Hệ thống đã sẵn sàng");
     }}

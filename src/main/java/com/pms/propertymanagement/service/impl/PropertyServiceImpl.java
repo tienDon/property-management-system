@@ -9,11 +9,13 @@ import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.entity.*;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
 import com.pms.propertymanagement.repository.*;
+import com.pms.propertymanagement.service.PostingOrderService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.utils.DateUtil;
 import com.pms.propertymanagement.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,8 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PropertyServiceImpl implements PropertyService
-{
+public class PropertyServiceImpl implements PropertyService {
+
     private final PropertyRepository propertyRepository;
     private final CategoryRepository categoryRepository;
     private final WardRepository wardRepository;
@@ -31,6 +33,7 @@ public class PropertyServiceImpl implements PropertyService
     private final SurroundingRepository surroundingRepository;
     private final TargetTenantsRepository targetRepository;
     private final ProvinceRepository provinceRepository;
+    private final PostingOrderService postingOrderService;
 
     @Override
     public List<Amenity> getAllAmenities() {
@@ -57,33 +60,22 @@ public class PropertyServiceImpl implements PropertyService
         List<Property> properties = propertyRepository.findByOwnerUsername(owner.getUsername());
 
         return properties.stream()
-                .map(p -> { // p ở đây là Entity Property
+                .map(p -> {
                     PropertyOwnerResponse dto = new PropertyOwnerResponse();
-
-                    // Lấy dữ liệu từ p (Entity) và set vào dto
                     dto.setId(p.getId());
-                    dto.setName(p.getName()); // Map tên nhà trọ
+                    dto.setName(p.getName());
                     dto.setTitle(p.getTitle());
                     dto.setAddressNumber(p.getAddressNumber());
 
-                    // Gọi getCategory() từ p chứ không phải từ dto
-                    if (p.getCategory() != null) {
-                        dto.setCategoryName(p.getCategory().getName());
-                    }
+                    if (p.getCategory() != null) dto.setCategoryName(p.getCategory().getName());
+                    if (p.getCreatedAt() != null) dto.setFormattedCreatedAt(DateUtil.formatDateTime(p.getCreatedAt()));
 
-                    // Gọi getCreatedAt() từ p để format ngày tháng
-                    if (p.getCreatedAt() != null) {
-                        dto.setFormattedCreatedAt(DateUtil.formatDateTime(p.getCreatedAt()));
-                    }
-
-                    // Gọi getImages() từ p để lấy ảnh đại diện
                     if (p.getImages() != null && !p.getImages().isEmpty()) {
                         dto.setImg_url(p.getImages().get(0).getImageUrl());
                     }
 
-                    // Tính số lượng phòng
                     dto.setTotalRooms(p.getNumberOfRooms());
-                    
+
                     int rentedCount = 0;
                     if (p.getRooms() != null) {
                         rentedCount = (int) p.getRooms().stream()
@@ -91,14 +83,19 @@ public class PropertyServiceImpl implements PropertyService
                                 .count();
                     }
                     dto.setRentedRooms(rentedCount);
-
                     return dto;
                 })
                 .toList();
     }
 
     @Override
+    @Transactional
     public void createProperty(PropertyRequest request, User owner) {
+        // CHẶN nếu không có lượt đăng
+        if (!postingOrderService.canPost(owner.getId())) {
+            throw new IllegalStateException("Bạn phải mua gói đăng tin mới.");
+        }
+
         Property property = new Property();
 
         property.setName(request.getName());
@@ -108,14 +105,10 @@ public class PropertyServiceImpl implements PropertyService
         property.setAddressNumber(request.getAddressNumber());
         property.setDescription(request.getDescription());
         property.setOwner(owner);
-
         property.setSlug(SlugUtil.makeSlug(request.getTitle()));
 
-        categoryRepository.findById(request.getCategoryId())
-                .ifPresent(property::setCategory);
-
-        wardRepository.findById(request.getWardCode())
-                .ifPresent(property::setWard);
+        categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
+        wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
 
         if (request.getAmenityIds() != null) {
             property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
@@ -127,38 +120,32 @@ public class PropertyServiceImpl implements PropertyService
             property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
         }
 
-        // ĐẶT GIÁ TRỊ PRICE LẤY TỪ REQUEST
         property.setPrice(request.getPrice());
 
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
             List<PropertyImage> images = new ArrayList<>();
-
             for (int i = 0; i < request.getImageUrls().size(); i++) {
                 PropertyImage img = new PropertyImage();
-
-                // 1. Gán đúng tên field trong Entity của bạn là imageUrl
                 img.setImageUrl(request.getImageUrls().get(i));
-
-                // 2. Xử lý field isPrimary: Ảnh đầu tiên (index = 0) là ảnh chính
                 img.setIsPrimary(i == 0);
-
-                // 3. Thiết lập quan hệ ngược lại với Property
                 img.setProperty(property);
-
                 images.add(img);
             }
-
             property.setImages(images);
         }
 
+        // save trước
         propertyRepository.save(property);
+
+        // TRỪ 1 LƯỢT + INSERT posting_usages
+        postingOrderService.consumeOneUseForNewProperty(owner.getId(), property);
     }
 
     @Override
     public PropertyRequest getPropertyForEdit(Long id) {
         Property p = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        
+
         PropertyRequest req = new PropertyRequest();
         req.setName(p.getName());
         req.setTitle(p.getTitle());
@@ -167,19 +154,17 @@ public class PropertyServiceImpl implements PropertyService
         req.setAcreage(p.getAcreage());
         req.setAddressNumber(p.getAddressNumber());
         req.setDescription(p.getDescription());
-        
+
         if (p.getCategory() != null) req.setCategoryId(p.getCategory().getId());
         if (p.getWard() != null) req.setWardCode(p.getWard().getCode());
-        
+
         req.setAmenityIds(p.getAmenities().stream().map(Amenity::getId).toList());
         req.setSurroundingIds(p.getSurroundings().stream().map(Surrounding::getId).toList());
         req.setTargetIds(p.getTargetTenants().stream().map(TargetTenant::getId).toList());
-        
-        // Populate image URLs if needed for display in edit form
+
         if (p.getImages() != null) {
             req.setImageUrls(p.getImages().stream().map(PropertyImage::getImageUrl).toList());
         }
-        
         return req;
     }
 
@@ -187,7 +172,7 @@ public class PropertyServiceImpl implements PropertyService
     public void updateProperty(Long id, PropertyRequest request) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-                
+
         property.setName(request.getName());
         property.setTitle(request.getTitle());
         property.setNumberOfRooms(request.getNumberOfRooms());
@@ -195,10 +180,10 @@ public class PropertyServiceImpl implements PropertyService
         property.setAcreage(request.getAcreage());
         property.setAddressNumber(request.getAddressNumber());
         property.setDescription(request.getDescription());
-        
+
         categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
         wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
-        
+
         if (request.getAmenityIds() != null) {
             property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
         }
@@ -208,15 +193,10 @@ public class PropertyServiceImpl implements PropertyService
         if (request.getTargetIds() != null) {
             property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
         }
-        
-        // Basic Image Update Strategy: Append new ones or Replace? 
-        // For simplicity, let's just append new non-empty URLs if this is a simple text input list
-        // Real implementation usually involves checking existing IDs or clearing and re-adding.
-        // Given the request just has Strings (URLs), we might clear and re-add if the UI sends ALL urls.
+
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-             // If the UI sends the full list of desired URLs, we can replace:
-             property.getImages().clear();
-             for (int i = 0; i < request.getImageUrls().size(); i++) {
+            property.getImages().clear();
+            for (int i = 0; i < request.getImageUrls().size(); i++) {
                 String url = request.getImageUrls().get(i);
                 if (url != null && !url.trim().isEmpty()) {
                     PropertyImage img = new PropertyImage();
@@ -227,7 +207,7 @@ public class PropertyServiceImpl implements PropertyService
                 }
             }
         }
-        
+
         propertyRepository.save(property);
     }
 
@@ -243,14 +223,13 @@ public class PropertyServiceImpl implements PropertyService
         return properties.stream().map(p -> PropertyResponse.builder()
                 .id(p.getId())
                 .title(p.getTitle())
-                .price(p.getPrice()) // Đảm bảo trong Entity Property đã có trường price
+                .price(p.getPrice())
                 .categoryName(p.getCategory().getName())
                 .acreage(p.getAcreage())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
                 .slug(p.getSlug())
-                // Lấy ảnh đầu tiên hoặc ảnh isPrimary
-                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().getFirst().getImageUrl())
+                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().getFirst().getImageUrl())
                 .build()
         ).collect(Collectors.toList());
     }
@@ -269,7 +248,7 @@ public class PropertyServiceImpl implements PropertyService
                 .addressNumber(p.getAddressNumber())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
-                .ownerName(p.getOwner().getFullName()) // Chạy mượt vì đã FETCH owner
+                .ownerName(p.getOwner().getFullName())
                 .ownerPhone(p.getOwner().getPhone())
                 .imageUrls(p.getImages().stream().map(PropertyImage::getImageUrl).toList())
                 .amenities(p.getAmenities().stream().map(a -> new IconResponse(a.getName(), a.getIcon())).toList())

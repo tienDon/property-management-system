@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div class="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+    <h2 class="text-xl font-bold mb-4">Chi tiết gói đăng tin</h2>
+
+    <div class="space-y-3 text-gray-700">
+        <div><span class="font-semibold">Tên gói:</span> <span th:text="${pkg.name}"></span></div>
+        <div><span class="font-semibold">Tên người mua:</span> <span th:text="${buyerName}"></span></div>
+        <div><span class="font-semibold">Giới hạn:</span> Sử dụng 1 lần</div>
+        <div><span class="font-semibold">Giá tiền:</span> <span th:text="${priceText}"></span></div>
+        <div><span class="font-semibold">Hình thức thanh toán:</span> VNPAY Sandbox</div>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+        <a th:href="@{/owner/properties}"
+           class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
+            Quay lại / Hủy
+        </a>
+
+        <form th:action="@{/owner/posting-packages/checkout/{orderId}/pay(orderId=${orderId})}" method="post">
+            <button type="submit"
+                    class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                Thanh toán
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
