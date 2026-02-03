@@ -1,4 +1,4 @@
-package com.pms.propertymanagement.dto;
+package com.pms.propertymanagement.dto.request;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class ContractDTO {
+public class ContractRequest {
     private Long propertyId;
     private Long roomId;
     private LocalDate startDate;

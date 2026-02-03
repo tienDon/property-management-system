@@ -188,11 +188,11 @@ public class PropertyInitializer {
         List<PropertyImage> images = new ArrayList<>();
         // Sample images (Placeholders or real valid URLs if available)
         String[] sampleImages = {
-            "https://file1.batdongsan.com.vn/guest/2019/12/03/20191203083049-74d6.jpg",
-            "https://cdn.luxstay.com/users/12202/Apt-02/1.jpg",
-            "https://tromoi.com/uploads/guest/2020/07/07/053005-fb-img-1594117765691.jpg",
-            "https://img.thuephongtro.com/images/thumb/2020/05/29/20200529120038-vt1qf.jpg",
-            "https://decoxdesign.com/upload/images/thiet-ke-noi-that-chung-cu-100m2-01-decox-design.jpg"
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_11/153%20tran%20quy/img_3410.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_1/54-3-NguyenBinhKhiem/54_3_nguyenbinhkhiem9.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Ba-Dinh/Ngo266DoiCan/ngo266doican3.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Tay-Ho/pho-tu-lien-duong-au-co/pho_tu_lien1(1).jpg",
+            "https://tromoi.com/uploads/guest/1768900126374_13c85297fc2c73722a3d18.jpg"
         };
         
         // Add 2-3 images

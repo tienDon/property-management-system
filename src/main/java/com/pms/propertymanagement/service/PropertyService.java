@@ -35,4 +35,6 @@ public interface PropertyService {
     List<Province> getAllProvinces();
 
     User getOwnerByPropertySlug(String propertySlug);
+
+    List<PropertyResponse> getAll();
 }

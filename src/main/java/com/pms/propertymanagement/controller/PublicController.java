@@ -3,7 +3,6 @@ package com.pms.propertymanagement.controller;
 import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
 import com.pms.propertymanagement.dto.response.PropertyResponse;
-import com.pms.propertymanagement.entity.Property;
 import com.pms.propertymanagement.service.CategoryService;
 import com.pms.propertymanagement.service.PropertyService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +27,7 @@ public class PublicController {
 
         model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("content", "public/home");
+        model.addAttribute("properties", propertyService.getAll());
 
         return "layout/public-main";
     }

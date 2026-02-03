@@ -1,8 +1,9 @@
-
 <div>
-    <h1>Welcome to Property Management System</h1>
+  <h1 class="text-2xl font-bold mb-6 text-gray-800">Tin đăng mới nhất</h1>
 
-    <a th:href="@{/login}">login</a>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div th:each="p : ${properties}">
+      <div th:replace="~{layout/parts/property-card :: card(p=${p})}"></div>
+    </div>
+  </div>
 </div>
-
-

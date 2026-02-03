@@ -286,4 +286,20 @@ public class PropertyServiceImpl implements PropertyService
     public User getOwnerByPropertySlug(String propertySlug) {
         return propertyRepository.findBySlug(propertySlug).map(Property::getOwner).orElse(null);
     }
+
+    @Override
+    public List<PropertyResponse> getAll() {
+        return propertyRepository.findAll().stream().map(p -> PropertyResponse.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .price(p.getPrice())
+                .categoryName(p.getCategory().getName())
+                .acreage(p.getAcreage())
+                .wardName(p.getWard().getName())
+                .provinceName(p.getWard().getProvince().getName())
+                .slug(p.getSlug())
+                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().getFirst().getImageUrl())
+                .build()
+        ).collect(Collectors.toList());
+    }
 }

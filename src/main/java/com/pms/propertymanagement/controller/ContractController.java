@@ -1,9 +1,8 @@
 package com.pms.propertymanagement.controller;
 
-import com.pms.propertymanagement.dto.ContractDTO;
+import com.pms.propertymanagement.dto.request.ContractRequest;
 import com.pms.propertymanagement.entity.Contract;
-import com.pms.propertymanagement.entity.Room;
-import com.pms.propertymanagement.entity.Tenant;
+
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.ContractStatus;
 // Removed RoomStatus
@@ -22,7 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 import com.pms.propertymanagement.dto.response.RoomResponse;
 
 @Controller
@@ -72,8 +71,8 @@ public class ContractController {
     }
 
     @PostMapping("/create")
-    public String createContract(@ModelAttribute ContractDTO contractDTO, HttpSession session) {
-        contractService.createContract(contractDTO);
+    public String createContract(@ModelAttribute ContractRequest contractRequest, HttpSession session) {
+        contractService.createContract(contractRequest);
         return "redirect:/owner/contracts?success=true";
     }
 

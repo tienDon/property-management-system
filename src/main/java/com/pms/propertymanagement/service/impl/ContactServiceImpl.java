@@ -5,6 +5,7 @@ import com.pms.propertymanagement.dto.response.ContactResponse;
 import com.pms.propertymanagement.entity.Contact;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.repository.ContactRepository;
+import com.pms.propertymanagement.repository.PropertyRepository;
 import com.pms.propertymanagement.service.ContactService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ import java.util.List;
 public class ContactServiceImpl implements ContactService {
 
     private final ContactRepository contactRepository;
-    private final com.pms.propertymanagement.repository.PropertyRepository propertyRepository;
+    private final PropertyRepository propertyRepository;
 
     @Override
     public List<ContactResponse> getContactsByOwner(Long ownerId) {

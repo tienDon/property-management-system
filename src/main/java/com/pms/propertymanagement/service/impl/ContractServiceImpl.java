@@ -1,6 +1,6 @@
 package com.pms.propertymanagement.service.impl;
 
-import com.pms.propertymanagement.dto.ContractDTO;
+import com.pms.propertymanagement.dto.request.ContractRequest;
 import com.pms.propertymanagement.entity.Contract;
 import com.pms.propertymanagement.entity.Room;
 import com.pms.propertymanagement.entity.Tenant;
@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,7 +33,7 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     @Transactional
-    public Contract createContract(ContractDTO dto) {
+    public Contract createContract(ContractRequest dto) {
         Room room = roomRepository.findById(dto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 

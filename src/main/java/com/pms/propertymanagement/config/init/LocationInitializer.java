@@ -33,8 +33,8 @@ public class LocationInitializer {
         // Thành phố Thủ Đức
         hcm.getWards().add(new Ward("26863", "Phường Thảo Điền", hcm));
         hcm.getWards().add(new Ward("26866", "Phường An Phú", hcm));
-        hcm.getWards().add(new Ward("27610", "Phường Phước Long A", hcm));
-        hcm.getWards().add(new Ward("27613", "Phường Phước Long B", hcm));
+        hcm.getWards().add(new Ward("27610", "Phường Phước Long", hcm));
+        hcm.getWards().add(new Ward("27613", "Tăng Nhơn Phú", hcm));
         hcm.getWards().add(new Ward("26881", "Phường Hiệp Phú", hcm)); // Gần khu Công nghệ cao
         hcm.getWards().add(new Ward("26875", "Phường Long Thạnh Mỹ", hcm)); // Gần Vinhome Grand Park
         hcm.getWards().add(new Ward("26878", "Phường Long Bình", hcm));
