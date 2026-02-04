@@ -4,7 +4,7 @@ This project is a comprehensive web application built with Spring Boot and Thyme
 
 ## Introduction
 
-The system provides a platform connecting landlords (Owners) and tenants, while offering convenient tools for managing contracts, services, and payments.
+The system provides a platform connecting Owners and tenants, while offering convenient tools for managing contracts, services, and payments.
 
 ### Technologies Used
 
@@ -23,8 +23,8 @@ The system provides a platform connecting landlords (Owners) and tenants, while 
 The system supports the following main roles:
 
 - **Guest (Public):** View property listings, search, and view details.
-- **Landlord (Owner):** Manage all properties and leasing activities.
-- **Tenant:** Manage rental information.
+- **Owner:** Manage all properties and leasing activities.
+- **Tenant:** Manage rental information(Will be added later).
 - **Admin:** (Will be added later).
 
 ### 2. Landlord (Owner) Features
@@ -107,7 +107,7 @@ Once the application starts successfully (Console shows "Started..."), open your
 
 ```
 src/main/java/com/pms/propertymanagement
-├── config/          # Configuration (Security, VNPay, AppConfig...)
+├── config/          # Configuration 
 ├── controller/      # Controllers (Owner, Public, Auth...)
 ├── entity/          # JPA Entities
 ├── repository/      # JPA Repositories
