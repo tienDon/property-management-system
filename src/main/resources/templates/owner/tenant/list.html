@@ -1,0 +1,133 @@
+<div th:fragment="content" class="bg-gray-50 min-h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Quản lý khách thuê</h2>
+      <a
+        th:href="@{/owner/tenants/create}"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors shadow-md"
+      >
+        <i class="fa-solid fa-user-plus"></i>
+        Thêm khách thuê
+      </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-2 text-sm text-gray-600">
+        <span>Hiển thị</span>
+        <select
+          class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+        >
+          <option>25</option>
+          <option>50</option>
+          <option>100</option>
+        </select>
+      </div>
+      <div class="relative">
+        <input
+          type="text"
+          placeholder="Tìm theo tên, SĐT, CCCD..."
+          class="border border-gray-300 rounded px-4 py-1.5 w-64 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <i
+          class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-gray-400 text-xs"
+        ></i>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr
+            class="border-b border-gray-200 text-sm font-semibold text-gray-700 bg-white"
+          >
+            <th class="py-3 px-4">Họ và tên</th>
+            <th class="py-3 px-4">Số điện thoại</th>
+            <th class="py-3 px-4">CCCD/CMND</th>
+            <th class="py-3 px-4">Giới tính</th>
+            <th class="py-3 px-4">Nghề nghiệp</th>
+            <th class="py-3 px-4">Ngày sinh</th>
+            <th class="py-3 px-4 text-center">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm text-gray-700">
+          <tr
+            th:if="${#lists.isEmpty(tenants)}"
+            class="border-b border-gray-100 bg-gray-50"
+          >
+            <td colspan="7" class="py-8 text-center text-gray-500">
+              Chưa có khách thuê nào
+            </td>
+          </tr>
+          <tr
+            th:each="t : ${tenants}"
+            class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+          >
+            <td
+              class="py-3 px-4 font-medium text-gray-800"
+              th:text="${t.fullName}"
+            >
+              Nguyễn Văn A
+            </td>
+            <td class="py-3 px-4" th:text="${t.phone}">0987654321</td>
+            <td class="py-3 px-4" th:text="${t.citizenId}">00109xxxxxxxx</td>
+            <td class="py-3 px-4">
+              <span
+                th:if="${t.gender.name() == 'MALE'}"
+                class="text-blue-600 font-medium"
+                >Nam</span
+              >
+              <span
+                th:if="${t.gender.name() == 'FEMALE'}"
+                class="text-pink-600 font-medium"
+                >Nữ</span
+              >
+              <span th:if="${t.gender.name() == 'OTHER'}" class="text-gray-600"
+                >Khác</span
+              >
+            </td>
+            <td class="py-3 px-4" th:text="${t.career}">Sinh viên</td>
+            <td class="py-3 px-4" th:text="${t.formattedBirthday}">
+              01/01/2000
+            </td>
+            <td class="py-3 px-4 text-center">
+              <a
+                th:href="@{/owner/tenants/delete/{id}(id=${t.id})}"
+                onclick="
+                  return confirm('Bạn có chắc chắn muốn xóa khách thuê này?');
+                "
+                class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
+                title="Xóa"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 text-xs text-gray-500">
+      Hiển thị <span th:text="${tenants.size()}">0</span> mục
+    </div>
+  </div>
+
+  {{/*
+  <!-- Alert Success -->
+  <div
+    th:if="${param.success}"
+    class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce z-50 flex items-center gap-2"
+  >
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Thêm khách thuê thành công!</span>
+  </div>
+  <div
+    th:if="${param.deleted}"
+    class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce z-50 flex items-center gap-2"
+  >
+    <i class="fa-solid fa-trash"></i>
+    <span>Đã xóa khách thuê!</span>
+  </div>
+  */}}
+</div>

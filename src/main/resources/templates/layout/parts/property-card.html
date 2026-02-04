@@ -1,0 +1,24 @@
+<a th:href="@{/public/property/{slug}(slug=${p.slug})}" th:fragment="card(p)" class="flex bg-white rounded-lg border p-3 mb-4 cursor-pointer">
+    <div class="w-1/5">
+        <img th:src="${p.imageUrl}" class="rounded-lg h-32 w-full object-cover">
+    </div>
+
+    <div class="w-2/3 pl-4">
+        <h3 class="font-bold text-gray-800" th:text="${p.title}">Tiêu đề</h3>
+
+        <p class="text-orange-600 font-bold"
+           th:text="${'Từ ' + #numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT') + ' triệu/tháng'}">
+            Từ 3 triệu/tháng
+        </p>
+
+        <div class="flex gap-2 text-xs mt-2">
+            <span class="bg-gray-100 p-1" th:text="${p.categoryName}">Nhà trọ</span>
+            <span class="bg-gray-100 p-1" th:text="${p.acreage + 'm²'}">40m²</span>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-2">
+            <i class="fa-solid fa-location-dot"></i>
+            <span th:text="${p.wardName + ', ' + p.provinceName}">Quận 12, HCM</span>
+        </p>
+    </div>
+</a>

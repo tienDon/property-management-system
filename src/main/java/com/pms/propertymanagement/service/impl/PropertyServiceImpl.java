@@ -1,0 +1,284 @@
+package com.pms.propertymanagement.service.impl;
+
+import com.pms.propertymanagement.dto.request.PropertyRequest;
+import com.pms.propertymanagement.dto.response.IconResponse;
+import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
+import com.pms.propertymanagement.dto.response.PropertyOwnerResponse;
+import com.pms.propertymanagement.dto.response.PropertyResponse;
+import com.pms.propertymanagement.enums.RoomStatus;
+import com.pms.propertymanagement.entity.*;
+import com.pms.propertymanagement.exception.ResourceNotFoundException;
+import com.pms.propertymanagement.repository.*;
+import com.pms.propertymanagement.service.PostingOrderService;
+import com.pms.propertymanagement.service.PropertyService;
+import com.pms.propertymanagement.utils.DateUtil;
+import com.pms.propertymanagement.utils.SlugUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class PropertyServiceImpl implements PropertyService {
+
+    private final PropertyRepository propertyRepository;
+    private final CategoryRepository categoryRepository;
+    private final WardRepository wardRepository;
+    private final AmenityRepository amenityRepository;
+    private final SurroundingRepository surroundingRepository;
+    private final TargetTenantsRepository targetRepository;
+    private final ProvinceRepository provinceRepository;
+    private final PostingOrderService postingOrderService;
+
+    @Override
+    public List<Amenity> getAllAmenities() {
+        return amenityRepository.findAll();
+    }
+
+    @Override
+    public List<Surrounding> getAllSurroundings() {
+        return surroundingRepository.findAll();
+    }
+
+    @Override
+    public List<TargetTenant> getAllTargetTenants() {
+        return targetRepository.findAll();
+    }
+
+    @Override
+    public List<Province> getAllProvinces() {
+        return provinceRepository.findAll();
+    }
+
+    @Override
+    public List<PropertyOwnerResponse> getPropertiesByOwner(User owner) {
+        List<Property> properties = propertyRepository.findByOwnerUsername(owner.getUsername());
+
+        return properties.stream()
+                .map(p -> {
+                    PropertyOwnerResponse dto = new PropertyOwnerResponse();
+                    dto.setId(p.getId());
+                    dto.setName(p.getName());
+                    dto.setTitle(p.getTitle());
+                    dto.setAddressNumber(p.getAddressNumber());
+
+                    if (p.getCategory() != null) dto.setCategoryName(p.getCategory().getName());
+                    if (p.getCreatedAt() != null) dto.setFormattedCreatedAt(DateUtil.formatDateTime(p.getCreatedAt()));
+
+                    if (p.getImages() != null && !p.getImages().isEmpty()) {
+                        dto.setImg_url(p.getImages().get(0).getImageUrl());
+                    }
+
+                    dto.setTotalRooms(p.getNumberOfRooms());
+
+                    int rentedCount = 0;
+                    if (p.getRooms() != null) {
+                        rentedCount = (int) p.getRooms().stream()
+                                .filter(r -> r.getStatus() == RoomStatus.RENTED)
+                                .count();
+                    }
+                    dto.setRentedRooms(rentedCount);
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void createProperty(PropertyRequest request, User owner) {
+        // CHẶN nếu không có lượt đăng
+        if (!postingOrderService.canPost(owner.getId())) {
+            throw new IllegalStateException("Bạn phải mua gói đăng tin mới.");
+        }
+
+        Property property = new Property();
+
+        property.setName(request.getName());
+        property.setTitle(request.getTitle());
+        property.setNumberOfRooms(request.getNumberOfRooms());
+        property.setAcreage(request.getAcreage());
+        property.setAddressNumber(request.getAddressNumber());
+        property.setDescription(request.getDescription());
+        property.setOwner(owner);
+        property.setSlug(SlugUtil.makeSlug(request.getTitle()));
+
+        categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
+        wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
+
+        if (request.getAmenityIds() != null) {
+            property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
+        }
+        if (request.getSurroundingIds() != null) {
+            property.setSurroundings(new HashSet<>(surroundingRepository.findAllById(request.getSurroundingIds())));
+        }
+        if (request.getTargetIds() != null) {
+            property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
+        }
+
+        property.setPrice(request.getPrice());
+
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            List<PropertyImage> images = new ArrayList<>();
+            for (int i = 0; i < request.getImageUrls().size(); i++) {
+                PropertyImage img = new PropertyImage();
+                img.setImageUrl(request.getImageUrls().get(i));
+                img.setIsPrimary(i == 0);
+                img.setProperty(property);
+                images.add(img);
+            }
+            property.setImages(images);
+        }
+
+        // save trước
+        propertyRepository.save(property);
+
+        // TRỪ 1 LƯỢT + INSERT posting_usages
+        postingOrderService.consumeOneUseForNewProperty(owner.getId(), property);
+    }
+
+    @Override
+    public PropertyRequest getPropertyForEdit(Long id) {
+        Property p = propertyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
+
+        PropertyRequest req = new PropertyRequest();
+        req.setName(p.getName());
+        req.setTitle(p.getTitle());
+        req.setNumberOfRooms(p.getNumberOfRooms());
+        req.setPrice(p.getPrice());
+        req.setAcreage(p.getAcreage());
+        req.setAddressNumber(p.getAddressNumber());
+        req.setDescription(p.getDescription());
+
+        if (p.getCategory() != null) req.setCategoryId(p.getCategory().getId());
+        if (p.getWard() != null) req.setWardCode(p.getWard().getCode());
+
+        req.setAmenityIds(p.getAmenities().stream().map(Amenity::getId).toList());
+        req.setSurroundingIds(p.getSurroundings().stream().map(Surrounding::getId).toList());
+        req.setTargetIds(p.getTargetTenants().stream().map(TargetTenant::getId).toList());
+
+        if (p.getImages() != null) {
+            req.setImageUrls(p.getImages().stream().map(PropertyImage::getImageUrl).toList());
+        }
+        return req;
+    }
+
+    @Override
+    public void updateProperty(Long id, PropertyRequest request) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
+
+        property.setName(request.getName());
+        property.setTitle(request.getTitle());
+        property.setNumberOfRooms(request.getNumberOfRooms());
+        property.setPrice(request.getPrice());
+        property.setAcreage(request.getAcreage());
+        property.setAddressNumber(request.getAddressNumber());
+        property.setDescription(request.getDescription());
+
+        categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
+        wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
+
+        if (request.getAmenityIds() != null) {
+            property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
+        }
+        if (request.getSurroundingIds() != null) {
+            property.setSurroundings(new HashSet<>(surroundingRepository.findAllById(request.getSurroundingIds())));
+        }
+        if (request.getTargetIds() != null) {
+            property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
+        }
+
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            property.getImages().clear();
+            for (int i = 0; i < request.getImageUrls().size(); i++) {
+                String url = request.getImageUrls().get(i);
+                if (url != null && !url.trim().isEmpty()) {
+                    PropertyImage img = new PropertyImage();
+                    img.setImageUrl(url);
+                    img.setIsPrimary(i == 0);
+                    img.setProperty(property);
+                    property.getImages().add(img);
+                }
+            }
+        }
+
+        propertyRepository.save(property);
+    }
+
+    @Override
+    public void deleteProperty(Long id) {
+        propertyRepository.deleteById(id);
+    }
+
+    @Override
+    public List<PropertyResponse> getPropertiesByCategory(Long categoryId) {
+        List<Property> properties = propertyRepository.findByCategory_Id(categoryId);
+
+        return properties.stream().map(p -> PropertyResponse.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .price(p.getPrice())
+                .categoryName(p.getCategory().getName())
+                .acreage(p.getAcreage())
+                .wardName(p.getWard().getName())
+                .provinceName(p.getWard().getProvince().getName())
+                .slug(p.getSlug())
+                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().getFirst().getImageUrl())
+                .build()
+        ).collect(Collectors.toList());
+    }
+
+    @Override
+    public PropertyDetailResponse getPropertyDetailBySlug(String slug) {
+        Property p = propertyRepository.findBySlugWithDetails(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng!"));
+
+        return PropertyDetailResponse.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .slug(p.getSlug())
+                .price(p.getPrice())
+                .description(p.getDescription())
+                .addressNumber(p.getAddressNumber())
+                .wardName(p.getWard().getName())
+                .provinceName(p.getWard().getProvince().getName())
+                .ownerName(p.getOwner().getFullName())
+                .ownerPhone(p.getOwner().getPhone())
+                .imageUrls(p.getImages().stream().map(PropertyImage::getImageUrl).toList())
+                .amenities(p.getAmenities().stream().map(a -> new IconResponse(a.getName(), a.getIcon())).toList())
+                .surroundings(p.getSurroundings().stream().map(s -> new IconResponse(s.getName(), s.getIcon())).toList())
+                .targetTenants(p.getTargetTenants().stream().map(t -> new IconResponse(t.getName(), t.getIcon())).toList())
+                .formattedCreatedAt(DateUtil.formatDateTime(p.getCreatedAt()))
+                .categoryName(p.getCategory().getName())
+                .acreage(p.getAcreage())
+                .numberOfRooms(p.getNumberOfRooms())
+                .build();
+    }
+
+    @Override
+    public User getOwnerByPropertySlug(String propertySlug) {
+        return propertyRepository.findBySlug(propertySlug).map(Property::getOwner).orElse(null);
+    }
+
+    @Override
+    public List<PropertyResponse> getAll() {
+        return propertyRepository.findAll().stream().map(p -> PropertyResponse.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .price(p.getPrice())
+                .categoryName(p.getCategory().getName())
+                .acreage(p.getAcreage())
+                .wardName(p.getWard().getName())
+                .provinceName(p.getWard().getProvince().getName())
+                .slug(p.getSlug())
+                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().getFirst().getImageUrl())
+                .build()
+        ).collect(Collectors.toList());
+    }
+}
