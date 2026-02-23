@@ -45,6 +45,24 @@ public class PostingOrderServiceImpl implements PostingOrderService {
     }
 
     @Override
+    @Transactional
+    public PostingOrder createOrderForPackage(Long ownerId, Long packageId) {
+        User owner = userService.findById(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy owner id=" + ownerId));
+
+        PostingPackage pkg = postingPackageService.getById(packageId);
+
+        PostingOrder order = new PostingOrder();
+        order.setOwner(owner);
+        order.setPostingPackage(pkg);
+        order.setAmount(pkg.getPrice());
+        order.setStatus(PaymentStatus.PENDING);
+        order.setRemainingUses(0);
+
+        return postingOrderRepository.save(order);
+    }
+
+    @Override
     public PostingOrder getOrderForOwner(Long orderId, Long ownerId) {
         PostingOrder order = postingOrderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy order id=" + orderId));

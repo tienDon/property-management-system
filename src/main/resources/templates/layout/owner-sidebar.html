@@ -27,6 +27,19 @@
       <span class="font-medium">Quảng cáo</span>
     </a>
 
+    <a
+      href="/owner/wallet"
+      class="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-tm-blue transition"
+      th:classappend="${activeMenu == 'wallet'} ? 'bg-blue-50 text-tm-blue' : ''"
+    >
+      <i class="fa-solid fa-wallet w-5"></i>
+      <span
+        class="font-medium"
+        th:classappend="${activeMenu == 'wallet'} ? 'text-blue-500 font-semibold' : ''"
+        >Quản lý ví</span
+      >
+    </a>
+
     <div class="pt-2">
       <button
         class="w-full flex items-center justify-between p-3 text-tm-blue font-bold"

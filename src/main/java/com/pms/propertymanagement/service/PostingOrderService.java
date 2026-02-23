@@ -6,6 +6,8 @@ import com.pms.propertymanagement.entity.Property;
 public interface PostingOrderService {
 
     PostingOrder createNewOrderForDefaultPackage(Long ownerId);
+    
+    PostingOrder createOrderForPackage(Long ownerId, Long packageId);
 
     PostingOrder getOrderForOwner(Long orderId, Long ownerId);
 

@@ -6,6 +6,8 @@ import com.pms.propertymanagement.service.PostingPackageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PostingPackageServiceImpl implements PostingPackageService {
@@ -28,5 +30,10 @@ public class PostingPackageServiceImpl implements PostingPackageService {
     public PostingPackage getById(Long id) {
         return postingPackageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy package id=" + id));
+    }
+    
+    @Override
+    public List<PostingPackage> findAll() {
+        return postingPackageRepository.findAllByOrderByPriceAsc();
     }
 }
