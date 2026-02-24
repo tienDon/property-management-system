@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a37ac37445.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+<div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+    <h1 class="text-3xl font-bold text-center mb-6">Đăng ký</h1>
+
+    <form th:action="@{/register}" method="post" th:object="${registerForm}" class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Username</label>
+            <input type="text" name="username" th:field="*{username}"
+                   class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-red-600 text-sm mt-1" th:if="${errorUsername != null}" th:text="${errorUsername}"></p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" name="password" th:field="*{password}"
+                   class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-red-600 text-sm mt-1" th:if="${errorPassword != null}" th:text="${errorPassword}"></p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Họ và tên</label>
+            <input type="text" name="fullName" th:field="*{fullName}"
+                   class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="text" name="email" th:field="*{email}"
+                   class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+            <input type="text" name="phone" th:field="*{phone}"
+                   class="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            Tạo tài khoản
+        </button>
+    </form>
+
+    <p class="text-sm text-center text-gray-600 mt-4">
+        Đã có tài khoản?
+        <a href="/login" class="text-blue-600 hover:underline">Đăng nhập</a>
+    </p>
+</div>
+</body>
+</html>
+

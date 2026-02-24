@@ -1,0 +1,14 @@
+<div>
+    <h1 class="text-2xl font-semibold mb-4">Phòng của tôi</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div th:each="r : ${rooms}" class="border rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold" th:text="${r.name}">Phòng A1</h2>
+                <span class="text-sm px-2 py-1 rounded bg-gray-100" th:text="${r.status.displayName}">Trạng thái</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1" th:text="'Tòa: ' + ${r.property != null ? r.property.name : 'N/A'}"></p>
+            <a th:href="@{|/tenant/rooms/${r.id}|}" class="inline-block mt-3 text-blue-600 hover:underline">Xem chi tiết</a>
+        </div>
+    </div>
+</div>
+
