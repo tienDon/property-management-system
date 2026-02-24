@@ -50,6 +50,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ManagementPlanInitializer managementPlanInitializer;
     private final PostPackageInitializer postPackageInitializer;
     private final PostInitializer postInitializer;
+    private final OwnerDataInitializer ownerDataInitializer;
 
 
     @Override
@@ -76,6 +77,9 @@ public class DataInitializer implements CommandLineRunner {
         
         // NEW ARCHITECTURE: Initialize Posts for Properties
         postInitializer.init();
+
+        // Sample data: owner1 wallet + Enterprise subscription
+        ownerDataInitializer.init();
 
         System.out.println("Hệ thống đã sẵn sàng");
     }}

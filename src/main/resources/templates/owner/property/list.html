@@ -67,7 +67,8 @@
         <tbody class="divide-y divide-gray-50">
           <tr
             th:each="prop : ${properties}"
-            class="hover:bg-blue-50/30 transition-colors group"
+            th:classappend="${prop.status == 'PLAN_LOCKED'} ? 'opacity-60 bg-gray-50' : 'hover:bg-blue-50/30'"
+            class="transition-colors group"
           >
             <td class="px-6 py-4">
               <div class="flex items-center gap-4">
@@ -81,11 +82,23 @@
                   />
                 </div>
                 <div class="max-w-[250px]">
-                  <div
-                    class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors"
-                    th:text="${prop.title}"
-                  >
-                    Tiêu đề tài sản
+                  <div class="flex items-center gap-1.5">
+                    <div
+                      class="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors"
+                      th:classappend="${prop.status == 'PLAN_LOCKED'} ? '!text-gray-400 !group-hover:text-gray-400' : ''"
+                      th:text="${prop.title}"
+                    >
+                      Tiêu đề tài sản
+                    </div>
+                    <!-- Lock badge for PLAN_LOCKED -->
+                    <span
+                      th:if="${prop.status == 'PLAN_LOCKED'}"
+                      class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold
+                             bg-orange-100 text-orange-600 flex-shrink-0"
+                      title="Nhà trọ tạm khóa do hạ gói"
+                    >
+                      <i class="fa-solid fa-lock text-[9px]"></i> Tạm khóa
+                    </span>
                   </div>
                   <div
                     class="text-[11px] text-gray-400 mt-0.5"
@@ -145,7 +158,8 @@
             </td>
 
             <td class="px-6 py-4">
-              <div class="flex justify-center items-center gap-4">
+              <!-- Normal actions -->
+              <div th:unless="${prop.status == 'PLAN_LOCKED'}" class="flex justify-center items-center gap-4">
                 <a
                   th:href="@{/owner/properties/edit/{id}(id=${prop.id})}"
                   class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
@@ -172,6 +186,18 @@
                     <i class="fa-solid fa-trash-can"></i>
                   </button>
                 </form>
+              </div>
+
+              <!-- Locked state —— upgrade plan to unlock -->
+              <div th:if="${prop.status == 'PLAN_LOCKED'}" class="flex justify-center">
+                <a
+                  href="/owner/management-plans"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                         bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all"
+                  title="Nâng gói để mở khóa"
+                >
+                  <i class="fa-solid fa-lock text-[10px]"></i> Nâng gói
+                </a>
               </div>
             </td>
           </tr>

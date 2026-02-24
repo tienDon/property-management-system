@@ -19,4 +19,6 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
     List<Room> findByPropertyIdAndStatus(Long propertyId, RoomStatus status);
 
     List<Room> findByProperty_Owner_Id(Long ownerId);
+
+    List<Room> findByStatus(RoomStatus status);
 }

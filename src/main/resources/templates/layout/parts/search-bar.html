@@ -9,7 +9,10 @@
         <div class="w-full md:w-48">
             <select class="w-full border rounded px-3 py-2 text-sm bg-gray-50 outline-none">
                 <option value="">Nhà trọ, phòng trọ</option>
-                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                <th:block th:each="cat : ${categories}">
+                    <option th:if="${cat instanceof T(com.pms.propertymanagement.dto.response.CategoryResponse)}"
+                            th:value="${cat.id}" th:text="${cat.name}"></option>
+                </th:block>
             </select>
         </div>
 

@@ -44,7 +44,7 @@
         <p class="text-2xl font-bold" th:text="${currentPlanName}">Free</p>
         <p
           class="text-sm text-blue-200"
-          th:text="${propertyCounts.active()} + '/' + ${currentPropertyLimit ?: 'N/A'} + ' Properties'"
+          th:text="${propertyCounts.active()} + '/' + ${(currentPropertyLimit != null && currentPropertyLimit == -1) ? '∞' : (currentPropertyLimit ?: 'N/A')} + ' Properties'"
         >
           0/0 Properties
         </p>
@@ -73,7 +73,12 @@
       <div class="text-right">
         <p class="text-sm text-green-600">Sử dụng Properties</p>
         <div class="flex items-center gap-2">
-          <div class="flex">
+          <!-- Unlimited plan: show ∞ icon instead of dots -->
+          <div th:if="${currentPropertyLimit != null && currentPropertyLimit == -1}" class="flex items-center gap-1">
+            <span class="text-green-500 font-bold text-base">∞</span>
+          </div>
+          <!-- Limited plan: show dot indicators -->
+          <div th:unless="${currentPropertyLimit != null && currentPropertyLimit == -1}" class="flex">
             <div
               th:each="i : ${#numbers.sequence(1, currentPropertyLimit ?: 0)}"
               th:class="${i <= propertyCounts.active()} ? 'w-3 h-3 bg-green-500 rounded mr-1' : 'w-3 h-3 bg-gray-300 rounded mr-1'"
@@ -81,7 +86,7 @@
           </div>
           <span
             class="text-sm font-medium"
-            th:text="${propertyCounts.active()} + '/' + ${currentPropertyLimit ?: 0}"
+            th:text="${propertyCounts.active()} + '/' + ${(currentPropertyLimit != null && currentPropertyLimit == -1) ? '∞' : (currentPropertyLimit ?: 0)}"
           >
             2/3
           </span>

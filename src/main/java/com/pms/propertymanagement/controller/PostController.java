@@ -351,8 +351,8 @@ public class PostController {
 
         try {
             postService.updatePostContent(id, title, slug, description);
-            redirectAttributes.addFlashAttribute("successMessage", 
-                    "Đã cập nhật nội dung bài đăng thành công");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã cập nhật bài đăng. Bài đăng đang tạm dừng và chờ moderator duyệt lại trước khi tiếp tục hiển thị.");
         } catch (Exception e) {
             log.error("Error updating post {}: {}", id, e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", 

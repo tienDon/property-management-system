@@ -24,6 +24,14 @@ public enum PostStatus {
     REJECTED,
 
     /**
+     * PENDING_REVISION: Owner edited an already-approved post and resubmitted
+     * - postExpiredAt is preserved (timer paused, not reset)
+     * - Not visible in marketplace until staff re-approves
+     * - Distinct from PENDING_APPROVAL so moderator knows this is a content update, not a new post
+     */
+    PENDING_REVISION,
+
+    /**
      * DRAFT: Post created but not yet paid/published
      * - Property exists but post has no duration yet
      * - Not visible in marketplace

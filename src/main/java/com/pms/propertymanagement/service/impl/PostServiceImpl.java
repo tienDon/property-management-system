@@ -107,6 +107,19 @@ public class PostServiceImpl implements PostService {
         post.setSlug(slug);
         post.setDescription(description);
 
+        // When owner edits, pause the post and require re-approval
+        // REJECTED → back to PENDING_APPROVAL (first-time review)
+        // ACTIVE / EXPIRED / HIDDEN → PENDING_REVISION (re-review, timer preserved)
+        com.pms.propertymanagement.enums.PostStatus currentStatus = post.getStatus();
+        if (currentStatus == com.pms.propertymanagement.enums.PostStatus.REJECTED) {
+            post.resubmit();
+            log.info("Post {} resubmitted to PENDING_APPROVAL after rejection edit", postId);
+        } else if (currentStatus != com.pms.propertymanagement.enums.PostStatus.PENDING_APPROVAL
+                && currentStatus != com.pms.propertymanagement.enums.PostStatus.PENDING_REVISION) {
+            post.submitRevision();
+            log.info("Post {} set to PENDING_REVISION after owner edit", postId);
+        }
+
         postRepository.save(post);
         log.info("Updated post {} content", postId);
     }

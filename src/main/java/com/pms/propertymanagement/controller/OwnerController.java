@@ -57,7 +57,7 @@ public class OwnerController {
 
         // NEW ARCHITECTURE: Check if user can create property based on management plan
         if (!newPropertyManagementService.canCreateProperty(user.getId())) {
-            ra.addFlashAttribute("errorMessage", "You need an active management plan to create properties.");
+            ra.addFlashAttribute("errorMessage", "Bạn cần có gói quản lý đang hoạt động để tạo nhà trọ.");
             return "redirect:/owner/properties";
         }
 

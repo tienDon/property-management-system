@@ -1,6 +1,11 @@
 <div>
   <h1 class="text-2xl font-bold mb-6 text-gray-800">Tin đăng mới nhất</h1>
 
+  <div th:if="${session.user == null}" class="mb-6 flex flex-col sm:flex-row gap-3">
+    <a href="/login" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">Đăng nhập</a>
+    <a href="/register" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-center">Đăng ký</a>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div th:each="p : ${properties}">
       <div th:replace="~{layout/parts/property-card :: card(p=${p})}"></div>

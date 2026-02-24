@@ -74,7 +74,7 @@
           <p class="text-gray-500 text-xs">Chờ duyệt</p>
           <p
             class="text-2xl font-bold text-yellow-600"
-            th:text="${postsByStatus['PENDING_APPROVAL'] != null ? postsByStatus['PENDING_APPROVAL'].size() : 0}"
+            th:text="${(postsByStatus['PENDING_APPROVAL'] != null ? postsByStatus['PENDING_APPROVAL'].size() : 0) + (postsByStatus['PENDING_REVISION'] != null ? postsByStatus['PENDING_REVISION'].size() : 0)}"
           >
             0
           </p>
@@ -250,6 +250,12 @@
               >
                 <i class="fas fa-edit"></i> DRAFT
               </span>
+              <span
+                th:if="${post.status.name() == 'PENDING_REVISION'}"
+                class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"
+              >
+                <i class="fas fa-sync-alt"></i> Chờ duyệt lại
+              </span>
               <!-- Rejection reason tooltip for REJECTED posts -->
               <div
                 th:if="${post.status.name() == 'REJECTED' and post.rejectionReason != null}"
@@ -274,11 +280,17 @@
               >
                 <i class="fas fa-ban"></i> Bị từ chối
               </span>
+              <span
+                th:if="${post.status.name() == 'PENDING_REVISION'}"
+                class="text-blue-600 font-medium"
+              >
+                <i class="fas fa-sync-alt"></i> Chờ duyệt lại
+              </span>
               <span th:if="${post.isActive}" class="text-green-600 font-medium">
                 <i class="fas fa-eye"></i> Đang hiển thị
               </span>
               <span
-                th:if="${!post.isActive and post.status.name() != 'PENDING_APPROVAL' and post.status.name() != 'REJECTED'}"
+                th:if="${!post.isActive and post.status.name() != 'PENDING_APPROVAL' and post.status.name() != 'REJECTED' and post.status.name() != 'PENDING_REVISION'}"
                 class="text-gray-500"
               >
                 <i class="fas fa-eye-slash"></i> Không hiển thị
@@ -297,6 +309,12 @@
               <div th:if="${post.status.name() == 'PENDING_APPROVAL'}">
                 <p class="text-sm text-yellow-600 font-medium">Chưa bắt đầu</p>
                 <p class="text-xs text-gray-400">Tính từ khi được duyệt</p>
+              </div>
+              <div th:if="${post.status.name() == 'PENDING_REVISION'}">
+                <p class="text-sm text-blue-600 font-medium">Đang tạm dừng</p>
+                <p class="text-xs text-gray-400"
+                   th:text="${post.daysRemaining > 0 ? post.daysRemaining + ' ngày được bảo lưu' : 'Hết hạn — sẽ được bù thêm'}"
+                ></p>
               </div>
               <div th:if="${post.status.name() == 'REJECTED'}">
                 <p class="text-sm text-red-500 font-medium">Không áp dụng</p>

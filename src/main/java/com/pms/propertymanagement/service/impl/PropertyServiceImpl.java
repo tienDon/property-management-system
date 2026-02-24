@@ -82,6 +82,7 @@ public class PropertyServiceImpl implements PropertyService {
                         dto.setImg_url(p.getImages().get(0).getImageUrl());
                     }
 
+                    dto.setStatus(p.getStatus() != null ? p.getStatus().name() : "ACTIVE");
                     dto.setTotalRooms(p.getNumberOfRooms());
 
                     int rentedCount = 0;
@@ -101,7 +102,7 @@ public class PropertyServiceImpl implements PropertyService {
     public void createProperty(PropertyRequest request, User owner) {
         // NEW ARCHITECTURE: Check if user can create property based on management plan
         if (!newPropertyManagementService.canCreateProperty(owner.getId())) {
-            throw new IllegalStateException("You need an active management plan to create properties.");
+            throw new IllegalStateException("Bạn cần có gói quản lý đang hoạt động để tạo nhà trọ.");
         }
 
         Property property = new Property();
@@ -285,7 +286,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .acreage(p.getAcreage())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
-                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().getFirst().getImageUrl());
+                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().get(0).getImageUrl());
             
             // NEW ARCHITECTURE: Get title/slug from Post
             postRepository.findByPropertyId(p.getId()).ifPresent(post -> {
@@ -355,7 +356,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .acreage(p.getAcreage())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
-                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().getFirst().getImageUrl());
+                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().get(0).getImageUrl());
             
             // NEW ARCHITECTURE: Get title/slug from Post
             postRepository.findByPropertyId(p.getId()).ifPresent(post -> {

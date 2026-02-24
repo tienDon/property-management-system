@@ -20,17 +20,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
 
     // === PESSIMISTIC LOCKING FOR CONCURRENCY CONTROL ===
-    /**
-     * Find user by ID with pessimistic write lock
-     * ENTERPRISE-GRADE: Includes timeout and proper isolation
-     * Used in subscription creation to prevent race conditions
-     * Locks the User aggregate root during subscription operations
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({
-        @QueryHint(name = "jakarta.persistence.lock.timeout", value = "10000"),  // 10 second timeout
+        @QueryHint(name = "jakarta.persistence.lock.timeout", value = "10000"),
         @QueryHint(name = "org.hibernate.readOnly", value = "false")
     })
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdWithLock(@Param("id") Long id);
+
+    List<User> findByRoles_Name(String roleName);
 }

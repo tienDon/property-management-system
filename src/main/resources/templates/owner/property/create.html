@@ -474,8 +474,13 @@
         });
     });
 
-  // Auto-add first slot (cover photo) on page load
-  addImageSlot();
+  // Auto-add first slot (cover photo) on page load, or pre-fill existing images in edit mode
+  const existingImages = /*[[${propertyRequest.imageUrls}]]*/ [];
+  if (existingImages && existingImages.length > 0) {
+    existingImages.forEach((url) => addImageSlot(url));
+  } else {
+    addImageSlot();
+  }
 </script>
 
 <style>

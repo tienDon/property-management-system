@@ -1,0 +1,60 @@
+<div>
+  <!-- Page title -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900"
+          th:text="${activeTab == 'pending'} ? 'Bài đăng chờ duyệt' : (${activeTab == 're-review'} ? 'Bài đăng chờ duyệt lại' : 'Bài đăng chờ chỉnh sửa')"></h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        <span th:text="${posts.size()}">0</span> bài đăng
+      </p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div th:if="${#lists.isEmpty(posts)}"
+       class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
+    <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
+    <p class="text-sm text-gray-500 italic"
+       th:text="${activeTab == 'pending'} ? 'Không có bài nào đang chờ duyệt.' : (${activeTab == 're-review'} ? 'Không có bài nào cần duyệt lại.' : 'Không có bài nào đang chờ chỉnh sửa.')"></p></p>
+  </div>
+
+  <!-- Table -->
+  <div th:if="${!#lists.isEmpty(posts)}"
+       class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 text-[11px] uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-4 font-bold">Tiêu đề</th>
+          <th class="px-6 py-4 font-bold">Chủ nhà</th>
+          <th class="px-6 py-4 font-bold">Danh mục</th>
+          <th class="px-6 py-4 font-bold">Ngày gửi</th>
+          <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <tr th:each="p : ${posts}" class="hover:bg-blue-50/30 transition-colors">
+          <td class="px-6 py-4">
+            <p class="font-semibold text-gray-900 line-clamp-1" th:text="${p.title}"></p>
+            <p class="text-xs text-gray-400 mt-0.5" th:text="${p.slug}"></p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-medium text-gray-700"
+               th:text="${p.property?.owner?.fullName ?: p.property?.owner?.username ?: 'N/A'}"></p>
+            <p class="text-xs text-gray-400"
+               th:text="${p.property?.owner?.phone ?: ''}"></p>
+          </td>
+          <td class="px-6 py-4 text-gray-600"
+              th:text="${p.property?.category?.name ?: '—'}"></td>
+          <td class="px-6 py-4 text-gray-500"
+              th:text="${p.createdAt != null} ? ${#temporals.format(p.createdAt, 'dd/MM/yyyy HH:mm')} : '—'"></td>
+          <td class="px-6 py-4 text-right">
+            <a th:href="@{|/moderator/posts/${p.id}|}"
+               class="inline-flex items-center gap-1.5 text-[#0054a5] hover:underline font-medium text-sm">
+              <i class="fa-solid fa-eye text-xs"></i> Xem
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

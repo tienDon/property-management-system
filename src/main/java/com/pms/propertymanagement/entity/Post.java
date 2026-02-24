@@ -97,6 +97,14 @@ public class Post {
     @Column(name = "rejection_reason", columnDefinition = "nvarchar(500)")
     private String rejectionReason;
 
+    /**
+     * Tracks when the post timer was paused (set by submitRevision()).
+     * Used by moderator on approval to compensate: postExpiredAt += (approvalTime - pausedAt).
+     * Cleared on approval. Preserved on rejection (stays paused until owner re-submits).
+     */
+    @Column(name = "paused_at")
+    private LocalDateTime pausedAt;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -177,6 +185,17 @@ public class Post {
     public void resubmit() {
         this.status = PostStatus.PENDING_APPROVAL;
         this.rejectionReason = null;
+    }
+
+    /**
+     * Submit revision: owner edited an active/expired/hidden post.
+     * Sets PENDING_REVISION and records pausedAt = now.
+     * On moderator approval, the pause duration (approvalTime - pausedAt) is added back to postExpiredAt.
+     * Distinct from resubmit() which is for REJECTED posts.
+     */
+    public void submitRevision() {
+        this.status = PostStatus.PENDING_REVISION;
+        this.pausedAt = LocalDateTime.now();
     }
 
     /**

@@ -12,68 +12,31 @@ public class PostingPackageInitializer {
     private final PostingPackageRepository postingPackageRepository;
 
     public void init() {
-        // Gói cơ bản - 15 days
-        postingPackageRepository.findByCode("POST_NEW").orElseGet(() -> {
-            PostingPackage p = new PostingPackage();
-            p.setCode("POST_NEW");
-            p.setName("Gói Đăng Tin Cơ Bản");
-            p.setDescription("Phù hợp cho chủ trọ mới bắt đầu với ít phòng trọ.");
-            p.setPrice(100_000);
-            p.setUsageLimit(15); // Duration in days
-            p.setFreeBoosts(0);
-            p.setHasVipBadge(false);
-            p.setHasSearchPriority(false);
-            p.setRecommended(false);
-            p.setActive(true);
-            return postingPackageRepository.save(p);
-        });
+        upsert("POST_NEW",    "Gói 7 ngày",  "Gia hạn bài đăng thêm 7 ngày.",  29_000,  7, 0, false, false, false);
+        upsert("POST_STANDARD","Gói 14 ngày","Gia hạn bài đăng thêm 14 ngày.", 49_000, 14, 0, false, false, true);
+        upsert("POST_PREMIUM", "Gói 30 ngày","Gia hạn bài đăng thêm 30 ngày.", 89_000, 30, 0, false, false, false);
 
-        // Gói tiêu chuẩn - 30 days (RECOMMENDED)
-        postingPackageRepository.findByCode("POST_STANDARD").orElseGet(() -> {
-            PostingPackage p = new PostingPackage();
-            p.setCode("POST_STANDARD");
-            p.setName("Gói Tiêu Chuẩn");
-            p.setDescription("Dành cho chủ trọ có quy mô vừa với nhiều loại phòng.");
-            p.setPrice(250_000);
-            p.setUsageLimit(30); // Duration in days
-            p.setFreeBoosts(3);
-            p.setHasVipBadge(false);
-            p.setHasSearchPriority(false);
-            p.setRecommended(true); // MOST POPULAR
-            p.setActive(true);
-            return postingPackageRepository.save(p);
+        // Deactivate legacy enterprise package
+        postingPackageRepository.findByCode("POST_ENTERPRISE").ifPresent(p -> {
+            p.setActive(false);
+            postingPackageRepository.save(p);
         });
+    }
 
-        // Gói cao cấp - 60 days with VIP
-        postingPackageRepository.findByCode("POST_PREMIUM").orElseGet(() -> {
-            PostingPackage p = new PostingPackage();
-            p.setCode("POST_PREMIUM");
-            p.setName("Gói Cao Cấp");
-            p.setDescription("Cho các chủ trọ có quy mô lớn và nhiều địa điểm.");
-            p.setPrice(500_000);
-            p.setUsageLimit(60); // Duration in days
-            p.setFreeBoosts(5);
-            p.setHasVipBadge(true);
-            p.setHasSearchPriority(true);
-            p.setRecommended(false);
-            p.setActive(true);
-            return postingPackageRepository.save(p);
-        });
-
-        // Gói doanh nghiệp - 90 days with VIP
-        postingPackageRepository.findByCode("POST_ENTERPRISE").orElseGet(() -> {
-            PostingPackage p = new PostingPackage();
-            p.setCode("POST_ENTERPRISE");
-            p.setName("Gói Doanh Nghiệp");
-            p.setDescription("Giải pháp toàn diện cho các công ty quản lý bất động sản.");
-            p.setPrice(1_000_000);
-            p.setUsageLimit(90); // Duration in days
-            p.setFreeBoosts(10);
-            p.setHasVipBadge(true);
-            p.setHasSearchPriority(true);
-            p.setRecommended(false);
-            p.setActive(true);
-            return postingPackageRepository.save(p);
-        });
+    private void upsert(String code, String name, String description,
+                        int price, int durationDays, int freeBoosts,
+                        boolean hasVipBadge, boolean hasSearchPriority, boolean recommended) {
+        PostingPackage p = postingPackageRepository.findByCode(code).orElseGet(PostingPackage::new);
+        p.setCode(code);
+        p.setName(name);
+        p.setDescription(description);
+        p.setPrice(price);
+        p.setUsageLimit(durationDays);
+        p.setFreeBoosts(freeBoosts);
+        p.setHasVipBadge(hasVipBadge);
+        p.setHasSearchPriority(hasSearchPriority);
+        p.setRecommended(recommended);
+        p.setActive(true);
+        postingPackageRepository.save(p);
     }
 }
