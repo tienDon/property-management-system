@@ -22,7 +22,16 @@
                 <td class="px-4 py-3" th:text="${r.code != null ? r.code : r.id}"></td>
                 <td class="px-4 py-3" th:text="${r.room != null ? r.room.name : 'N/A'}"></td>
                 <td class="px-4 py-3" th:text="${r.tenant != null ? (r.tenant.fullName != null ? r.tenant.fullName : r.tenant.username) : 'N/A'}"></td>
-                <td class="px-4 py-3" th:text="${r.status.displayName}"></td>
+                <td class="px-4 py-3">
+                    <span th:class="${r.status.name() == 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                     r.status.name() == 'ASSIGNED' ? 'bg-blue-100 text-blue-800' :
+                                     r.status.name() == 'IN_PROGRESS' ? 'bg-orange-100 text-orange-800' :
+                                     r.status.name() == 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                     r.status.name() == 'CONFIRMED' ? 'bg-gray-200 text-gray-800' :
+                                     r.status.name() == 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                     r.status.name() == 'REOPENED' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'} + ' px-2 py-1 rounded text-xs font-semibold'"
+                          th:text="${r.status.displayName}"></span>
+                </td>
                 <td class="px-4 py-3" th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                 <td class="px-4 py-3 text-right">
                     <a th:href="@{|/staff/maintenance/${r.id}|}" class="text-blue-600 hover:underline">Xem</a>

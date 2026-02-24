@@ -1,13 +1,13 @@
 package com.pms.propertymanagement.enums;
 
 public enum MaintenanceStatus {
-    PENDING("Chờ xử lý"),
-    ASSIGNED("Đã phân công"),
-    IN_PROGRESS("Đang xử lý"),
-    COMPLETED("Hoàn thành"),
-    CONFIRMED("Đã xác nhận"),
-    REJECTED("Từ chối"),
-    REOPENED("Mở lại");
+    PENDING("Pending"),
+    ASSIGNED("Assigned"),
+    IN_PROGRESS("In Progress"),
+    COMPLETED("Completed"),
+    CONFIRMED("Confirmed"),
+    REJECTED("Rejected"),
+    REOPENED("Reopened");
 
     private final String displayName;
 
