@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,8 +27,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             @Value("${cloudinary.folder:}") String defaultFolder,
             @Value("${cloudinary.cloud-name:ddloigkh2}") String cloudName,
             @Value("${cloudinary.api-key:272519623212178}") String apiKey,
-            @Value("${cloudinary.api-secret:Dzuj-FHcoaVaP4-HKDp1A8ZhA4Q}") String apiSecret
-    ) {
+            @Value("${cloudinary.api-secret:Dzuj-FHcoaVaP4-HKDp1A8ZhA4Q}") String apiSecret) {
         this.cloudinary = cloudinary;
         this.defaultFolder = defaultFolder;
         this.cloudName = cloudName;
@@ -56,8 +54,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
             Map<?, ?> result = cloudinary.uploader().upload(
                     file.getBytes(),
-                    options
-            );
+                    options);
             String publicId = String.valueOf(result.get("public_id"));
             Object secureUrl = result.get("secure_url");
             String url = secureUrl != null ? String.valueOf(secureUrl) : String.valueOf(result.get("url"));
@@ -70,6 +67,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             throw new IllegalStateException("Upload Cloudinary thất bại", e);
         }
     }
+
     private String buildFolder(String module) {
         String normalizedModule = normalizeModule(module);
         if (defaultFolder == null || defaultFolder.isBlank()) {
@@ -80,6 +78,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         }
         return defaultFolder + "/" + normalizedModule;
     }
+
     private String normalizeModule(String module) {
         if (module == null || module.isBlank()) {
             return null;
@@ -99,6 +98,11 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         if ("requests".equals(normalized)) {
             return "requests";
         }
+        if ("maintenance".equals(normalized)
+                || "maintenance_request".equals(normalized)
+                || "maintenance_requests".equals(normalized)) {
+            return "maintenance";
+        }
         if ("feedbacks".equals(normalized)) {
             return "feedbacks";
         }
@@ -112,8 +116,10 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                 || "colletorreports".equals(normalized)) {
             return "collectorReport";
         }
-        throw new IllegalArgumentException("module không hợp lệ (chỉ chấp nhận: reports, requests, feedbacks, collectorReport)");
+        throw new IllegalArgumentException(
+                "module không hợp lệ (chỉ chấp nhận: reports, requests, feedbacks, collectorReport)");
     }
+
     @Override
     public void deleteImage(String publicId) {
         assertConfigured();
@@ -123,8 +129,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         try {
             cloudinary.uploader().destroy(
                     publicId,
-                    ObjectUtils.asMap("resource_type", "image", "invalidate", true)
-            );
+                    ObjectUtils.asMap("resource_type", "image", "invalidate", true));
         } catch (IOException e) {
             throw new IllegalStateException("Xóa Cloudinary thất bại", e);
         }
@@ -134,8 +139,8 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         if (cloudName == null || cloudName.isBlank()
                 || apiKey == null || apiKey.isBlank()
                 || apiSecret == null || apiSecret.isBlank()) {
-            throw new IllegalStateException("Thiếu cấu hình Cloudinary (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)");
+            throw new IllegalStateException(
+                    "Thiếu cấu hình Cloudinary (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)");
         }
     }
 }
-

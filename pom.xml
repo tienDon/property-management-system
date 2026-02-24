@@ -82,10 +82,10 @@
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/com.cloudinary/cloudinary-core -->
+        <!-- cloudinary-http45 bundles core + Apache HttpClient adapter (required at runtime) -->
         <dependency>
             <groupId>com.cloudinary</groupId>
-            <artifactId>cloudinary-core</artifactId>
+            <artifactId>cloudinary-http45</artifactId>
             <version>1.39.0</version>
             <scope>compile</scope>
         </dependency>
