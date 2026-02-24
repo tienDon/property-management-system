@@ -60,7 +60,7 @@
           PHỔ BIẾN
         </span>
       </div>
-      
+
       <!-- VIP Badge -->
       <div th:if="${package.hasVipBadge}" class="absolute top-4 left-4 z-10">
         <span
@@ -113,7 +113,9 @@
             </li>
             <li th:if="${package.freeBoosts > 0}" class="flex items-center">
               <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
-              <span th:text="|${package.freeBoosts} lần đẩy tin miễn phí|">3 lần đẩy tin miễn phí</span>
+              <span th:text="|${package.freeBoosts} lần đẩy tin miễn phí|"
+                >3 lần đẩy tin miễn phí</span
+              >
             </li>
             <li th:if="${package.hasVipBadge}" class="flex items-center">
               <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
@@ -151,9 +153,16 @@
         </div>
 
         <!-- Action Button -->
-        <form th:action="@{/owner/post-packages/subscribe}" method="post" class="mb-0">
+        <form
+          th:action="@{/owner/post-packages/subscribe}"
+          method="post"
+          class="mb-0"
+        >
           <input type="hidden" name="postPackageId" th:value="${package.id}" />
-          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors">
+          <button
+            type="submit"
+            class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors"
+          >
             <i class="fa-solid fa-shopping-cart mr-2"></i>
             Đăng ký gói ngay
           </button>
@@ -162,7 +171,10 @@
     </div>
 
     <!-- Empty State -->
-    <div th:if="${postPackages == null || #lists.isEmpty(postPackages)}" class="col-span-full">
+    <div
+      th:if="${postPackages == null || #lists.isEmpty(postPackages)}"
+      class="col-span-full"
+    >
       <div class="text-center py-16">
         <div class="text-gray-400 mb-4">
           <i class="fa-solid fa-box-open text-6xl"></i>
@@ -185,8 +197,12 @@
         <ul class="text-sm text-blue-800 space-y-1">
           <li>• Gói sẽ được kích hoạt ngay sau khi đăng ký thành công</li>
           <li>• Thời gian hiển thị tin đăng sẽ bắt đầu tính từ lúc đăng tin</li>
-          <li>• Bạn có thể đăng ký nhiều gói cùng lúc để tăng thời gian hiển thị</li>
-          <li>• Các tính năng VIP và ưu tiên sẽ áp dụng trong suốt thời gian gói</li>
+          <li>
+            • Bạn có thể đăng ký nhiều gói cùng lúc để tăng thời gian hiển thị
+          </li>
+          <li>
+            • Các tính năng VIP và ưu tiên sẽ áp dụng trong suốt thời gian gói
+          </li>
           <li>• Mọi thắc mắc vui lòng liên hệ bộ phận hỗ trợ</li>
         </ul>
       </div>
