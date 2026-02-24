@@ -7,11 +7,38 @@
   >
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-        <span class="w-1 h-6 bg-blue-600 mr-3"></span> Thông tin nhà trọ, phòng
-        trọ
+        <span class="w-1 h-6 bg-blue-600 mr-3"></span> Thông tin nhà trọ
       </h2>
+      
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <i class="fa-solid fa-info-circle text-blue-500"></i>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-blue-700">
+              <strong>Lưu ý:</strong> Form này chỉ tạo thông tin nhà trọ để quản lý nội bộ. 
+              Sau khi tạo, bạn cần <strong>tạo bài đăng</strong> riêng để hiển thị lên marketplace.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Tên nhà trọ <span class="text-red-500">*</span></label
+          >
+          <input
+            type="text"
+            th:field="*{name}"
+            placeholder="Ví dụ: Trọ cô Ba, Nhà trọ Hòa Bình..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+          <p class="text-xs text-gray-500 mt-1">Tên này chỉ dùng để quản lý nội bộ</p>
+        </div>
+        
         <div class="md:col-span-1">
           <label class="block text-sm font-medium text-gray-700 mb-1"
             >Loại hình <span class="text-red-500">*</span></label
@@ -19,6 +46,7 @@
           <select
             th:field="*{categoryId}"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            required
           >
             <option value="">-- Chọn loại hình --</option>
             <option
@@ -43,7 +71,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1"
-              >Giá thuê</label
+              >Giá thuê (đ/tháng)</label
             >
             <input
               type="number"
@@ -56,30 +84,6 @@
 
         <div class="md:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Tiêu đề bài đăng <span class="text-red-500">*</span></label
-          >
-          <input
-            type="text"
-            th:field="*{title}"
-            placeholder="Ví dụ: Phòng trọ cao cấp, full nội thất quận 8..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Tên nhà trọ</label
-          >
-          <input
-            type="text"
-            th:field="*{name}"
-            placeholder="Ví dụ: Trọ cô Ba"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
             >Diện tích ($m^2$)</label
           >
           <input
@@ -89,23 +93,13 @@
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Mô tả chi tiết</label
-          >
-          <textarea
-            th:field="*{description}"
-            rows="4"
-            placeholder="Mô tả về không gian, giờ giấc, quy định..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          ></textarea>
-        </div>
       </div>
+    </div>
 
-      <div
-        class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100"
-      >
+    <!-- Địa chỉ -->
+    <div
+      class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100"
+    >
         <h2
           class="text-lg font-bold text-gray-800 mb-6 flex items-center border-b pb-2"
         >
@@ -158,7 +152,6 @@
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
-      </div>
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
@@ -288,22 +281,32 @@
       </a>
       <button
         type="submit"
-        class="px-10 py-2 bg-orange-500 text-white font-bold rounded-md hover:bg-orange-600 shadow-md transition"
+        class="px-10 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 shadow-md transition flex items-center gap-2"
       >
-        TIẾP TỤC
+        <i class="fa-solid fa-floppy-disk"></i>
+        Lưu nhà trọ
       </button>
     </div>
   </form>
 </div>
 
-<script>
+<script th:inline="javascript">
   /* --- 1. XỬ LÝ DROPDOWN TỈNH/HUYỆN --- */
   const provinceSelect = document.getElementById("province-select");
   const wardSelect = document.getElementById("ward-select");
+  
+  // Get edit mode data from Thymeleaf
+  const selectedProvinceCode = /*[[${selectedProvinceCode}]]*/ null;
+  const selectedWardCode = /*[[${propertyRequest.wardCode}]]*/ null;
 
   if (provinceSelect) {
+    // Event listener for province change
     provinceSelect.addEventListener("change", function () {
-      const provinceCode = this.value;
+      loadWards(this.value);
+    });
+    
+    // Load wards function
+    function loadWards(provinceCode, selectWardCode = null) {
       wardSelect.innerHTML = '<option value="">-- Chọn Phường --</option>';
 
       if (provinceCode) {
@@ -317,8 +320,13 @@
               const option = document.createElement("option");
               option.value = ward.code;
               option.text = ward.name;
+              
+              // Pre-select ward if provided (edit mode)
+              if (selectWardCode && ward.code === selectWardCode) {
+                option.selected = true;
+              }
+              
               wardSelect.appendChild(option);
-              console.log(option);
             });
           })
           .catch((error) => console.error("Error loading wards:", error));
@@ -326,7 +334,13 @@
         wardSelect.disabled = true;
         wardSelect.classList.add("bg-gray-100", "cursor-not-allowed");
       }
-    });
+    }
+    
+    // Initialize for edit mode
+    if (selectedProvinceCode) {
+      provinceSelect.value = selectedProvinceCode;
+      loadWards(selectedProvinceCode, selectedWardCode);
+    }
   }
 
   /* --- 2. XỬ LÝ THÊM/XÓA Ô INPUT ẢNH --- */

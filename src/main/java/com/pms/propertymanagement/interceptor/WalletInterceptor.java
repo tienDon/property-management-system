@@ -2,6 +2,7 @@ package com.pms.propertymanagement.interceptor;
 
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.entity.UserWallet;
+import com.pms.propertymanagement.service.FreeTrialService;
 import com.pms.propertymanagement.service.WalletService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class WalletInterceptor implements HandlerInterceptor {
     
     private final WalletService walletService;
+    private final FreeTrialService freeTrialService;
     
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -36,6 +38,13 @@ public class WalletInterceptor implements HandlerInterceptor {
                 userWallet = walletService.getOrCreateWallet(user);
                 session.setAttribute("userWallet", userWallet);
                 session.setAttribute("lastWalletUpdate", currentTime);
+            }
+            
+            // AUTO-CREATE FREE TRIAL: Check if new user needs FREE subscription
+            Boolean freeTrialChecked = (Boolean) session.getAttribute("freeTrialChecked");
+            if (freeTrialChecked == null || !freeTrialChecked) {
+                freeTrialService.createFreeTrialIfEligible(user);
+                session.setAttribute("freeTrialChecked", true);
             }
         }
         

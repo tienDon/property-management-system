@@ -151,7 +151,6 @@ public class PropertyInitializer {
         Random random = new Random();
         Property p = new Property();
         p.setName(name);
-        p.setTitle(title);
         p.setAddressNumber(address);
         p.setOwner(owner);
         p.setCategory(category);
@@ -164,8 +163,8 @@ public class PropertyInitializer {
         // Random Ward from list
         p.setWard(wards.get(random.nextInt(wards.size())));
         
-        p.setDescription(desc + "\n\nTiện ích xung quanh đầy đủ, giao thông thuận tiện. Vui lòng liên hệ để xem phòng trực tiếp.");
-        p.setSlug(SlugUtil.makeSlug(title + " " + System.currentTimeMillis() % 1000)); // Ensure unique slug
+        // NEW ARCHITECTURE: Property only contains real estate fields
+        // Marketing fields (title, slug, description) will be added by PostInitializer
 
         // Random Amenities (2-5 items)
         if (!allAmenities.isEmpty()) {

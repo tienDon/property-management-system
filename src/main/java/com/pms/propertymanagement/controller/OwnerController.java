@@ -23,7 +23,7 @@ public class OwnerController {
     private final UserService userService;
     private final CategoryService categoryService;
     private final ContactService contactService;
-    private final PostingOrderService postingOrderService;
+    private final NewPropertyManagementService newPropertyManagementService;
 
     @GetMapping
     public String dashboard(Model model, HttpSession session) {
@@ -43,7 +43,7 @@ public class OwnerController {
         model.addAttribute("properties", properties);
         model.addAttribute("activeMenu", "properties");
 
-        boolean canPost = postingOrderService.canPost(user.getId());
+        boolean canPost = newPropertyManagementService.canCreateProperty(user.getId());
         model.addAttribute("canPost", canPost);
 
         model.addAttribute("content", "owner/property/list");
@@ -55,9 +55,9 @@ public class OwnerController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        // CHẶN nếu hết lượt
-        if (!postingOrderService.canPost(user.getId())) {
-            ra.addFlashAttribute("errorMessage", "Bạn phải mua gói đăng tin mới.");
+        // NEW ARCHITECTURE: Check if user can create property based on management plan
+        if (!newPropertyManagementService.canCreateProperty(user.getId())) {
+            ra.addFlashAttribute("errorMessage", "You need an active management plan to create properties.");
             return "redirect:/owner/properties";
         }
 
@@ -86,9 +86,12 @@ public class OwnerController {
 
         try {
             propertyService.createProperty(propertyRequest, user);
-            ra.addFlashAttribute("successMessage", "Đăng tin thành công!");
+            ra.addFlashAttribute("successMessage", 
+                "Tạo nhà trọ thành công! Hãy vào mục 'Quản lý bài đăng' để tạo bài đăng cho nhà trọ này.");
         } catch (IllegalStateException ex) {
             ra.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            ra.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
         }
 
         return "redirect:/owner/properties";
@@ -99,7 +102,8 @@ public class OwnerController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        model.addAttribute("propertyRequest", propertyService.getPropertyForEdit(id));
+        PropertyRequest propertyRequest = propertyService.getPropertyForEdit(id);
+        model.addAttribute("propertyRequest", propertyRequest);
         model.addAttribute("actionUrl", "/owner/properties/edit/" + id);
 
         model.addAttribute("categories", categoryService.findAll());
@@ -107,25 +111,50 @@ public class OwnerController {
         model.addAttribute("provinces", propertyService.getAllProvinces());
         model.addAttribute("surroundings", propertyService.getAllSurroundings());
         model.addAttribute("targetTenants", propertyService.getAllTargetTenants());
+        
+        // Get province code from ward for edit mode
+        if (propertyRequest.getWardCode() != null) {
+            String provinceCode = propertyService.getProvinceCodeFromWard(propertyRequest.getWardCode());
+            model.addAttribute("selectedProvinceCode", provinceCode);
+        }
 
-        model.addAttribute("content", "owner/property/create"); // Re-using create form - Note: naming should probably be form.html
+        model.addAttribute("content", "owner/property/create"); // Re-using create form
+        model.addAttribute("activeMenu", "properties");
         return "layout/owner-layout";
     }
 
     @PostMapping("/properties/edit/{id}")
-    public String updateProperty(@PathVariable Long id, @ModelAttribute("propertyRequest") PropertyRequest propertyRequest, HttpSession session) {
+    public String updateProperty(@PathVariable Long id, 
+                                @ModelAttribute("propertyRequest") PropertyRequest propertyRequest, 
+                                HttpSession session,
+                                RedirectAttributes ra) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login/owner";
 
-        propertyService.updateProperty(id, propertyRequest);
+        try {
+            propertyService.updateProperty(id, propertyRequest);
+            ra.addFlashAttribute("successMessage", "Cập nhật thông tin nhà trọ thành công!");
+        } catch (Exception ex) {
+            ra.addFlashAttribute("errorMessage", "Lỗi: " + ex.getMessage());
+        }
+        
         return "redirect:/owner/properties";
     }
 
     @PostMapping("/properties/delete/{id}")
-    public String deleteProperty(@PathVariable Long id, HttpSession session) {
+    public String deleteProperty(@PathVariable Long id, 
+                                HttpSession session,
+                                RedirectAttributes ra) {
         User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
 
-        propertyService.deleteProperty(id);
+        try {
+            propertyService.deleteProperty(id);
+            ra.addFlashAttribute("successMessage", "Đã xóa nhà trọ thành công!");
+        } catch (Exception ex) {
+            ra.addFlashAttribute("errorMessage", "Không thể xóa: " + ex.getMessage());
+        }
+        
         return "redirect:/owner/properties";
     }
 

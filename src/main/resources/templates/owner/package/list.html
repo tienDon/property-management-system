@@ -11,14 +11,14 @@
           Gói đăng tin
         </h1>
         <p class="text-orange-100">
-          Chọn gói phù hợp với nhu cầu đăng tin của bạn
+          Chọn gói phù hợp để hiển thị tin đăng của bạn
         </p>
       </div>
       <div class="text-right">
         <p class="text-sm text-orange-200 mb-1">Tổng số gói</p>
         <p
           class="text-3xl font-bold"
-          th:text="${postingPackages != null ? postingPackages.size() : 0}"
+          th:text="${postPackages != null ? postPackages.size() : 0}"
         >
           0
         </p>
@@ -48,21 +48,41 @@
   <!-- Packages Grid -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <div
-      th:each="package : ${postingPackages}"
-      class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow overflow-hidden"
+      th:each="package : ${postPackages ?: {}}"
+      class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow overflow-hidden relative"
     >
+      <!-- Popular Badge -->
+      <!-- Recommended Badge -->
+      <div th:if="${package.isRecommended}" class="absolute top-4 right-4 z-10">
+        <span
+          class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full"
+        >
+          PHỔ BIẾN
+        </span>
+      </div>
+      
+      <!-- VIP Badge -->
+      <div th:if="${package.hasVipBadge}" class="absolute top-4 left-4 z-10">
+        <span
+          class="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center"
+        >
+          <i class="fa-solid fa-crown mr-1"></i>
+          VIP
+        </span>
+      </div>
+
       <!-- Package Header -->
       <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-bold text-gray-900" th:text="${package.name}">
-            Gói cơ bản
+            Gói 15 ngày
           </h3>
           <div class="flex items-center gap-2">
             <span
               class="text-xs bg-blue-600 text-white px-2 py-1 rounded-full font-medium"
-              th:text="${package.usageLimit} + ' bài'"
+              th:text="${package.displayDuration}"
             >
-              30 bài
+              15 ngày
             </span>
           </div>
         </div>
@@ -87,9 +107,21 @@
             <li class="flex items-center">
               <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
               <span
-                th:text="'Đăng tối đa ' + ${package.usageLimit} + ' bài tin'"
-                >Đăng tối đa 30 bài tin</span
+                th:text="|Hiển thị tin đăng trong ${package.durationDays} ngày|"
+                >Hiển thị tin đăng trong 15 ngày</span
               >
+            </li>
+            <li th:if="${package.freeBoosts > 0}" class="flex items-center">
+              <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
+              <span th:text="|${package.freeBoosts} lần đẩy tin miễn phí|">3 lần đẩy tin miễn phí</span>
+            </li>
+            <li th:if="${package.hasVipBadge}" class="flex items-center">
+              <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
+              <span>Huy hiệu VIP nổi bật</span>
+            </li>
+            <li th:if="${package.hasSearchPriority}" class="flex items-center">
+              <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
+              <span>Ưu tiên hiển thị trong tìm kiếm</span>
             </li>
             <li class="flex items-center">
               <i class="fa-solid fa-check text-green-500 mr-2 text-xs"></i>
@@ -106,40 +138,31 @@
         <div class="mb-6 text-center">
           <div
             class="text-3xl font-bold text-orange-600"
-            th:text="${#numbers.formatDecimal(package.price, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+            th:text="${package.displayPrice}"
           >
             299,000 đ
           </div>
           <div
             class="text-sm text-gray-500 mt-1"
-            th:text="'≈ ' + ${#numbers.formatDecimal(package.price / package.usageLimit, 0, 'COMMA', 0, 'POINT')} + ' đ/bài'"
+            th:text="${package.pricePerDay}"
           >
-            ≈ 9,967 đ/bài
+            ≈ 19,933 đ/ngày
           </div>
         </div>
 
         <!-- Action Button -->
-        <a
-          th:href="@{/owner/posting-packages/buy/{id}(id=${package.id})}"
-          class="w-full block text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors"
-        >
-          <i class="fa-solid fa-shopping-cart mr-2"></i>
-          Mua gói ngay
-        </a>
-      </div>
-
-      <!-- Popular Badge (if needed) -->
-      <div th:if="${package.code == 'BASIC'}" class="absolute top-4 right-4">
-        <span
-          class="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full"
-        >
-          PHỔ BIẾN
-        </span>
+        <form th:action="@{/owner/post-packages/subscribe}" method="post" class="mb-0">
+          <input type="hidden" name="postPackageId" th:value="${package.id}" />
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition-colors">
+            <i class="fa-solid fa-shopping-cart mr-2"></i>
+            Đăng ký gói ngay
+          </button>
+        </form>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div th:if="${#lists.isEmpty(postingPackages)}" class="col-span-full">
+    <div th:if="${postPackages == null || #lists.isEmpty(postPackages)}" class="col-span-full">
       <div class="text-center py-16">
         <div class="text-gray-400 mb-4">
           <i class="fa-solid fa-box-open text-6xl"></i>
@@ -160,9 +183,10 @@
       <div>
         <h4 class="font-semibold text-blue-900 mb-2">Thông tin quan trọng</h4>
         <ul class="text-sm text-blue-800 space-y-1">
-          <li>• Gói sẽ được kích hoạt ngay sau khi thanh toán thành công</li>
-          <li>• Số lượt đăng tin không được chuyển đổi giữa các gói</li>
-          <li>• Thời hạn gói được tính từ lúc kích hoạt, không tích lũy</li>
+          <li>• Gói sẽ được kích hoạt ngay sau khi đăng ký thành công</li>
+          <li>• Thời gian hiển thị tin đăng sẽ bắt đầu tính từ lúc đăng tin</li>
+          <li>• Bạn có thể đăng ký nhiều gói cùng lúc để tăng thời gian hiển thị</li>
+          <li>• Các tính năng VIP và ưu tiên sẽ áp dụng trong suốt thời gian gói</li>
           <li>• Mọi thắc mắc vui lòng liên hệ bộ phận hỗ trợ</li>
         </ul>
       </div>

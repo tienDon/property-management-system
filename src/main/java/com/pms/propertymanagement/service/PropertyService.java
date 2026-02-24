@@ -33,8 +33,14 @@ public interface PropertyService {
     List<Surrounding> getAllSurroundings();
     List<TargetTenant> getAllTargetTenants();
     List<Province> getAllProvinces();
+    String getProvinceCodeFromWard(String wardCode);
 
     User getOwnerByPropertySlug(String propertySlug);
 
     List<PropertyResponse> getAll();
+
+    /**
+     * Get properties owned by user that have no post yet (available for post creation)
+     */
+    List<Property> getActivePropertiesWithoutPost(Long ownerId);
 }

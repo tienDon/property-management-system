@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.entity;
 
+import com.pms.propertymanagement.enums.PropertyStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,14 +21,12 @@ public class Property {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Internal management name (not for public display)
+     * For public display, use Post.title
+     */
     @Column(nullable = false, columnDefinition = "nvarchar(255)")
     private String name;
-
-    @Column(nullable = false, columnDefinition = "nvarchar(255)")
-    private String title;
-
-    @Column(unique = true, nullable = false)
-    private String slug; // Dùng để xem chi tiết bài đăng (SEO)
 
     @Column(nullable = false)
     private int numberOfRooms;
@@ -40,9 +39,6 @@ public class Property {
 
     @Column(nullable = false, columnDefinition = "nvarchar(255)")
     private String addressNumber;
-
-    @Column(columnDefinition = "nvarchar(255)")
-    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
@@ -100,8 +96,40 @@ public class Property {
     )
     private Set<TargetTenant>  targetTenants = new HashSet<>();
 
+    // === NEW ARCHITECTURE: Property Status Management ===
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(255) DEFAULT 'ACTIVE'")
+    private PropertyStatus status = PropertyStatus.ACTIVE;
+
+    @Column(name = "management_locked_at")
+    private LocalDateTime managementLockedAt;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // === Property Status Management Methods ===
+    public void lockByPlan() {
+        this.status = PropertyStatus.PLAN_LOCKED;
+        this.managementLockedAt = LocalDateTime.now();
+    }
+
+    public void unlockByPlan() {
+        if (this.status == PropertyStatus.PLAN_LOCKED) {
+            this.status = PropertyStatus.ACTIVE;
+            this.managementLockedAt = null;
+        }
+    }
+
+    public boolean isActive() {
+        return status == PropertyStatus.ACTIVE;
+    }
+
+    public boolean isPlanLocked() {
+        return status == PropertyStatus.PLAN_LOCKED;
+    }
+
+    public boolean isManageable() {
+        return status == PropertyStatus.ACTIVE;
+    }
 
 }

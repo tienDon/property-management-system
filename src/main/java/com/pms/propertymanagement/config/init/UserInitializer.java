@@ -16,6 +16,9 @@ public class UserInitializer {
     public void init() {
         createAdmin();
         createOwner1();
+        createOwner2();
+        createOwner3();
+        createOwner4();
     }
 
     private void createAdmin() {
@@ -79,7 +82,7 @@ public class UserInitializer {
         owner.setUsername("owner4");
         owner.setPassword("123");
         owner.setFullName("owner4");
-        owner.setPhone("0975893248");
+        owner.setPhone("0808080808");
         owner.setEmail("an@gmail.com");
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
