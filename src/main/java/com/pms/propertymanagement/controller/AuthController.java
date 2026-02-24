@@ -40,6 +40,9 @@ public class AuthController {
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
             return "redirect:/owner";
         }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
+            return "redirect:/staff/maintenance";
+        }
         return "redirect:/tenant/rooms";
     }
 
@@ -56,9 +59,12 @@ public class AuthController {
             if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
                 return "redirect:/owner";
             }
+            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
+                return "redirect:/staff/maintenance";
+            }
         }
 
-            model.addAttribute("error", "Sai gi do: " + username + " " + password);
+            model.addAttribute("error", "Sai username hoặc password");
             return "public/login";
     }
 

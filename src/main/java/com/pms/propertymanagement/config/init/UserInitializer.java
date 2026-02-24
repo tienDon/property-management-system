@@ -17,6 +17,7 @@ public class UserInitializer {
         createAdmin();
         createOwner1();
         createTenant1();
+        createStaff1();
     }
 
     private void createAdmin() {
@@ -51,12 +52,26 @@ public class UserInitializer {
         User tenant = new User();
         tenant.setUsername("tenant1");
         tenant.setPassword("123");
-        tenant.setFullName("tenant1");
-        tenant.setPhone("0900000001");
-        tenant.setEmail("tenant1@gmail.com");
+        tenant.setFullName("Nguyễn Văn An");
+        tenant.setPhone("0901234567");
+        tenant.setEmail("nva@gmail.com");
         tenant.getRoles().add(roleRepository.findByName("USER").get());
 
         userRepository.save(tenant);
+    }
+
+    private void createStaff1() {
+        if (userRepository.findByUsername("staff1").isPresent()) return;
+
+        User staff = new User();
+        staff.setUsername("staff1");
+        staff.setPassword("123");
+        staff.setFullName("Staff 1");
+        staff.setPhone("0901111111");
+        staff.setEmail("staff1@gmail.com");
+        staff.getRoles().add(roleRepository.findByName("STAFF").get());
+
+        userRepository.save(staff);
     }
 
     private void createOwner2() {

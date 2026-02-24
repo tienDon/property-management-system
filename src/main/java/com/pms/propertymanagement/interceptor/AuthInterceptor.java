@@ -28,6 +28,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
         }
 
+        if (uri.contains("/staff")) {
+            if (user == null || user.getRoles().stream().noneMatch(r -> r.getName().equals("STAFF"))) {
+                response.sendRedirect("/");
+                return false;
+            }
+        }
+
         if (uri.contains("/admin")) {
             if (user == null || user.getRoles().stream().noneMatch(r -> r.getName().equals("ADMIN"))) {
                 response.sendRedirect("/");

@@ -10,7 +10,7 @@
     </div>
     <script th:if="${success}">
         (function () {
-            alert('Gửi yêu cầu bảo trì thành công!');
+            alert('Cập nhật yêu cầu bảo trì thành công!');
             if (history.replaceState) {
                 const url = new URL(window.location.href);
                 url.searchParams.delete('success');
@@ -20,7 +20,7 @@
     </script>
 
     <div class="mt-4 border rounded p-4 space-y-2">
-        <p><span class="font-medium">Mã yêu cầu:</span> <span th:text="${request.id}"></span></p>
+        <p><span class="font-medium">Mã yêu cầu:</span> <span th:text="${request.code != null ? request.code : request.id}"></span></p>
         <p><span class="font-medium">Phòng:</span> <span th:text="${request.room.name}"></span></p>
         <p><span class="font-medium">Danh mục:</span> <span th:text="${request.category.displayName}"></span></p>
         <p><span class="font-medium">Mô tả:</span></p>

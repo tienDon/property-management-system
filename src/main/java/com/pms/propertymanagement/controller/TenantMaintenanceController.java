@@ -1,11 +1,14 @@
 package com.pms.propertymanagement.controller;
 
+import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.entity.MaintenanceRequest;
 import com.pms.propertymanagement.entity.Room;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.MaintenanceCategory;
 import com.pms.propertymanagement.enums.MaintenanceStatus;
+import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.dto.request.MaintenanceCreateForm;
+import com.pms.propertymanagement.service.ContactService;
 import com.pms.propertymanagement.service.TenantMaintenanceService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,47 @@ import java.util.List;
 public class TenantMaintenanceController {
 
     private final TenantMaintenanceService tenantMaintenanceService;
+    private final ContactService contactService;
+
+    @GetMapping("/home")
+    public String home(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
+        List<Room> rooms = tenantMaintenanceService.getAvailableRooms();
+        model.addAttribute("rooms", rooms);
+        model.addAttribute("content", "tenant/available-room-list");
+        return "layout/public-main";
+    }
+
+    @PostMapping("/rooms/{roomId}/rent")
+    public String rentRoom(@PathVariable Long roomId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
+
+        if (!StringUtils.hasText(user.getPhone())) {
+            redirectAttributes.addFlashAttribute("rentError", "Vui lòng cập nhật số điện thoại trước khi gửi yêu cầu thuê.");
+            return "redirect:/tenant/home";
+        }
+
+        Room room = tenantMaintenanceService.getRoomDetail(roomId);
+        if (room.getStatus() != RoomStatus.AVAILABLE) {
+            redirectAttributes.addFlashAttribute("rentError", "Phòng này không còn trống.");
+            return "redirect:/tenant/home";
+        }
+        if (room.getProperty() == null || !StringUtils.hasText(room.getProperty().getSlug())) {
+            redirectAttributes.addFlashAttribute("rentError", "Không tìm thấy bài đăng của phòng này.");
+            return "redirect:/tenant/home";
+        }
+
+        ContactRequest contact = new ContactRequest();
+        contact.setName(StringUtils.hasText(user.getFullName()) ? user.getFullName() : user.getUsername());
+        contact.setPhone(user.getPhone());
+        contact.setNote("Yêu cầu thuê phòng: " + room.getName() + " (roomId=" + room.getId() + ")");
+
+        contactService.createContact(room.getProperty().getSlug(), contact);
+        redirectAttributes.addFlashAttribute("rentSuccess", true);
+        return "redirect:/tenant/home";
+    }
 
     @GetMapping("/rooms")
     public String listRooms(HttpSession session, Model model) {
@@ -40,7 +84,9 @@ public class TenantMaintenanceController {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
         Room room = tenantMaintenanceService.getRoomDetail(roomId);
+        boolean canRequestMaintenance = tenantMaintenanceService.isRoomRentedByTenant(roomId, user);
         model.addAttribute("room", room);
+        model.addAttribute("canRequestMaintenance", canRequestMaintenance);
         model.addAttribute("content", "tenant/room-detail");
         return "layout/public-main";
     }
@@ -49,6 +95,9 @@ public class TenantMaintenanceController {
     public String showCreateForm(@PathVariable Long roomId, HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
+        if (!tenantMaintenanceService.isRoomRentedByTenant(roomId, user)) {
+            return "redirect:/tenant/rooms/" + roomId;
+        }
         Room room = tenantMaintenanceService.getRoomDetail(roomId);
         model.addAttribute("room", room);
         model.addAttribute("maintenanceCategories", Arrays.asList(MaintenanceCategory.values()));

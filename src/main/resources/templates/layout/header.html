@@ -52,9 +52,19 @@
                 Quản lý
             </a>
 
-            <a th:if="${session.user.roles.?[name == 'OWNER'].size() == 0}" href="/tenant/rooms"
+            <a th:if="${session.user.roles.?[name == 'STAFF'].size() > 0}" href="/staff/maintenance"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Công việc
+            </a>
+
+            <a th:if="${session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0}" href="/tenant/rooms"
                class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
                 Phòng của tôi
+            </a>
+
+            <a th:if="${session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0}" href="/tenant/home"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Tìm phòng
             </a>
 
             <form th:action="@{/logout}" method="post">
@@ -67,7 +77,7 @@
             </form>
         </div>
 
-        <a th:if="${session.user == null or session.user.roles.?[name == 'OWNER'].size() == 0}" href="/login/owner"
+        <a th:if="${session.user == null or (session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0)}" href="/login/owner"
            class="ml-2 bg-blue-600 text-white px-5 py-2 rounded-full
               text-sm font-semibold
               hover:bg-blue-700 transition shadow-sm">

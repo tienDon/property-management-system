@@ -1,0 +1,51 @@
+<div th:fragment="content">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Danh sách yêu cầu bảo trì</h1>
+            <p class="text-sm text-gray-500">
+                Tổng cộng:
+                <span class="font-semibold text-blue-600" th:text="${requests.size()}">0</span>
+                yêu cầu
+            </p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead class="bg-gray-50/50 border-b border-gray-100">
+                <tr class="text-gray-500 uppercase text-[11px] tracking-wider">
+                    <th class="px-6 py-4 font-bold">Mã</th>
+                    <th class="px-6 py-4 font-bold">Phòng</th>
+                    <th class="px-6 py-4 font-bold">Khách</th>
+                    <th class="px-6 py-4 font-bold">Trạng thái</th>
+                    <th class="px-6 py-4 font-bold">Nhân viên</th>
+                    <th class="px-6 py-4 font-bold">Ngày tạo</th>
+                    <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+                </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-50">
+                <tr th:each="r : ${requests}" class="hover:bg-blue-50/30 transition-colors">
+                    <td class="px-6 py-4 font-semibold text-gray-900" th:text="${r.code != null ? r.code : r.id}">MR-...</td>
+                    <td class="px-6 py-4" th:text="${r.room != null ? r.room.name : 'N/A'}">Phòng</td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-gray-900" th:text="${r.tenant != null ? (r.tenant.fullName != null ? r.tenant.fullName : r.tenant.username) : 'N/A'}"></div>
+                        <div class="text-xs text-gray-500" th:text="${r.tenant != null ? r.tenant.phone : ''}"></div>
+                    </td>
+                    <td class="px-6 py-4" th:text="${r.status.displayName}">Trạng thái</td>
+                    <td class="px-6 py-4" th:text="${r.staff != null ? (r.staff.fullName != null ? r.staff.fullName : r.staff.username) : '-'}">-</td>
+                    <td class="px-6 py-4" th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                    <td class="px-6 py-4 text-right">
+                        <a th:href="@{|/owner/maintenance/${r.id}|}" class="text-blue-600 hover:underline">Chi tiết</a>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(requests)}">
+                    <td colspan="7" class="py-16 text-center text-gray-500">Chưa có yêu cầu bảo trì nào.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

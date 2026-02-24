@@ -9,7 +9,9 @@ import java.util.List;
 
 public interface TenantMaintenanceService {
     List<Room> getRoomsForTenant(User tenant);
+    List<Room> getAvailableRooms();
     Room getRoomDetail(Long roomId);
+    boolean isRoomRentedByTenant(Long roomId, User tenant);
     List<MaintenanceRequest> getRequestsForTenant(User tenant);
     MaintenanceRequest createRequest(Long roomId, User tenant, MaintenanceCategory category, String description);
     MaintenanceRequest getTenantRequestDetail(Long id, User tenant);

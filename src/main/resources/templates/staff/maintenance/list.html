@@ -1,0 +1,34 @@
+<div>
+    <h1 class="text-2xl font-semibold mb-4">Việc được giao</h1>
+
+    <div th:if="${#lists.isEmpty(requests)}" class="p-4 border rounded text-gray-700">
+        Chưa có yêu cầu nào được giao cho bạn.
+    </div>
+
+    <div th:if="${!#lists.isEmpty(requests)}" class="border rounded overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-700">
+            <tr>
+                <th class="text-left px-4 py-3">Mã</th>
+                <th class="text-left px-4 py-3">Phòng</th>
+                <th class="text-left px-4 py-3">Khách</th>
+                <th class="text-left px-4 py-3">Trạng thái</th>
+                <th class="text-left px-4 py-3">Ngày tạo</th>
+                <th class="text-right px-4 py-3">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y">
+            <tr th:each="r : ${requests}">
+                <td class="px-4 py-3" th:text="${r.code != null ? r.code : r.id}"></td>
+                <td class="px-4 py-3" th:text="${r.room != null ? r.room.name : 'N/A'}"></td>
+                <td class="px-4 py-3" th:text="${r.tenant != null ? (r.tenant.fullName != null ? r.tenant.fullName : r.tenant.username) : 'N/A'}"></td>
+                <td class="px-4 py-3" th:text="${r.status.displayName}"></td>
+                <td class="px-4 py-3" th:text="${r.createdAt != null ? #temporals.format(r.createdAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
+                <td class="px-4 py-3 text-right">
+                    <a th:href="@{|/staff/maintenance/${r.id}|}" class="text-blue-600 hover:underline">Xem</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

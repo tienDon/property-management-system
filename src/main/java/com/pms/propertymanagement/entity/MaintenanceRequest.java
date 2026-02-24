@@ -33,6 +33,10 @@ public class MaintenanceRequest {
     @JoinColumn(name = "tenant_id", nullable = false)
     private User tenant;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "staff_id")
+    private User staff;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MaintenanceCategory category;
@@ -55,5 +59,9 @@ public class MaintenanceRequest {
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    private LocalDateTime assignedAt;
+    private LocalDateTime startedAt;
+    private LocalDateTime completedAt;
 }
 

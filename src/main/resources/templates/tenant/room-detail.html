@@ -9,9 +9,17 @@
         <p class="text-gray-700 whitespace-pre-line" th:text="${room.description}">Mô tả</p>
     </div>
     <div class="mt-4">
-        <div class="flex flex-wrap gap-2">
+        <div th:if="${room.status.name() == 'AVAILABLE'}">
+            <form th:action="@{|/tenant/rooms/${room.id}/rent|}" method="post">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Thuê phòng này</button>
+            </form>
+        </div>
+        <div th:if="${canRequestMaintenance}" class="flex flex-wrap gap-2">
             <a th:href="@{|/tenant/rooms/${room.id}/maintenance/create|}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Yêu cầu bảo trì</a>
             <a th:href="@{/tenant/maintenance}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Danh sách yêu cầu</a>
+        </div>
+        <div th:if="${canRequestMaintenance == false}" class="text-sm text-gray-600">
+            Phòng này không thuộc danh sách phòng đang thuê của bạn.
         </div>
     </div>
 </div>

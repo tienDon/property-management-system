@@ -15,6 +15,7 @@ public class RoleInitializer {
         createIfNotExists("ADMIN");
         createIfNotExists("USER");
         createIfNotExists("OWNER");
+        createIfNotExists("STAFF");
     }
 
     private void createIfNotExists(String name) {

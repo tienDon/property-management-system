@@ -4,7 +4,6 @@ import com.pms.propertymanagement.entity.MaintenanceRequest;
 import com.pms.propertymanagement.entity.Room;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.MaintenanceCategory;
-import com.pms.propertymanagement.repository.RoomRepository;
 import com.pms.propertymanagement.repository.UserRepository;
 import com.pms.propertymanagement.service.TenantMaintenanceService;
 import org.junit.jupiter.api.Test;
@@ -22,13 +21,10 @@ public class MaintenanceRequestCreateIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
-
     @Test
     void createRequest_generatesCodeAndPersists() {
-        User tenant = userRepository.findAll().stream().findFirst().orElseThrow();
-        Room room = roomRepository.findAll().stream().findFirst().orElseThrow();
+        User tenant = userRepository.findByUsername("tenant1").orElseThrow();
+        Room room = tenantMaintenanceService.getRoomsForTenant(tenant).stream().findFirst().orElseThrow();
 
         MaintenanceRequest saved = tenantMaintenanceService.createRequest(
                 room.getId(),
@@ -41,4 +37,3 @@ public class MaintenanceRequestCreateIntegrationTest {
         assertNotNull(saved.getCode());
     }
 }
-

@@ -1,11 +1,13 @@
 package com.pms.propertymanagement.repository;
 
 import com.pms.propertymanagement.entity.Contract;
+import com.pms.propertymanagement.entity.Room;
 import com.pms.propertymanagement.enums.ContractStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +21,42 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
 
     @Query("SELECT c FROM Contract c WHERE c.room.property.owner.id = :ownerId AND (:status IS NULL OR c.status = :status) AND (c.code LIKE %:keyword% OR c.room.name LIKE %:keyword% OR c.representative.fullName LIKE %:keyword%)")
     Page<Contract> searchByOwnerIdAndStatusAndKeyword(Long ownerId, ContractStatus status, String keyword, Pageable pageable);
+
+    @Query("""
+            select distinct r
+            from Contract c
+            join c.room r
+            join fetch r.property
+            left join c.tenants t
+            where (t.id = :tenantId or c.representative.id = :tenantId)
+              and c.status = com.pms.propertymanagement.enums.ContractStatus.ACTIVE
+            """)
+    List<Room> findActiveRoomsByTenantId(@Param("tenantId") Long tenantId);
+
+    @Query("""
+            select count(c)
+            from Contract c
+            left join c.tenants t
+            where c.room.id = :roomId
+              and (t.id = :tenantId or c.representative.id = :tenantId)
+              and c.status = com.pms.propertymanagement.enums.ContractStatus.ACTIVE
+            """)
+    long countActiveContractsByTenantIdAndRoomId(@Param("tenantId") Long tenantId, @Param("roomId") Long roomId);
+
+    @Query("""
+            select count(c)
+            from Contract c
+            left join c.tenants t
+            where (t.id = :tenantId or c.representative.id = :tenantId)
+              and c.status = com.pms.propertymanagement.enums.ContractStatus.ACTIVE
+            """)
+    long countActiveContractsByTenantId(@Param("tenantId") Long tenantId);
+
+    @Query("""
+            select count(c)
+            from Contract c
+            where c.room.id = :roomId
+              and c.status = com.pms.propertymanagement.enums.ContractStatus.ACTIVE
+            """)
+    long countActiveContractsByRoomId(@Param("roomId") Long roomId);
 }
