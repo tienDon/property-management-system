@@ -23,21 +23,21 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
             boolean isOwner = user.getRoles().stream().allMatch(role -> role.getName().equals("OWNER"));
             if (!isOwner) {
-                response.sendRedirect("/");
+                response.sendRedirect("/403");
                 return false;
             }
         }
 
         if (uri.contains("/staff")) {
             if (user == null || user.getRoles().stream().noneMatch(r -> r.getName().equals("STAFF"))) {
-                response.sendRedirect("/");
+                response.sendRedirect("/403");
                 return false;
             }
         }
 
         if (uri.contains("/admin")) {
             if (user == null || user.getRoles().stream().noneMatch(r -> r.getName().equals("ADMIN"))) {
-                response.sendRedirect("/");
+                response.sendRedirect("/403");
                 return false;
             }
         }

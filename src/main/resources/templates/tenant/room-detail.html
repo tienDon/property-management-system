@@ -1,6 +1,7 @@
 <div>
     <a href="/tenant/rooms" class="text-sm text-blue-600 hover:underline">&larr; Quay lại danh sách</a>
     <h1 class="text-2xl font-semibold mt-2" th:text="${room.name}">Chi tiết phòng</h1>
+    <div th:if="${maintenanceError != null}" class="mt-3 p-3 bg-yellow-100 text-yellow-800 rounded" th:text="${maintenanceError}"></div>
     <div class="mt-3 border rounded p-4">
         <p><span class="font-medium">Tòa nhà:</span> <span th:text="${room.property != null ? room.property.name : 'N/A'}"></span></p>
         <p><span class="font-medium">Giá:</span> <span th:text="${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')}"></span></p>

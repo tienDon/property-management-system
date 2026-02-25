@@ -92,10 +92,14 @@ public class TenantMaintenanceController {
     }
 
     @GetMapping("/rooms/{roomId}/maintenance/create")
-    public String showCreateForm(@PathVariable Long roomId, HttpSession session, Model model) {
+    public String showCreateForm(@PathVariable Long roomId, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
         if (!tenantMaintenanceService.isRoomRentedByTenant(roomId, user)) {
+            return "redirect:/403";
+        }
+        if (tenantMaintenanceService.hasUnresolvedRequestForRoom(roomId)) {
+            redirectAttributes.addFlashAttribute("maintenanceError", "Phòng này đang có yêu cầu chưa được xử lý xong");
             return "redirect:/tenant/rooms/" + roomId;
         }
         Room room = tenantMaintenanceService.getRoomDetail(roomId);
@@ -142,6 +146,13 @@ public class TenantMaintenanceController {
                                 RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
+        if (!tenantMaintenanceService.isRoomRentedByTenant(roomId, user)) {
+            return "redirect:/403";
+        }
+        if (tenantMaintenanceService.hasUnresolvedRequestForRoom(roomId)) {
+            redirectAttributes.addFlashAttribute("maintenanceError", "Phòng này đang có yêu cầu chưa được xử lý xong");
+            return "redirect:/tenant/rooms/" + roomId;
+        }
 
         boolean hasError = false;
         MaintenanceCategory category = null;
@@ -167,8 +178,13 @@ public class TenantMaintenanceController {
             return "redirect:/tenant/rooms/" + roomId + "/maintenance/create";
         }
 
-        MaintenanceRequest saved = tenantMaintenanceService.createRequest(roomId, user, category, description);
-        return "redirect:/tenant/maintenance?success=true&createdId=" + saved.getId();
+        try {
+            MaintenanceRequest saved = tenantMaintenanceService.createRequest(roomId, user, category, description);
+            return "redirect:/tenant/maintenance?success=true&createdId=" + saved.getId();
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("maintenanceError", ex.getMessage());
+            return "redirect:/tenant/rooms/" + roomId;
+        }
     }
 
     @GetMapping("/maintenance/{id}")
@@ -179,6 +195,7 @@ public class TenantMaintenanceController {
         MaintenanceRequest req = tenantMaintenanceService.getTenantRequestDetail(id, user);
         model.addAttribute("request", req);
         model.addAttribute("success", success != null);
+        model.addAttribute("reopenCount", tenantMaintenanceService.countReopens(id));
         model.addAttribute("statuses", MaintenanceStatus.values());
         model.addAttribute("content", "tenant/maintenance-detail");
         return "layout/public-main";
@@ -188,8 +205,12 @@ public class TenantMaintenanceController {
     public String confirm(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
-        tenantMaintenanceService.confirmCompletion(id, user);
-        redirectAttributes.addAttribute("success", "true");
+        try {
+            tenantMaintenanceService.confirmCompletion(id, user);
+            redirectAttributes.addAttribute("success", "true");
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorAction", "Thao tác không hợp lệ");
+        }
         return "redirect:/tenant/maintenance/" + id;
     }
 
@@ -204,8 +225,17 @@ public class TenantMaintenanceController {
             redirectAttributes.addFlashAttribute("errorReopen", "Vui lòng nhập lý do");
             return "redirect:/tenant/maintenance/" + id;
         }
-        tenantMaintenanceService.reopenRequest(id, reason, user);
-        redirectAttributes.addAttribute("success", "true");
+        try {
+            tenantMaintenanceService.reopenRequest(id, reason, user);
+            redirectAttributes.addAttribute("success", "true");
+        } catch (IllegalStateException ex) {
+            String msg = ex.getMessage();
+            if (msg != null && msg.contains("quá số lần")) {
+                redirectAttributes.addFlashAttribute("errorAction", msg);
+            } else {
+                redirectAttributes.addFlashAttribute("errorAction", "Thao tác không hợp lệ");
+            }
+        }
         return "redirect:/tenant/maintenance/" + id;
     }
 }

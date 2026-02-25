@@ -32,5 +32,7 @@ public interface MaintenanceRequestRepository extends JpaRepository<MaintenanceR
 
     @EntityGraph(attributePaths = {"room", "room.property", "tenant", "staff"})
     List<MaintenanceRequest> findByRoom_Property_Owner_IdAndStatusOrderByCreatedAtDesc(Long ownerId, MaintenanceStatus status);
+
+    long countByRoom_IdAndStatusIn(Long roomId, List<MaintenanceStatus> statuses);
 }
 
