@@ -6,24 +6,37 @@
     <title th:text="${title} ?: 'Kiểm duyệt - Trọ Mới'"></title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
 
     <style>
-      :root { --tm-blue: #0054a5; --tm-orange: #ff7b00; }
-      .text-tm-blue { color: var(--tm-blue); }
-      .bg-tm-blue   { background-color: var(--tm-blue); }
-      .bg-tm-orange { background-color: var(--tm-orange); }
+      :root {
+        --tm-blue: #0054a5;
+        --tm-orange: #ff7b00;
+      }
+      .text-tm-blue {
+        color: var(--tm-blue);
+      }
+      .bg-tm-blue {
+        background-color: var(--tm-blue);
+      }
+      .bg-tm-orange {
+        background-color: var(--tm-orange);
+      }
     </style>
   </head>
 
   <body class="bg-gray-50 text-gray-800">
     <div class="flex min-h-screen">
-
       <!-- CỘT 1: Section switcher (72px, xanh đậm) -->
       <div th:replace="~{layout/moderator-sidebar1 :: sidebar1}"></div>
 
       <!-- CỘT 2: Contextual nav (240px, trắng) -->
-      <aside class="w-60 bg-white border-r border-gray-200 flex flex-col sticky top-0 h-screen overflow-y-auto">
+      <aside
+        class="w-60 bg-white border-r border-gray-200 flex flex-col sticky top-0 h-screen overflow-y-auto"
+      >
         <div th:replace="~{layout/moderator-sidebar2 :: sidebar2}"></div>
       </aside>
 
@@ -35,12 +48,13 @@
           <div th:replace="${content}"></div>
         </main>
 
-        <footer class="p-4 text-xs text-gray-400 border-t border-gray-100 bg-white">
+        <footer
+          class="p-4 text-xs text-gray-400 border-t border-gray-100 bg-white"
+        >
           Copyright © 2015 - 2026 OHI Co.Ltd | Hệ thống được xây dựng bởi
           <span class="font-bold">OHI Co.Ltd</span>
         </footer>
       </div>
-
     </div>
   </body>
 </html>

@@ -15,13 +15,19 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <div class="text-xs text-gray-500">Phòng</div>
-                <div class="font-semibold text-gray-900" th:text="${request.room != null ? request.room.name : 'N/A'}"></div>
-                <div class="text-sm text-gray-600" th:text="${request.room != null && request.room.property != null ? request.room.property.name : ''}"></div>
+                <div class="font-semibold text-gray-900" th:text="${request.room != null ? request.room.name : 'N/A'}">
+                </div>
+                <div class="text-sm text-gray-600"
+                    th:text="${request.room != null && request.room.property != null ? request.room.property.name : ''}">
+                </div>
             </div>
             <div>
                 <div class="text-xs text-gray-500">Khách thuê</div>
-                <div class="font-semibold text-gray-900" th:text="${request.tenant != null ? (request.tenant.fullName != null ? request.tenant.fullName : request.tenant.username) : 'N/A'}"></div>
-                <div class="text-sm text-gray-600" th:text="${request.tenant != null ? request.tenant.phone : ''}"></div>
+                <div class="font-semibold text-gray-900"
+                    th:text="${request.tenant != null ? (request.tenant.fullName != null ? request.tenant.fullName : request.tenant.username) : 'N/A'}">
+                </div>
+                <div class="text-sm text-gray-600" th:text="${request.tenant != null ? request.tenant.phone : ''}">
+                </div>
             </div>
         </div>
 
@@ -35,6 +41,14 @@
             <div class="text-gray-700 whitespace-pre-line" th:text="${request.description}"></div>
         </div>
 
+        <div th:if="${request.imageUrl != null}">
+            <div class="text-xs text-gray-500 mb-1">Ảnh đính kèm</div>
+            <a th:href="${request.imageUrl}" target="_blank" rel="noopener noreferrer">
+                <img th:src="${request.imageUrl}" alt="Ảnh yêu cầu bảo trì"
+                    class="max-w-sm max-h-72 rounded-xl border object-cover hover:opacity-90 transition-opacity cursor-pointer" />
+            </a>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <div class="text-xs text-gray-500">Trạng thái</div>
@@ -42,22 +56,30 @@
             </div>
             <div>
                 <div class="text-xs text-gray-500">Nhân viên</div>
-                <div class="font-semibold" th:text="${request.staff != null ? (request.staff.fullName != null ? request.staff.fullName : request.staff.username) : '-'}"></div>
+                <div class="font-semibold"
+                    th:text="${request.staff != null ? (request.staff.fullName != null ? request.staff.fullName : request.staff.username) : '-'}">
+                </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <div class="text-xs text-gray-500">Phân công lúc</div>
-                <div class="text-sm text-gray-700" th:text="${request.assignedAt != null ? #temporals.format(request.assignedAt, 'dd/MM/yyyy HH:mm') : '-'}"></div>
+                <div class="text-sm text-gray-700"
+                    th:text="${request.assignedAt != null ? #temporals.format(request.assignedAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                </div>
             </div>
             <div>
                 <div class="text-xs text-gray-500">Bắt đầu lúc</div>
-                <div class="text-sm text-gray-700" th:text="${request.startedAt != null ? #temporals.format(request.startedAt, 'dd/MM/yyyy HH:mm') : '-'}"></div>
+                <div class="text-sm text-gray-700"
+                    th:text="${request.startedAt != null ? #temporals.format(request.startedAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                </div>
             </div>
             <div>
                 <div class="text-xs text-gray-500">Hoàn thành lúc</div>
-                <div class="text-sm text-gray-700" th:text="${request.completedAt != null ? #temporals.format(request.completedAt, 'dd/MM/yyyy HH:mm') : '-'}"></div>
+                <div class="text-sm text-gray-700"
+                    th:text="${request.completedAt != null ? #temporals.format(request.completedAt, 'dd/MM/yyyy HH:mm') : '-'}">
+                </div>
             </div>
         </div>
 
@@ -65,7 +87,8 @@
             <div class="font-semibold">Lý do từ chối</div>
             <div class="text-sm whitespace-pre-line" th:text="${request.rejectedReason}"></div>
         </div>
-        <div th:if="${request.status.name() == 'COMPLETED' or request.status.name() == 'CONFIRMED'}" class="p-3 bg-gray-50 text-gray-700 rounded">
+        <div th:if="${request.status.name() == 'COMPLETED' or request.status.name() == 'CONFIRMED'}"
+            class="p-3 bg-gray-50 text-gray-700 rounded">
             <div class="font-semibold">Ghi chú hoàn thành</div>
             <div class="text-sm whitespace-pre-line" th:text="${request.completionNote}"></div>
         </div>
@@ -83,9 +106,11 @@
                 <label class="block text-sm font-medium mb-2">Chọn nhân viên</label>
                 <select name="staffId" class="w-full border rounded px-3 py-2">
                     <option value="">-- Chọn --</option>
-                    <option th:each="s : ${staffs}" th:value="${s.id}" th:text="${s.fullName != null ? s.fullName : s.username}"></option>
+                    <option th:each="s : ${staffs}" th:value="${s.id}"
+                        th:text="${s.fullName != null ? s.fullName : s.username}"></option>
                 </select>
-                <button type="submit" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Phân công</button>
+                <button type="submit" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Phân
+                    công</button>
             </form>
         </div>
 
@@ -94,8 +119,10 @@
             <p class="text-sm text-red-600 mb-2" th:if="${errorReject != null}" th:text="${errorReject}"></p>
             <form th:action="@{|/owner/maintenance/${request.id}/reject|}" method="post">
                 <label class="block text-sm font-medium mb-2">Lý do</label>
-                <textarea name="reason" rows="4" class="w-full border rounded px-3 py-2" th:text="${rejectReason}"></textarea>
-                <button type="submit" class="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Từ chối</button>
+                <textarea name="reason" rows="4" class="w-full border rounded px-3 py-2"
+                    th:text="${rejectReason}"></textarea>
+                <button type="submit" class="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Từ
+                    chối</button>
             </form>
         </div>
     </div>

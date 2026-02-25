@@ -312,8 +312,9 @@
               </div>
               <div th:if="${post.status.name() == 'PENDING_REVISION'}">
                 <p class="text-sm text-blue-600 font-medium">Đang tạm dừng</p>
-                <p class="text-xs text-gray-400"
-                   th:text="${post.daysRemaining > 0 ? post.daysRemaining + ' ngày được bảo lưu' : 'Hết hạn — sẽ được bù thêm'}"
+                <p
+                  class="text-xs text-gray-400"
+                  th:text="${post.daysRemaining > 0 ? post.daysRemaining + ' ngày được bảo lưu' : 'Hết hạn — sẽ được bù thêm'}"
                 ></p>
               </div>
               <div th:if="${post.status.name() == 'REJECTED'}">

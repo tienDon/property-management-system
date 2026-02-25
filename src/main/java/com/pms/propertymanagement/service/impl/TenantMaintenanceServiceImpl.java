@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.service.impl;
 
+import com.pms.propertymanagement.dto.response.CloudinaryResponse;
 import com.pms.propertymanagement.entity.MaintenanceRequest;
 import com.pms.propertymanagement.entity.MaintenanceRequestLog;
 import com.pms.propertymanagement.entity.Room;
@@ -13,13 +14,17 @@ import com.pms.propertymanagement.repository.MaintenanceRequestLogRepository;
 import com.pms.propertymanagement.repository.MaintenanceRequestRepository;
 import com.pms.propertymanagement.repository.RoomRepository;
 import com.pms.propertymanagement.repository.TenantRepository;
+import com.pms.propertymanagement.service.CloudinaryService;
 import com.pms.propertymanagement.service.TenantMaintenanceService;
 import lombok.RequiredArgsConstructor;
 import com.pms.propertymanagement.exception.ForbiddenException;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,12 +35,14 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
+    private static final Logger log = LoggerFactory.getLogger(TenantMaintenanceServiceImpl.class);
 
     private final RoomRepository roomRepository;
     private final ContractRepository contractRepository;
     private final TenantRepository tenantRepository;
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final MaintenanceRequestLogRepository logRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public List<Room> getRoomsForTenant(User tenant) {
@@ -76,7 +83,8 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
 
     @Override
     @Transactional
-    public MaintenanceRequest createRequest(Long roomId, User tenant, MaintenanceCategory category, String description) {
+    public MaintenanceRequest createRequest(Long roomId, User tenant, MaintenanceCategory category,
+            String description, MultipartFile image) {
         if (tenant == null) {
             throw new IllegalArgumentException("Bạn chưa đăng nhập");
         }
@@ -99,6 +107,19 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
         req.setStatus(MaintenanceStatus.PENDING);
         req.setCreatedAt(LocalDateTime.now());
         req.setUpdatedAt(LocalDateTime.now());
+
+        // Upload ảnh lên Cloudinary nếu có
+        if (image != null && !image.isEmpty()) {
+            try {
+                CloudinaryResponse uploaded = cloudinaryService.uploadImage(image, "maintenance");
+                req.setImageUrl(uploaded.getUrl());
+                req.setImagePublicId(uploaded.getPublicId());
+                log.info("[Maintenance] Upload ảnh thành công: {}", uploaded.getUrl());
+            } catch (Exception e) {
+                log.error("[Maintenance] Upload ảnh thất bại, yêu cầu vẫn được lưu không có ảnh", e);
+            }
+        }
+
         MaintenanceRequest saved = maintenanceRequestRepository.save(req);
 
         MaintenanceRequestLog log = new MaintenanceRequestLog();
@@ -186,4 +207,3 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
         return Optional.empty();
     }
 }
-

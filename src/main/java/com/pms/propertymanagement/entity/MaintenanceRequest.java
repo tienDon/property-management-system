@@ -57,6 +57,12 @@ public class MaintenanceRequest {
     @Column(columnDefinition = "nvarchar(MAX)")
     private String completionNote;
 
+    @Column(columnDefinition = "nvarchar(MAX)")
+    private String imageUrl;
+
+    @Column(length = 255)
+    private String imagePublicId;
+
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 
@@ -64,4 +70,3 @@ public class MaintenanceRequest {
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
 }
-
