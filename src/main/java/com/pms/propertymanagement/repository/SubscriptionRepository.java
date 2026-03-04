@@ -126,4 +126,15 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * Find subscriptions by post package ID (for package analytics)
      */  
     List<Subscription> findByPostPackageIdAndStatus(Long postPackageId, SubscriptionStatus status);
+
+    /**
+     * Extend expiredAt of all currently-active (not-yet-expired) POST subscriptions for a user.
+     * Used when owner upgrades to a plan with a longer postDurationDays.
+     */
+    @Modifying
+    @Query("UPDATE Subscription s SET s.expiredAt = :newExpiredAt, s.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE s.user.id = :userId AND s.type = 'POST' AND s.status = 'ACTIVE' " +
+           "AND s.expiredAt > CURRENT_TIMESTAMP")
+    int extendActivePostSubscriptions(@Param("userId") Long userId,
+                                      @Param("newExpiredAt") LocalDateTime newExpiredAt);
 }

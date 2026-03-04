@@ -64,7 +64,7 @@ public class RoomController {
         return "redirect:/owner/rooms";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteRoom(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         roomService.deleteRoom(id);
         redirectAttributes.addAttribute("deleted", true);

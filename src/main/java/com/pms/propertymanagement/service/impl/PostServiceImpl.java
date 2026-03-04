@@ -108,12 +108,12 @@ public class PostServiceImpl implements PostService {
         post.setDescription(description);
 
         // When owner edits, pause the post and require re-approval
-        // REJECTED → back to PENDING_APPROVAL (first-time review)
-        // ACTIVE / EXPIRED / HIDDEN → PENDING_REVISION (re-review, timer preserved)
+        // REJECTED → PENDING_REVISION (re-review, fresh timer granted on approval)
+        // ACTIVE / EXPIRED / HIDDEN → PENDING_REVISION (re-review, existing timer preserved)
         com.pms.propertymanagement.enums.PostStatus currentStatus = post.getStatus();
         if (currentStatus == com.pms.propertymanagement.enums.PostStatus.REJECTED) {
             post.resubmit();
-            log.info("Post {} resubmitted to PENDING_APPROVAL after rejection edit", postId);
+            log.info("Post {} resubmitted to PENDING_REVISION after rejection", postId);
         } else if (currentStatus != com.pms.propertymanagement.enums.PostStatus.PENDING_APPROVAL
                 && currentStatus != com.pms.propertymanagement.enums.PostStatus.PENDING_REVISION) {
             post.submitRevision();
@@ -236,7 +236,7 @@ public class PostServiceImpl implements PostService {
 
         post.resubmit();
         postRepository.save(post);
-        log.info("Post {} resubmitted for approval by owner {}", postId, ownerId);
+        log.info("Post {} resubmitted to PENDING_REVISION by owner {}", postId, ownerId);
     }
 
     // === STAFF APPROVAL WORKFLOW ===
@@ -290,6 +290,80 @@ public class PostServiceImpl implements PostService {
                 .stream()
                 .map(this::convertToOwnerResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Post> getPostsByStatus(PostStatus status) {
+        return postRepository.findByStatusOrderByCreatedAtAsc(status);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Post findPostById(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài đăng không tồn tại"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Post> findPostByPropertyId(Long propertyId) {
+        return postRepository.findByPropertyId(propertyId);
+    }
+
+    @Override
+    @Transactional
+    public void approvePostByModerator(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài đăng không tồn tại"));
+
+        if (post.getStatus() != PostStatus.PENDING_APPROVAL && post.getStatus() != PostStatus.PENDING_REVISION) {
+            throw new IllegalStateException("Chỉ duyệt được bài đang ở trạng thái chờ duyệt.");
+        }
+
+        if (post.getStatus() == PostStatus.PENDING_REVISION && post.getPausedAt() != null) {
+            // Compensate the pause duration so owner doesn't lose display time during review
+            LocalDateTime pausedAt = post.getPausedAt();
+            LocalDateTime now = LocalDateTime.now();
+            long pausedSeconds = java.time.temporal.ChronoUnit.SECONDS.between(pausedAt, now);
+            LocalDateTime baseExpiry = (post.getPostExpiredAt() != null) ? post.getPostExpiredAt() : now;
+            post.setPostExpiredAt(baseExpiry.plusSeconds(pausedSeconds));
+            post.setPausedAt(null);
+            post.setStatus(PostStatus.ACTIVE);
+            post.setRejectionReason(null);
+            log.info("Post {} (PENDING_REVISION) re-approved by moderator, compensated {} seconds", postId, pausedSeconds);
+        } else {
+            // PENDING_APPROVAL: grant fresh days from owner's active management plan
+            int durationDays = 7;
+            try {
+                Long ownerId = post.getProperty().getOwner().getId();
+                Subscription sub = subscriptionManagementService.getActiveManagementSubscription(ownerId);
+                if (sub != null) {
+                    durationDays = managementPlanService.getById(sub.getManagementPlanId()).getPostDurationDays();
+                }
+            } catch (Exception e) {
+                log.warn("Could not determine plan duration for post {}, using default 7 days: {}", postId, e.getMessage());
+            }
+            post.approve(durationDays);
+            log.info("Post {} approved by moderator with {} days", postId, durationDays);
+        }
+
+        postRepository.save(post);
+    }
+
+    @Override
+    @Transactional
+    public void rejectPostByModerator(Long postId, String reason) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bài đăng không tồn tại"));
+
+        if (post.getStatus() != PostStatus.PENDING_APPROVAL && post.getStatus() != PostStatus.PENDING_REVISION) {
+            throw new IllegalStateException("Chỉ từ chối được bài đang ở trạng thái chờ duyệt.");
+        }
+
+        post.reject(reason);
+        postRepository.save(post);
+        log.info("Post {} rejected by moderator. Reason: {}", postId, reason);
     }
 
     // === QUERY METHODS ===

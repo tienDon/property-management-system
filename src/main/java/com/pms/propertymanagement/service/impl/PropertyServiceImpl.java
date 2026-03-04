@@ -9,7 +9,7 @@ import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.entity.*;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
 import com.pms.propertymanagement.repository.*;
-import com.pms.propertymanagement.service.NewPropertyManagementService;
+import com.pms.propertymanagement.service.PropertyManagementService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.utils.DateUtil;
 import com.pms.propertymanagement.utils.SlugUtil;
@@ -35,7 +35,7 @@ public class PropertyServiceImpl implements PropertyService {
     private final SurroundingRepository surroundingRepository;
     private final TargetTenantsRepository targetRepository;
     private final ProvinceRepository provinceRepository;
-    private final NewPropertyManagementService newPropertyManagementService;
+    private final PropertyManagementService propertyManagementService;
     private final PostRepository postRepository;
 
     @Override
@@ -101,7 +101,7 @@ public class PropertyServiceImpl implements PropertyService {
     @Transactional
     public void createProperty(PropertyRequest request, User owner) {
         // NEW ARCHITECTURE: Check if user can create property based on management plan
-        if (!newPropertyManagementService.canCreateProperty(owner.getId())) {
+        if (!propertyManagementService.canCreateProperty(owner.getId())) {
             throw new IllegalStateException("Bạn cần có gói quản lý đang hoạt động để tạo nhà trọ.");
         }
 

@@ -26,13 +26,13 @@
       </div>
       <div>
         <h1 class="text-2xl font-bold">
-          Hạ gói xuống: <span th:text="${newPlan.name}">Basic</span>
+          Chuyển sang gói: <span th:text="${newPlan.name}">Basic</span>
         </h1>
         <p class="text-orange-100 text-sm mt-1">
-          Gói mới chỉ cho phép tối đa
+          Gói mới cho phép tối đa
           <strong th:text="${keepCount}">2</strong> nhà trọ hoạt động. Vui lòng
-          chọn <strong th:text="${keepCount}">2</strong> nhà trọ bạn muốn giữ
-          lại. Các nhà trọ không được chọn sẽ bị
+          chọn đúng <strong th:text="${keepCount}">2</strong> nhà trọ bạn muốn
+          giữ lại. Các nhà trọ không được chọn sẽ bị
           <strong>tạm khóa</strong> (không xóa dữ liệu).
         </p>
       </div>
@@ -53,9 +53,9 @@
     </div>
   </div>
 
-  <!-- No active properties -->
+  <!-- No properties -->
   <div
-    th:if="${#lists.isEmpty(activeProperties)}"
+    th:if="${#lists.isEmpty(allProperties)}"
     class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center"
   >
     <i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-4 block"></i>
@@ -69,7 +69,7 @@
   </div>
 
   <!-- Property selection form -->
-  <div th:unless="${#lists.isEmpty(activeProperties)}">
+  <div th:unless="${#lists.isEmpty(allProperties)}">
     <form
       th:action="@{/owner/management-plans/downgrade/{id}(id=${newPlan.id})}"
       method="post"
@@ -92,7 +92,7 @@
       <!-- Property cards grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <label
-          th:each="prop : ${activeProperties}"
+          th:each="prop : ${allProperties}"
           th:for="'prop-' + ${prop.id}"
           class="property-card relative bg-white rounded-xl border-2 border-gray-200 shadow-sm cursor-pointer hover:border-blue-400 transition-all select-none"
         >
@@ -103,6 +103,20 @@
             th:value="${prop.id}"
             class="sr-only property-checkbox"
           />
+
+          <!-- Status badge (ACTIVE / LOCKED) -->
+          <div class="absolute top-2 left-2">
+            <span
+              th:if="${'ACTIVE'.equals(prop.status)}"
+              class="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full"
+              >đang hoạt động</span
+            >
+            <span
+              th:unless="${'ACTIVE'.equals(prop.status)}"
+              class="text-xs bg-yellow-100 text-yellow-700 font-semibold px-2 py-0.5 rounded-full"
+              >đang khóa</span
+            >
+          </div>
 
           <!-- Checkmark overlay -->
           <div

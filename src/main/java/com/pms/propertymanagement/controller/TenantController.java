@@ -52,7 +52,7 @@ public class TenantController {
         return "redirect:/owner/tenants?success";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         tenantService.deleteTenant(id);
         return "redirect:/owner/tenants?deleted";

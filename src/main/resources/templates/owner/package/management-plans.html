@@ -297,12 +297,29 @@
             th:action="@{/owner/management-plans/upgrade/{planId}(planId=${plan.id})}"
             method="post"
           >
+            <!-- Upgrade button -->
             <button
+              th:if="${plan.monthlyPrice >= currentPlanMonthlyPrice}"
               type="submit"
               class="w-full font-semibold py-2.5 rounded-lg transition-colors text-sm"
               th:classappend="${plan.isRecommended} ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'"
+              data-confirm-type="upgrade"
+              th:data-plan-name="${plan.name}"
+              th:data-plan-price="${plan.monthlyPrice}"
+              onclick="return confirmPlanChange(this);"
             >
-              <i class="fa-solid fa-arrows-alt-v mr-1"></i> Chuyển đổi
+              <i class="fa-solid fa-arrow-up mr-1"></i> Nâng cấp
+            </button>
+            <!-- Downgrade button -->
+            <button
+              th:if="${plan.monthlyPrice < currentPlanMonthlyPrice}"
+              type="submit"
+              class="w-full font-semibold py-2.5 rounded-lg transition-colors text-sm bg-gray-500 hover:bg-gray-600 text-white"
+              data-confirm-type="downgrade"
+              th:data-plan-name="${plan.name}"
+              onclick="return confirmPlanChange(this);"
+            >
+              <i class="fa-solid fa-arrow-down mr-1"></i> Hạ cấp
             </button>
           </form>
         </div>
@@ -449,3 +466,35 @@
     </div>
   </div>
 </div>
+
+<script>
+  function confirmPlanChange(btn) {
+    var type = btn.getAttribute("data-confirm-type");
+    var name = btn.getAttribute("data-plan-name");
+    if (type === "upgrade") {
+      var price = parseInt(btn.getAttribute("data-plan-price"), 10);
+      var priceStr =
+        price === 0 ? "Miễn phí" : price.toLocaleString("vi-VN") + "đ";
+      return confirm(
+        "Nâng cấp lên gói " +
+          name +
+          "?\n\n" +
+          "Chi phí: " +
+          priceStr +
+          " sẽ được trừ từ ví của bạn.\n" +
+          "Bài đăng hiện tại sẽ được tự động kéo dài theo thời hạn mới.\n\n" +
+          "Bạn có chắc chắn muốn tiếp tục?",
+      );
+    } else {
+      return confirm(
+        "Hạ cấp xuống gói " +
+          name +
+          "?\n\n" +
+          "⚠ Lưu ý:\n" +
+          "• Các nhà trọ vượt quota mới sẽ bị khóa tạm thời.\n" +
+          "• Bài đăng hiện tại vẫn tiếp tục chạy đến hết thời hạn còn lại.\n\n" +
+          "Bạn có chắc chắn muốn tiếp tục?",
+      );
+    }
+  }
+</script>

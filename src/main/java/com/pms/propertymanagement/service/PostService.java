@@ -5,6 +5,7 @@ import com.pms.propertymanagement.dto.response.PostOwnerResponse;
 import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.entity.PostingPackage;
 import com.pms.propertymanagement.entity.Property;
+import com.pms.propertymanagement.enums.PostStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -86,6 +87,32 @@ public interface PostService {
      * Get all posts with PENDING_APPROVAL status (for staff dashboard)
      */
     List<PostOwnerResponse> getPendingApprovalPosts();
+
+    /**
+     * Get all posts with specified status (for moderator dashboard)
+     */
+    List<Post> getPostsByStatus(PostStatus status);
+
+    /**
+     * Find a post by ID, throws ResourceNotFoundException if not found
+     */
+    Post findPostById(Long id);
+
+    /**
+     * Find a post by property ID
+     */
+    Optional<Post> findPostByPropertyId(Long propertyId);
+
+    /**
+     * Moderator approve: handles both PENDING_APPROVAL and PENDING_REVISION.
+     * For PENDING_REVISION compensates paused time; for PENDING_APPROVAL grants fresh days from plan.
+     */
+    void approvePostByModerator(Long postId);
+
+    /**
+     * Moderator reject: handles both PENDING_APPROVAL and PENDING_REVISION.
+     */
+    void rejectPostByModerator(Long postId, String reason);
 
     // === QUERY METHODS ===
 

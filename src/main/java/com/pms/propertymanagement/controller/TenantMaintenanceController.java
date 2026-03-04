@@ -9,8 +9,8 @@ import com.pms.propertymanagement.enums.MaintenanceCategory;
 import com.pms.propertymanagement.enums.MaintenanceStatus;
 import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.dto.request.MaintenanceCreateForm;
-import com.pms.propertymanagement.repository.PostRepository;
 import com.pms.propertymanagement.service.ContactService;
+import com.pms.propertymanagement.service.PostService;
 import com.pms.propertymanagement.service.TenantMaintenanceService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class TenantMaintenanceController {
 
     private final TenantMaintenanceService tenantMaintenanceService;
     private final ContactService contactService;
-    private final PostRepository postRepository;
+    private final PostService postService;
 
     @GetMapping("/home")
     public String home(HttpSession session, Model model) {
@@ -62,7 +62,7 @@ public class TenantMaintenanceController {
             return "redirect:/tenant/home";
         }
         Post post = (room.getProperty() != null)
-                ? postRepository.findByPropertyId(room.getProperty().getId()).orElse(null)
+                ? postService.findPostByPropertyId(room.getProperty().getId()).orElse(null)
                 : null;
         if (post == null || !StringUtils.hasText(post.getSlug())) {
             redirectAttributes.addFlashAttribute("rentError", "Không tìm thấy bài đăng của phòng này.");

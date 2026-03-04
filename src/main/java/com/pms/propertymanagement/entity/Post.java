@@ -179,11 +179,12 @@ public class Post {
     }
 
     /**
-     * Resubmit rejected post: reset to PENDING_APPROVAL
-     * Called by owner after editing a rejected post
+     * Resubmit rejected post: moves to PENDING_REVISION (chờ duyệt lại)
+     * Called by owner after a post was rejected and they resubmit it.
+     * pausedAt is left null — moderator approval will grant a fresh timer via the normal approval path.
      */
     public void resubmit() {
-        this.status = PostStatus.PENDING_APPROVAL;
+        this.status = PostStatus.PENDING_REVISION;
         this.rejectionReason = null;
     }
 

@@ -6,7 +6,7 @@ import com.pms.propertymanagement.dto.response.PostOwnerResponse;
 import com.pms.propertymanagement.entity.Property;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.entity.UserWallet;
-import com.pms.propertymanagement.service.PostPackageService;
+import com.pms.propertymanagement.service.PostingPackageService;
 import com.pms.propertymanagement.service.PostService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.service.WalletService;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class PostController {
 
     private final PostService postService;
-    private final PostPackageService postPackageService;
+    private final PostingPackageService postingPackageService;
     private final PropertyService propertyService;
     private final WalletService walletService;
 
@@ -258,7 +258,7 @@ public class PostController {
         PostAnalyticsDTO analytics = postService.getPostAnalytics(id);
         
         // Load available posting packages for renewal
-        List<PostPackageDTO> packages = postPackageService.getAllPackages();
+        List<PostPackageDTO> packages = postingPackageService.getAllPackages();
         
         model.addAttribute("analytics", analytics);
         model.addAttribute("postPackages", packages);
@@ -283,7 +283,7 @@ public class PostController {
         }
 
         try {
-            var postPackage = postPackageService.getById(postPackageId);
+            var postPackage = postingPackageService.getById(postPackageId);
             postService.purchaseDuration(id, postPackage);
             
             // CRITICAL: Refresh wallet in session after transaction

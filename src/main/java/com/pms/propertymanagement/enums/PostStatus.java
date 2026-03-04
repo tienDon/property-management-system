@@ -5,7 +5,7 @@ package com.pms.propertymanagement.enums;
  * Controls post lifecycle and marketplace visibility
  *
  * Flow: PENDING_APPROVAL → ACTIVE → EXPIRED (or HIDDEN by owner)
- *       PENDING_APPROVAL → REJECTED (staff rejects) → owner edits → PENDING_APPROVAL again
+ *       PENDING_APPROVAL → REJECTED (staff rejects) → owner resubmits → PENDING_REVISION → ACTIVE
  */
 public enum PostStatus {
     /**

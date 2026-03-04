@@ -23,7 +23,7 @@ public class OwnerController {
     private final UserService userService;
     private final CategoryService categoryService;
     private final ContactService contactService;
-    private final NewPropertyManagementService newPropertyManagementService;
+    private final PropertyManagementService propertyManagementService;
 
     @GetMapping
     public String dashboard(Model model, HttpSession session) {
@@ -43,7 +43,7 @@ public class OwnerController {
         model.addAttribute("properties", properties);
         model.addAttribute("activeMenu", "properties");
 
-        boolean canPost = newPropertyManagementService.canCreateProperty(user.getId());
+        boolean canPost = propertyManagementService.canCreateProperty(user.getId());
         model.addAttribute("canPost", canPost);
 
         model.addAttribute("content", "owner/property/list");
@@ -56,7 +56,7 @@ public class OwnerController {
         if (user == null) return "redirect:/login/owner";
 
         // NEW ARCHITECTURE: Check if user can create property based on management plan
-        if (!newPropertyManagementService.canCreateProperty(user.getId())) {
+        if (!propertyManagementService.canCreateProperty(user.getId())) {
             ra.addFlashAttribute("errorMessage", "Bạn cần có gói quản lý đang hoạt động để tạo nhà trọ.");
             return "redirect:/owner/properties";
         }

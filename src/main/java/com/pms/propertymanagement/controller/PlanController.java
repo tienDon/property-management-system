@@ -10,7 +10,7 @@ import com.pms.propertymanagement.entity.UserWallet;
 import com.pms.propertymanagement.service.SubscriptionManagementService;
 import com.pms.propertymanagement.service.PropertyPolicyService;
 import com.pms.propertymanagement.service.ManagementPlanService;
-import com.pms.propertymanagement.service.PostPackageService;
+import com.pms.propertymanagement.service.PostingPackageService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.service.WalletService;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class PlanController {
     private final SubscriptionManagementService subscriptionManagementService;
     private final PropertyPolicyService propertyPolicyService;
     private final ManagementPlanService managementPlanService;
-    private final PostPackageService postPackageService;
+    private final PostingPackageService postPackageService;
     private final PropertyService propertyService;
     private final WalletService walletService;
     
@@ -70,11 +70,13 @@ public class PlanController {
             Integer currentPropertyLimit = null;
             String currentPlanName = "Không có gói";
             boolean hasActiveSubscription = false;
+            int currentPlanMonthlyPrice = 0;
             
             if (currentSubscription != null) {
                 var currentPlan = managementPlanService.getById(currentSubscription.getManagementPlanId());
                 currentPropertyLimit = currentPlan.getMaxProperties();
                 currentPlanName = currentPlan.getName();
+                currentPlanMonthlyPrice = currentPlan.getMonthlyPrice();
                 hasActiveSubscription = true;
             }
             
@@ -86,6 +88,7 @@ public class PlanController {
             
             model.addAttribute("currentSubscription", currentSubscription);
             model.addAttribute("currentPlanName", currentPlanName);
+            model.addAttribute("currentPlanMonthlyPrice", currentPlanMonthlyPrice);
             model.addAttribute("availablePlans", availablePlans);
             model.addAttribute("propertyCounts", propertyCounts);
             model.addAttribute("currentPropertyLimit", currentPropertyLimit);
@@ -153,8 +156,9 @@ public class PlanController {
     
     /**
      * NEW ARCHITECTURE: Upgrade management plan (atomic transition).
-     * If downgrading to a plan with fewer property slots than current active count,
-     * redirect to the property-selection page first.
+     * If the new plan is limited and the owner has any locked properties (or active exceeds
+     * the new limit), redirect to the property-selection page so the owner can explicitly
+     * choose which properties should be active under the new quota.
      */
     @PostMapping("/management-plans/upgrade/{newPlanId}")
     public String upgradeManagementPlan(@PathVariable Long newPlanId,
@@ -166,8 +170,11 @@ public class PlanController {
             ManagementPlan newPlan = managementPlanService.getById(newPlanId);
             PropertyPolicyService.PropertyCounts counts = propertyPolicyService.getPropertyCounts(owner.getId());
 
-            // Downgrade check: active properties exceed new plan's limit → owner must choose which to keep
-            if (!newPlan.isUnlimitedProperties() && counts.active() > newPlan.getMaxProperties()) {
+            // For limited plans: if owner has any locked properties OR active exceeds new limit,
+            // redirect to selection page so owner picks exactly which properties to keep active.
+            // Unlimited plans → unlock everything automatically, no selection needed.
+            if (!newPlan.isUnlimitedProperties()
+                    && (counts.active() > newPlan.getMaxProperties() || counts.planLocked() > 0)) {
                 return "redirect:/owner/management-plans/downgrade/" + newPlanId;
             }
 
@@ -208,14 +215,14 @@ public class PlanController {
             User owner = getCurrentOwner(session);
             ManagementPlan newPlan = managementPlanService.getById(newPlanId);
 
-            // Only ACTIVE properties are shown for selection
-            List<PropertyOwnerResponse> activeProperties = propertyService.getPropertiesByOwner(owner)
+            // Show ALL properties (ACTIVE + PLAN_LOCKED) so owner can pick from entire pool
+            List<PropertyOwnerResponse> allProperties = propertyService.getPropertiesByOwner(owner)
                 .stream()
-                .filter(p -> "ACTIVE".equals(p.getStatus()))
+                .filter(p -> "ACTIVE".equals(p.getStatus()) || "PLAN_LOCKED".equals(p.getStatus()))
                 .toList();
 
             model.addAttribute("newPlan", newPlan);
-            model.addAttribute("activeProperties", activeProperties);
+            model.addAttribute("allProperties", allProperties);
             model.addAttribute("keepCount", newPlan.getMaxProperties());
             model.addAttribute("content", "owner/package/downgrade-confirm");
             model.addAttribute("activeMenu", "management-plans");
@@ -241,43 +248,58 @@ public class PlanController {
             User owner = getCurrentOwner(session);
             ManagementPlan newPlan = managementPlanService.getById(newPlanId);
 
-            List<Long> activeIds = propertyService.getPropertiesByOwner(owner)
+            // Get ALL properties (ACTIVE + PLAN_LOCKED) for full selection pool
+            List<PropertyOwnerResponse> allProps = propertyService.getPropertiesByOwner(owner)
                 .stream()
-                .filter(p -> "ACTIVE".equals(p.getStatus()))
-                .map(PropertyOwnerResponse::getId)
+                .filter(p -> "ACTIVE".equals(p.getStatus()) || "PLAN_LOCKED".equals(p.getStatus()))
                 .toList();
 
             Set<Long> keepSet = (keepPropertyIds != null) ? new HashSet<>(keepPropertyIds) : Set.of();
 
-            // Validate: owner may not keep more slots than the new plan allows
+            // Validate: cannot keep more than plan allows
             if (!newPlan.isUnlimitedProperties() && keepSet.size() > newPlan.getMaxProperties()) {
                 redirectAttributes.addFlashAttribute("errorMessage",
-                    "Số nhà trọ giữ lại vượt quá giới hạn của gói " + newPlan.getName() + 
+                    "Số nhà trọ giữ lại vượt quá giới hạn của gói " + newPlan.getName() +
                     " (tối đa " + newPlan.getMaxProperties() + ").");
                 return "redirect:/owner/management-plans/downgrade/" + newPlanId;
             }
 
-            // Lock properties the owner did NOT select to keep
-            List<Long> lockIds = activeIds.stream()
-                .filter(id -> !keepSet.contains(id))
+            // Lock ACTIVE properties NOT selected by owner
+            List<Long> lockIds = allProps.stream()
+                .filter(p -> "ACTIVE".equals(p.getStatus()) && !keepSet.contains(p.getId()))
+                .map(PropertyOwnerResponse::getId)
+                .toList();
+
+            // Unlock PLAN_LOCKED properties that owner selected
+            List<Long> unlockIds = allProps.stream()
+                .filter(p -> "PLAN_LOCKED".equals(p.getStatus()) && keepSet.contains(p.getId()))
+                .map(PropertyOwnerResponse::getId)
                 .toList();
 
             if (!lockIds.isEmpty()) {
                 propertyPolicyService.lockSelectedProperties(owner.getId(), lockIds);
-                log.info("Locked {} properties for user {} during downgrade to plan {}",
+                log.info("Locked {} properties for user {} during plan switch to {}",
                     lockIds.size(), owner.getId(), newPlanId);
             }
+            if (!unlockIds.isEmpty()) {
+                propertyPolicyService.unlockSelectedProperties(owner.getId(), unlockIds);
+                log.info("Unlocked {} properties for user {} during plan switch to {}",
+                    unlockIds.size(), owner.getId(), newPlanId);
+            }
 
-            // Switch the management plan (already passes property count check now)
+            // Switch the management plan
             subscriptionManagementService.upgradeManagementPlan(owner.getId(), newPlanId);
 
             session.setAttribute("lastWalletUpdate", 0L);
+            int finalActive = (int) allProps.stream()
+                .filter(p -> keepSet.contains(p.getId()) || ("ACTIVE".equals(p.getStatus()) && !lockIds.contains(p.getId())))
+                .count();
             redirectAttributes.addFlashAttribute("successMessage",
-                String.format("Chuyển xuống gói %s thành công. %d nhà trọ đã tạm khoá.",
-                    newPlan.getName(), lockIds.size()));
+                String.format("Chuyển sang gói %s thành công. %d nhà trọ đang hoạt động.",
+                    newPlan.getName(), finalActive));
 
-            log.info("User {} downgraded to plan {}, locked {} properties",
-                owner.getId(), newPlanId, lockIds.size());
+            log.info("User {} switched to plan {}, locked {}, unlocked {} properties",
+                owner.getId(), newPlanId, lockIds.size(), unlockIds.size());
 
         } catch (IllegalStateException e) {
             log.error("Error processing downgrade to plan {} for user", newPlanId, e);
