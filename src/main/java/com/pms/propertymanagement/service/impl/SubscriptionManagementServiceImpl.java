@@ -6,6 +6,7 @@ import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.SubscriptionStatus;
 import com.pms.propertymanagement.enums.SubscriptionType;
 import com.pms.propertymanagement.enums.TransactionType;
+import com.pms.propertymanagement.repository.PostRepository;
 import com.pms.propertymanagement.repository.SubscriptionRepository;
 import com.pms.propertymanagement.repository.UserRepository;
 import com.pms.propertymanagement.service.ManagementPlanService;
@@ -35,6 +36,7 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
     private final ManagementPlanService managementPlanService;
     private final WalletService walletService;
     private final PostingPackageService postingPackageService;
+    private final PostRepository postRepository;
 
     @Override
     @Transactional
@@ -161,14 +163,16 @@ public class SubscriptionManagementServiceImpl implements SubscriptionManagement
 
         Subscription newSub = createManagementSubscription(userId, newManagementPlanId, 30);
 
-        int oldPostDuration = (currentSub.isPresent())
-                ? managementPlanService.getById(currentSub.get().getManagementPlanId()).getPostDurationDays()
-                : 0;
-        if (newPlan.getPostDurationDays() > oldPostDuration) {
+        // Extend/reactivate posts on upgrade:
+        // - ACTIVE posts with remaining time < postDurationDays → extend expiry (never shorten)
+        // - EXPIRED posts → reactivate (set ACTIVE) and give full postDurationDays from now
+        if (newPlan.getPostDurationDays() > 0) {
             LocalDateTime newPostExpiry = LocalDateTime.now().plusDays(newPlan.getPostDurationDays());
-            int updated = subscriptionRepository.extendActivePostSubscriptions(userId, newPostExpiry);
-            log.info("Extended {} active POST subscriptions to {} for user {} (upgrade: {} -> {} days)",
-                    updated, newPostExpiry, userId, oldPostDuration, newPlan.getPostDurationDays());
+            int updatedSubs = subscriptionRepository.extendActivePostSubscriptions(userId, newPostExpiry);
+            int extendedPosts = postRepository.extendActivePostsExpiry(userId, newPostExpiry);
+            int reactivatedPosts = postRepository.reactivateExpiredPosts(userId, newPostExpiry);
+            log.info("Upgrade to plan {} for user {}: extended {} POST subscriptions, extended {} active posts, reactivated {} expired posts (expiry: {}, {} days)",
+                    newPlan.getName(), userId, updatedSubs, extendedPosts, reactivatedPosts, newPostExpiry, newPlan.getPostDurationDays());
         }
 
         return newSub;

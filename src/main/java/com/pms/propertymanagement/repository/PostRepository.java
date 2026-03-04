@@ -139,6 +139,29 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // === BULK OPERATIONS ===
 
     /**
+     * Extend postExpiredAt for ACTIVE posts owned by this user where current expiry is shorter
+     * than newExpiredAt. Used when owner upgrades to a plan with longer postDurationDays.
+     * Only extends (never shortens) posts.
+     */
+    @Modifying
+    @Query("UPDATE Post p SET p.postExpiredAt = :newExpiredAt " +
+           "WHERE p.property.owner.id = :ownerId AND p.status = 'ACTIVE' " +
+           "AND p.postExpiredAt > CURRENT_TIMESTAMP " +
+           "AND p.postExpiredAt < :newExpiredAt")
+    int extendActivePostsExpiry(@Param("ownerId") Long ownerId,
+                                @Param("newExpiredAt") LocalDateTime newExpiredAt);
+
+    /**
+     * Reactivate EXPIRED posts for a user when owner upgrades plan.
+     * Sets status back to ACTIVE and extends postExpiredAt = now + newPlan.postDurationDays.
+     */
+    @Modifying
+    @Query("UPDATE Post p SET p.status = 'ACTIVE', p.postExpiredAt = :newExpiredAt " +
+           "WHERE p.property.owner.id = :ownerId AND p.status = 'EXPIRED'")
+    int reactivateExpiredPosts(@Param("ownerId") Long ownerId,
+                               @Param("newExpiredAt") LocalDateTime newExpiredAt);
+
+    /**
      * Hide all posts for a user (when properties are locked)
      */
     @Modifying
