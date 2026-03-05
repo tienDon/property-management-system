@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>403 - Forbidden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a37ac37445.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>body { background: #f8fafc }</style>
+    <script>history.replaceState && history.replaceState(null, '', location.pathname);</script>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+<div class="max-w-lg mx-auto bg-white shadow rounded p-8 text-center">
+    <div class="text-red-600 text-6xl mb-2"><i class="fa-solid fa-ban"></i></div>
+    <h1 class="text-2xl font-bold mb-2">403 - Không có quyền truy cập</h1>
+    <p class="text-gray-600 mb-6">Bạn không được phép xem nội dung này.</p>
+    <a href="/" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Về trang chủ</a>
+    <a href="/tenant/rooms" class="ml-2 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Về danh sách phòng</a>
+  </div>
+</body>
+</html>

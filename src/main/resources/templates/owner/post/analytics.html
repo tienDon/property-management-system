@@ -1,0 +1,253 @@
+<div th:fragment="content" class="space-y-6">
+  <div class="max-w-4xl">
+    <!-- Header -->
+    <div class="mb-8">
+      <a
+        href="/owner/posts"
+        class="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+      >
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+      </a>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Thống kê Bài Đăng</h1>
+      <p class="text-gray-600" th:text="${analytics.title}">Post Title</p>
+    </div>
+
+    <!-- Status Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Status Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-600">Trạng thái</h3>
+          <i class="fas fa-info-circle text-gray-400"></i>
+        </div>
+        <div class="flex items-center">
+          <span
+            th:class="${analytics.statusColorClass} + ' px-4 py-2 rounded-full text-lg font-semibold'"
+            th:text="${analytics.statusLabel}"
+            >Status</span
+          >
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          <span th:if="${analytics.isVisible}">
+            <i class="fas fa-eye text-green-500"></i> Đang hiển thị trên
+            marketplace
+          </span>
+          <span th:unless="${analytics.isVisible}">
+            <i class="fas fa-eye-slash text-gray-500"></i> Không hiển thị trên
+            marketplace
+          </span>
+        </p>
+      </div>
+
+      <!-- View Count Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-600">Lượt xem</h3>
+          <i class="fas fa-chart-line text-blue-400"></i>
+        </div>
+        <div>
+          <p
+            class="text-4xl font-bold text-blue-600"
+            th:text="${analytics.viewCount}"
+          >
+            0
+          </p>
+          <p class="text-xs text-gray-500 mt-2">Tổng lượt xem chi tiết</p>
+        </div>
+      </div>
+
+      <!-- Days Remaining Card -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-gray-600">Thời gian còn lại</h3>
+          <i class="fas fa-clock text-orange-400"></i>
+        </div>
+        <div>
+          <div th:if="${analytics.daysRemaining > 0}">
+            <p
+              class="text-4xl font-bold text-orange-600"
+              th:text="${analytics.daysRemaining}"
+            >
+              0
+            </p>
+            <p class="text-xs text-gray-500 mt-2">ngày</p>
+          </div>
+          <div th:unless="${analytics.daysRemaining > 0}">
+            <p class="text-2xl font-bold text-red-600">Hết hạn</p>
+            <p class="text-xs text-gray-500 mt-2">Cần gia hạn</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- Post Details -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+          <i class="fas fa-file-alt text-blue-600"></i> Thông tin bài đăng
+        </h2>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Post ID:</span>
+            <span
+              class="font-medium text-gray-900"
+              th:text="${analytics.postId}"
+              >123</span
+            >
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Slug:</span>
+            <a
+              th:href="@{/properties/{slug}(slug=${analytics.slug})}"
+              class="font-medium text-blue-600 hover:text-blue-800"
+              target="_blank"
+              th:text="'/' + ${analytics.slug}"
+            >
+              /slug
+            </a>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Tiêu đề:</span>
+            <span
+              class="font-medium text-gray-900 text-right"
+              th:text="${analytics.title}"
+              >Title</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Visibility Timeline -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">
+          <i class="fas fa-calendar-alt text-green-600"></i> Thời gian hiển thị
+        </h2>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Hết hạn vào:</span>
+            <span
+              class="font-medium text-gray-900"
+              th:text="${analytics.formattedExpiry}"
+              >Date</span
+            >
+          </div>
+          <div
+            class="flex justify-between"
+            th:if="${analytics.daysRemaining > 0}"
+          >
+            <span class="text-gray-600">Còn lại:</span>
+            <span class="font-medium text-orange-600">
+              <span th:text="${analytics.daysRemaining}">X</span> ngày (<span
+                th:text="${analytics.hoursRemaining}"
+                >Y</span
+              >
+              giờ)
+            </span>
+          </div>
+          <div
+            th:if="${analytics.isBoosted}"
+            class="p-3 bg-yellow-50 rounded-lg"
+          >
+            <p class="text-sm font-medium text-yellow-800">
+              <i class="fas fa-star"></i> Đang được Boost
+            </p>
+            <p
+              class="text-xs text-yellow-700 mt-1"
+              th:text="'Hết boost: ' + ${analytics.formattedBoostExpiry}"
+            >
+              Boost expires
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <i class="fas fa-tools text-purple-600"></i> Hành động
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Edit Button -->
+        <a
+          th:href="@{/owner/posts/{id}/edit(id=${analytics.postId})}"
+          class="flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          <i class="fas fa-edit mr-2"></i> Chỉnh sửa
+        </a>
+
+        <!-- Renew Button -->
+        <a
+          th:href="@{/owner/posts/{id}/renew(id=${analytics.postId})}"
+          class="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+        >
+          <i class="fas fa-redo mr-2"></i> Gia hạn
+        </a>
+
+        <!-- Hide/Show Button -->
+        <form
+          th:if="${analytics.status.name() == 'ACTIVE'}"
+          th:action="@{/owner/posts/{id}/hide(id=${analytics.postId})}"
+          method="post"
+          class="w-full"
+        >
+          <button
+            type="submit"
+            class="w-full flex items-center justify-center px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          >
+            <i class="fas fa-eye-slash mr-2"></i> Ẩn bài
+          </button>
+        </form>
+
+        <form
+          th:if="${analytics.status.name() == 'HIDDEN'}"
+          th:action="@{/owner/posts/{id}/show(id=${analytics.postId})}"
+          method="post"
+          class="w-full"
+        >
+          <button
+            type="submit"
+            class="w-full flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+          >
+            <i class="fas fa-eye mr-2"></i> Hiển thị
+          </button>
+        </form>
+
+        <!-- View on Marketplace -->
+        <a
+          th:href="@{/properties/{slug}(slug=${analytics.slug})}"
+          target="_blank"
+          class="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+        >
+          <i class="fas fa-external-link-alt mr-2"></i> Xem bài
+        </a>
+      </div>
+    </div>
+
+    <!-- Tips Section -->
+    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+      <h3 class="font-medium text-gray-900 mb-3">
+        <i class="fas fa-lightbulb text-yellow-500"></i> Mẹo tăng hiệu quả
+      </h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li>
+          <i class="fas fa-check text-green-500"></i> Cập nhật nội dung thường
+          xuyên để giữ bài đăng hấp dẫn
+        </li>
+        <li>
+          <i class="fas fa-check text-green-500"></i> Thêm ảnh chất lượng cao để
+          tăng tỷ lệ xem chi tiết
+        </li>
+        <li>
+          <i class="fas fa-check text-green-500"></i> Sử dụng gói Boost để xuất
+          hiện ưu tiên trên marketplace
+        </li>
+        <li>
+          <i class="fas fa-check text-green-500"></i> Gia hạn trước khi hết hạn
+          để duy trì vị trí hiển thị
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

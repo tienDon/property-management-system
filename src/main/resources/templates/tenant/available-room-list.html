@@ -1,0 +1,25 @@
+<div>
+    <div th:if="${rentSuccess}" class="mb-4 p-3 bg-green-100 text-green-800 rounded">
+        Đã gửi yêu cầu thuê. Chủ trọ sẽ liên hệ với bạn sớm.
+    </div>
+    <div th:if="${rentError != null}" class="mb-4 p-3 bg-red-100 text-red-800 rounded" th:text="${rentError}"></div>
+    <h1 class="text-2xl font-semibold mb-4">Phòng đang trống</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div th:each="r : ${rooms}" class="border rounded-lg p-4 shadow">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-bold" th:text="${r.name}">Phòng A1</h2>
+                <span class="text-sm px-2 py-1 rounded bg-gray-100" th:text="${r.status.displayName}">Trạng thái</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1" th:text="'Tòa: ' + ${r.property != null ? r.property.name : 'N/A'}"></p>
+            <p class="text-sm text-gray-600 mt-1" th:text="'Giá: ' + ${#numbers.formatDecimal(r.price, 0, 'COMMA', 0, 'POINT')}"></p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <a th:href="@{|/tenant/rooms/${r.id}|}" class="px-4 py-2 border rounded hover:bg-gray-50">Xem chi tiết</a>
+                <form th:action="@{|/tenant/rooms/${r.id}/rent|}" method="post">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Thuê
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

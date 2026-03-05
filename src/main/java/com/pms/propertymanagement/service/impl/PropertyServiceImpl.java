@@ -9,11 +9,12 @@ import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.entity.*;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
 import com.pms.propertymanagement.repository.*;
-import com.pms.propertymanagement.service.PostingOrderService;
+import com.pms.propertymanagement.service.PropertyManagementService;
 import com.pms.propertymanagement.service.PropertyService;
 import com.pms.propertymanagement.utils.DateUtil;
 import com.pms.propertymanagement.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PropertyServiceImpl implements PropertyService {
 
     private final PropertyRepository propertyRepository;
@@ -33,7 +35,8 @@ public class PropertyServiceImpl implements PropertyService {
     private final SurroundingRepository surroundingRepository;
     private final TargetTenantsRepository targetRepository;
     private final ProvinceRepository provinceRepository;
-    private final PostingOrderService postingOrderService;
+    private final PropertyManagementService propertyManagementService;
+    private final PostRepository postRepository;
 
     @Override
     public List<Amenity> getAllAmenities() {
@@ -64,7 +67,12 @@ public class PropertyServiceImpl implements PropertyService {
                     PropertyOwnerResponse dto = new PropertyOwnerResponse();
                     dto.setId(p.getId());
                     dto.setName(p.getName());
-                    dto.setTitle(p.getTitle());
+                    
+                    // Get marketing title from Post (if exists)
+                    postRepository.findByPropertyId(p.getId()).ifPresent(post -> {
+                        dto.setTitle(post.getTitle());
+                    });
+                    
                     dto.setAddressNumber(p.getAddressNumber());
 
                     if (p.getCategory() != null) dto.setCategoryName(p.getCategory().getName());
@@ -74,6 +82,7 @@ public class PropertyServiceImpl implements PropertyService {
                         dto.setImg_url(p.getImages().get(0).getImageUrl());
                     }
 
+                    dto.setStatus(p.getStatus() != null ? p.getStatus().name() : "ACTIVE");
                     dto.setTotalRooms(p.getNumberOfRooms());
 
                     int rentedCount = 0;
@@ -91,24 +100,23 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     @Transactional
     public void createProperty(PropertyRequest request, User owner) {
-        // CHẶN nếu không có lượt đăng
-        if (!postingOrderService.canPost(owner.getId())) {
-            throw new IllegalStateException("Bạn phải mua gói đăng tin mới.");
+        // NEW ARCHITECTURE: Check if user can create property based on management plan
+        if (!propertyManagementService.canCreateProperty(owner.getId())) {
+            throw new IllegalStateException("Bạn cần có gói quản lý đang hoạt động để tạo nhà trọ.");
         }
 
         Property property = new Property();
 
+        // Set property real estate data only
         property.setName(request.getName());
-        property.setTitle(request.getTitle());
-        property.setNumberOfRooms(request.getNumberOfRooms());
-        property.setAcreage(request.getAcreage());
+        if (request.getNumberOfRooms() != null) property.setNumberOfRooms(request.getNumberOfRooms());
+        if (request.getAcreage() != null) property.setAcreage(request.getAcreage());
         property.setAddressNumber(request.getAddressNumber());
-        property.setDescription(request.getDescription());
+        if (request.getPrice() != null) property.setPrice(request.getPrice());
         property.setOwner(owner);
-        property.setSlug(SlugUtil.makeSlug(request.getTitle()));
 
-        categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
-        wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
+        if (request.getCategoryId() != null) categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
+        if (request.getWardCode() != null && !request.getWardCode().isEmpty()) wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
 
         if (request.getAmenityIds() != null) {
             property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
@@ -119,8 +127,6 @@ public class PropertyServiceImpl implements PropertyService {
         if (request.getTargetIds() != null) {
             property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
         }
-
-        property.setPrice(request.getPrice());
 
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
             List<PropertyImage> images = new ArrayList<>();
@@ -134,11 +140,8 @@ public class PropertyServiceImpl implements PropertyService {
             property.setImages(images);
         }
 
-        // save trước
+        // Save property only — post creation is handled separately via /owner/posts/create
         propertyRepository.save(property);
-
-        // TRỪ 1 LƯỢT + INSERT posting_usages
-        postingOrderService.consumeOneUseForNewProperty(owner.getId(), property);
     }
 
     @Override
@@ -148,12 +151,17 @@ public class PropertyServiceImpl implements PropertyService {
 
         PropertyRequest req = new PropertyRequest();
         req.setName(p.getName());
-        req.setTitle(p.getTitle());
         req.setNumberOfRooms(p.getNumberOfRooms());
         req.setPrice(p.getPrice());
         req.setAcreage(p.getAcreage());
         req.setAddressNumber(p.getAddressNumber());
-        req.setDescription(p.getDescription());
+        
+        // Get marketing fields from Post
+        postRepository.findByPropertyId(id).ifPresent(post -> {
+            req.setPostTitle(post.getTitle());
+            req.setPostSlug(post.getSlug());
+            req.setPostDescription(post.getDescription());
+        });
 
         if (p.getCategory() != null) req.setCategoryId(p.getCategory().getId());
         if (p.getWard() != null) req.setWardCode(p.getWard().getCode());
@@ -173,16 +181,15 @@ public class PropertyServiceImpl implements PropertyService {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
 
+        // Update property real estate data
         property.setName(request.getName());
-        property.setTitle(request.getTitle());
-        property.setNumberOfRooms(request.getNumberOfRooms());
-        property.setPrice(request.getPrice());
-        property.setAcreage(request.getAcreage());
+        if (request.getNumberOfRooms() != null) property.setNumberOfRooms(request.getNumberOfRooms());
+        if (request.getPrice() != null) property.setPrice(request.getPrice());
+        if (request.getAcreage() != null) property.setAcreage(request.getAcreage());
         property.setAddressNumber(request.getAddressNumber());
-        property.setDescription(request.getDescription());
 
-        categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
-        wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
+        if (request.getCategoryId() != null) categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
+        if (request.getWardCode() != null && !request.getWardCode().isEmpty()) wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
 
         if (request.getAmenityIds() != null) {
             property.setAmenities(new HashSet<>(amenityRepository.findAllById(request.getAmenityIds())));
@@ -207,8 +214,59 @@ public class PropertyServiceImpl implements PropertyService {
                 }
             }
         }
-
+    
         propertyRepository.save(property);
+        
+        // NEW ARCHITECTURE: Update Post marketing fields separately
+        updatePostMarketingFields(property.getId(), request);
+    }
+    
+    /**
+     * Update Post marketing fields when Property is updated
+     */
+    private void updatePostMarketingFields(Long propertyId, PropertyRequest request) {
+        postRepository.findByPropertyId(propertyId).ifPresent(post -> {
+            boolean changed = false;
+            
+            // Update title
+            if (request.getPostTitle() != null && !request.getPostTitle().trim().isEmpty() 
+                    && !request.getPostTitle().equals(post.getTitle())) {
+                post.setTitle(request.getPostTitle());
+                
+                // Auto-regenerate slug if title changed and slug not explicitly provided
+                if (request.getPostSlug() == null || request.getPostSlug().trim().isEmpty()) {
+                    String newSlug = SlugUtil.makeSlug(request.getPostTitle() + "-" + propertyId);
+                    if (!postRepository.existsBySlugExcludingId(newSlug, post.getId())) {
+                        post.setSlug(newSlug);
+                    }
+                }
+                changed = true;
+            }
+            
+            // Update slug if explicitly provided
+            if (request.getPostSlug() != null && !request.getPostSlug().trim().isEmpty() 
+                    && !request.getPostSlug().equals(post.getSlug())) {
+                // Check slug uniqueness
+                if (!postRepository.existsBySlugExcludingId(request.getPostSlug(), post.getId())) {
+                    post.setSlug(request.getPostSlug());
+                    changed = true;
+                } else {
+                    log.warn("Slug {} already exists, skipping update", request.getPostSlug());
+                }
+            }
+            
+            // Update description
+            if (request.getPostDescription() != null && !request.getPostDescription().trim().isEmpty()
+                    && !request.getPostDescription().equals(post.getDescription())) {
+                post.setDescription(request.getPostDescription());
+                changed = true;
+            }
+            
+            if (changed) {
+                postRepository.save(post);
+                log.info("Updated marketing fields for post {}", post.getId());
+            }
+        });
     }
 
     @Override
@@ -220,31 +278,43 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PropertyResponse> getPropertiesByCategory(Long categoryId) {
         List<Property> properties = propertyRepository.findByCategory_Id(categoryId);
 
-        return properties.stream().map(p -> PropertyResponse.builder()
+        return properties.stream().map(p -> {
+            PropertyResponse.PropertyResponseBuilder builder = PropertyResponse.builder()
                 .id(p.getId())
-                .title(p.getTitle())
                 .price(p.getPrice())
                 .categoryName(p.getCategory().getName())
                 .acreage(p.getAcreage())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
-                .slug(p.getSlug())
-                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().getFirst().getImageUrl())
-                .build()
-        ).collect(Collectors.toList());
+                .imageUrl(p.getImages().isEmpty() ? "/images/no-image.jpg" : p.getImages().get(0).getImageUrl());
+            
+            // NEW ARCHITECTURE: Get title/slug from Post
+            postRepository.findByPropertyId(p.getId()).ifPresent(post -> {
+                builder.title(post.getTitle());
+                builder.slug(post.getSlug());
+            });
+            
+            return builder.build();
+        }).collect(Collectors.toList());
     }
 
     @Override
     public PropertyDetailResponse getPropertyDetailBySlug(String slug) {
-        Property p = propertyRepository.findBySlugWithDetails(slug)
+        // NEW ARCHITECTURE: Slug belongs to Post, not Property
+        Post post = postRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài đăng!"));
+        
+        Property p = post.getProperty();
+        if (p == null) {
+            throw new ResourceNotFoundException("Property not found for this post");
+        }
 
         return PropertyDetailResponse.builder()
                 .id(p.getId())
-                .title(p.getTitle())
-                .slug(p.getSlug())
+                .title(post.getTitle())
+                .slug(post.getSlug())
                 .price(p.getPrice())
-                .description(p.getDescription())
+                .description(post.getDescription())
                 .addressNumber(p.getAddressNumber())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
@@ -263,22 +333,43 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public User getOwnerByPropertySlug(String propertySlug) {
-        return propertyRepository.findBySlug(propertySlug).map(Property::getOwner).orElse(null);
+        // NEW ARCHITECTURE: Slug belongs to Post
+        return postRepository.findBySlug(propertySlug)
+                .map(post -> post.getProperty().getOwner())
+                .orElse(null);
+    }
+    
+    @Override
+    public String getProvinceCodeFromWard(String wardCode) {
+        return wardRepository.findById(wardCode)
+                .map(ward -> ward.getProvince().getCode())
+                .orElse(null);
     }
 
     @Override
     public List<PropertyResponse> getAll() {
-        return propertyRepository.findAll().stream().map(p -> PropertyResponse.builder()
+        return propertyRepository.findAll().stream().map(p -> {
+            PropertyResponse.PropertyResponseBuilder builder = PropertyResponse.builder()
                 .id(p.getId())
-                .title(p.getTitle())
                 .price(p.getPrice())
                 .categoryName(p.getCategory().getName())
                 .acreage(p.getAcreage())
                 .wardName(p.getWard().getName())
                 .provinceName(p.getWard().getProvince().getName())
-                .slug(p.getSlug())
-                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().getFirst().getImageUrl())
-                .build()
-        ).collect(Collectors.toList());
+                .imageUrl(p.getImages().isEmpty() ? "/images/default.jpg" : p.getImages().get(0).getImageUrl());
+            
+            // NEW ARCHITECTURE: Get title/slug from Post
+            postRepository.findByPropertyId(p.getId()).ifPresent(post -> {
+                builder.title(post.getTitle());
+                builder.slug(post.getSlug());
+            });
+            
+            return builder.build();
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Property> getActivePropertiesWithoutPost(Long ownerId) {
+        return propertyRepository.findActivePropertiesWithoutPost(ownerId);
     }
 }

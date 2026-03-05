@@ -29,7 +29,19 @@ public class PostingPackage {
     private int price; // VND
 
     @Column(nullable = false)
-    private int usageLimit; // 1
+    private int usageLimit; // Duration in days for post packages
+
+    @Column(nullable = false)
+    private int freeBoosts = 0; // Number of free boost uses
+
+    @Column(nullable = false)
+    private boolean hasVipBadge = false; // VIP badge feature
+
+    @Column(nullable = false)
+    private boolean hasSearchPriority = false; // Search priority feature
+
+    @Column(nullable = false)
+    private boolean isRecommended = false; // Recommended badge
 
     @Column(nullable = false)
     private boolean isActive = true;

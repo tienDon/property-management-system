@@ -1,9 +1,10 @@
 package com.pms.propertymanagement.controller;
 
 import com.pms.propertymanagement.dto.request.ContactRequest;
-import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
-import com.pms.propertymanagement.dto.response.PropertyResponse;
+import com.pms.propertymanagement.dto.response.PostPublicResponse;
+import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.service.CategoryService;
+import com.pms.propertymanagement.service.PostService;
 import com.pms.propertymanagement.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -17,30 +18,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicController {
 
-
     private final CategoryService categoryService;
-
     private final PropertyService propertyService;
+    private final PostService postService;
 
     @GetMapping("/")
     public String index(Model model) {
+        // NEW ARCHITECTURE: Get marketplace posts (ACTIVE only), not all properties
+        List<PostPublicResponse> properties = postService.getAllMarketplacePosts()
+                .stream().map(PostPublicResponse::from).toList();
 
         model.addAttribute("categories", categoryService.findAll());
         model.addAttribute("content", "public/home");
-        model.addAttribute("properties", propertyService.getAll());
+        model.addAttribute("properties", properties);
 
         return "layout/public-main";
     }
 
     @GetMapping("/public/category/{id}")
     public String listByCategory(@PathVariable("id") Long categoryId, Model model) {
-
-        List<PropertyResponse> properties = propertyService.getPropertiesByCategory(categoryId);
+        List<PostPublicResponse> properties = postService.getMarketplacePostsByCategory(categoryId)
+                .stream().map(PostPublicResponse::from).toList();
 
         model.addAttribute("properties", properties);
         model.addAttribute("currentCategoryId", categoryId);
-
-        // Vẫn cần các list phụ cho sidebar/search
         model.addAttribute("allAmenities", propertyService.getAllAmenities());
         model.addAttribute("categoryId", categoryId);
 
@@ -50,15 +51,15 @@ public class PublicController {
 
     @GetMapping("/public/property/{slug}")
     public String propertyDetail(@PathVariable("slug") String slug, Model model) {
-        // 1. Gọi service lấy dữ liệu chi tiết qua slug
-        PropertyDetailResponse property = propertyService.getPropertyDetailBySlug(slug);
+        Post post = postService.getMarketplacePostBySlug(slug)
+                .orElseThrow(() -> new com.pms.propertymanagement.exception.ResourceNotFoundException("Post not found or not available"));
 
-        // 2. Đưa vào model
-        model.addAttribute("p", property);
+        postService.incrementView(slug);
 
-        // 3. Layout fragment (giống các trang trước bạn làm)
+        PostPublicResponse p = PostPublicResponse.from(post);
+        model.addAttribute("p", p);
+
         model.addAttribute("content", "public/property-detail");
-
         model.addAttribute("contact", new ContactRequest());
 
         return "layout/public-main";

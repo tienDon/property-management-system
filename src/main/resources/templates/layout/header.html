@@ -10,43 +10,77 @@
     </a>
 
     <nav class="hidden md:flex space-x-6">
-        <a th:each="cat : ${categories}"
-           th:href="@{/public/category/{id}(id=${cat.id})}"
-           class="text-gray-700 font-medium hover:text-blue-600 transition duration-300 pb-1 border-b-2 border-transparent hover:border-blue-600"
-           th:text="${cat.name}">
-            Nhà trọ
-        </a>
+        <th:block th:each="cat : ${categories}">
+            <th:block th:if="${cat instanceof T(com.pms.propertymanagement.dto.response.CategoryResponse)}">
+                <a th:href="@{/public/category/{id}(id=${cat.id})}"
+                   class="text-gray-700 font-medium hover:text-blue-600 transition duration-300 pb-1 border-b-2 border-transparent hover:border-blue-600"
+                   th:text="${cat.name}">
+                    Nhà trọ
+                </a>
+            </th:block>
+        </th:block>
         <a href="/video-review" class="text-gray-700 font-medium hover:text-blue-600">Video Review</a>
     </nav>
 
     <div class="flex items-center gap-3">
 
-        <!-- Đăng nhập -->
-        <a href="/login"
-           class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300
-              text-gray-700 text-sm font-medium
-              hover:bg-gray-100 hover:border-gray-400 transition">
+        <div th:if="${session.user == null}" class="flex items-center gap-3">
+            <a href="/login"
+               class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300
+                  text-gray-700 text-sm font-medium
+                  hover:bg-gray-100 hover:border-gray-400 transition">
+                <i class="fa-solid fa-right-to-bracket text-gray-600"></i>
+                <span>Đăng nhập</span>
+            </a>
 
-            <i class="fa-solid fa-right-to-bracket text-gray-600"></i>
-            <span>Đăng nhập</span>
-        </a>
+            <a href="/register"
+               class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300
+                  text-gray-700 text-sm font-medium
+                  hover:bg-gray-100 hover:border-gray-400 transition">
+                <i class="fa-solid fa-user-plus text-gray-600"></i>
+                <span>Đăng ký</span>
+            </a>
+        </div>
 
-        <!-- Đăng ký -->
-        <a href="/register"
-           class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300
-              text-gray-700 text-sm font-medium
-              hover:bg-gray-100 hover:border-gray-400 transition">
+        <div th:if="${session.user != null}" class="flex items-center gap-3">
+            <span class="text-sm text-gray-700">
+                Xin chào, <span class="font-semibold" th:text="${session.user.fullName != null ? session.user.fullName : session.user.username}"></span>
+            </span>
 
-            <i class="fa-solid fa-user-plus text-gray-600"></i>
-            <span>Đăng ký</span>
-        </a>
+            <a th:if="${session.user.roles.?[name == 'OWNER'].size() > 0}" href="/owner"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Quản lý
+            </a>
 
-        <!-- Đăng nhà trọ -->
-        <a href="/login/owner"
+            <a th:if="${session.user.roles.?[name == 'STAFF'].size() > 0}" href="/staff/maintenance"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Công việc
+            </a>
+
+            <a th:if="${session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0}" href="/tenant/rooms"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Phòng của tôi
+            </a>
+
+            <a th:if="${session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0}" href="/tenant/home"
+               class="px-4 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                Tìm phòng
+            </a>
+
+            <form th:action="@{/logout}" method="post">
+                <button type="submit"
+                        class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300
+                           text-gray-700 text-sm font-medium hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-right-from-bracket text-gray-600"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+
+        <a th:if="${session.user == null or (session.user.roles.?[name == 'OWNER'].size() == 0 and session.user.roles.?[name == 'STAFF'].size() == 0)}" href="/login/owner"
            class="ml-2 bg-blue-600 text-white px-5 py-2 rounded-full
               text-sm font-semibold
               hover:bg-blue-700 transition shadow-sm">
-
             Đăng nhà trọ
         </a>
 

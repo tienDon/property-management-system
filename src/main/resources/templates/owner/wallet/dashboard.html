@@ -1,0 +1,178 @@
+<!doctype html>
+<div th:fragment="content" class="space-y-6">
+  <!-- Page Header -->
+  <div
+    class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold mb-2">
+          <i class="fa-solid fa-wallet mr-3"></i>
+          Quản lý ví điện tử
+        </h1>
+        <p class="text-blue-100">Theo dõi số dư và lịch sử giao dịch của bạn</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-blue-200 mb-1">Số dư hiện tại</p>
+        <p class="text-3xl font-bold" th:text="${balanceFormatted}">0 đ</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <a
+      href="/owner/wallet/topup"
+      class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+    >
+      <div class="flex items-center">
+        <div class="bg-green-100 p-3 rounded-full mr-4">
+          <i class="fa-solid fa-circle-plus text-green-600 text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Nạp tiền</h3>
+          <p class="text-sm text-gray-600">Thêm tiền vào ví</p>
+        </div>
+      </div>
+    </a>
+
+    <a
+      href="/owner/wallet/transactions"
+      class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+    >
+      <div class="flex items-center">
+        <div class="bg-blue-100 p-3 rounded-full mr-4">
+          <i class="fa-solid fa-list text-blue-600 text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Lịch sử</h3>
+          <p class="text-sm text-gray-600">Xem giao dịch</p>
+        </div>
+      </div>
+    </a>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="flex items-center">
+        <div class="bg-purple-100 p-3 rounded-full mr-4">
+          <i class="fa-solid fa-chart-line text-purple-600 text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Tổng nạp</h3>
+          <p
+            class="text-lg font-bold text-purple-600"
+            th:text="${totalDepositedFormatted}"
+          >
+            0 đ
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+      <div class="flex items-center">
+        <div class="bg-red-100 p-3 rounded-full mr-4">
+          <i class="fa-solid fa-arrow-down text-red-600 text-xl"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900">Đã chi tiêu</h3>
+          <p
+            class="text-lg font-bold text-red-600"
+            th:text="${totalSpentFormatted}"
+          >
+            0 đ
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="bg-white rounded-lg border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">
+          <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+          Giao dịch gần đây
+        </h3>
+        <a
+          href="/owner/wallet/transactions"
+          class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          Xem tất cả
+          <i class="fa-solid fa-arrow-right ml-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="divide-y divide-gray-200">
+      <div
+        th:if="${#lists.isEmpty(recentTransactions)}"
+        class="p-6 text-center"
+      >
+        <div class="text-gray-400 mb-2">
+          <i class="fa-solid fa-inbox text-4xl"></i>
+        </div>
+        <p class="text-gray-600">Chưa có giao dịch nào</p>
+        <a
+          href="/owner/wallet/topup"
+          class="inline-block mt-3 text-blue-600 hover:text-blue-800"
+        >
+          Nạp tiền ngay
+        </a>
+      </div>
+
+      <div th:each="transaction : ${recentTransactions}" class="p-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center mr-4"
+              th:classappend="${transaction.type == T(com.pms.propertymanagement.enums.TransactionType).DEPOSIT} ? 'bg-green-100' : 'bg-red-100'"
+            >
+              <i
+                class="text-lg"
+                th:classappend="${transaction.type == T(com.pms.propertymanagement.enums.TransactionType).DEPOSIT} ? 'fa-solid fa-arrow-up text-green-600' : 'fa-solid fa-arrow-down text-red-600'"
+              ></i>
+            </div>
+            <div>
+              <p
+                class="font-medium text-gray-900"
+                th:text="${transaction.type.displayName}"
+              >
+                Loại giao dịch
+              </p>
+              <p
+                class="text-sm text-gray-600"
+                th:text="${transaction.description ?: transaction.type.description}"
+              >
+                Mô tả giao dịch
+              </p>
+              <p
+                class="text-xs text-gray-500"
+                th:text="${#temporals.format(transaction.createdAt, 'dd/MM/yyyy HH:mm')}"
+              >
+                Thời gian
+              </p>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <p
+              class="font-semibold"
+              th:classappend="${transaction.type == T(com.pms.propertymanagement.enums.TransactionType).DEPOSIT} ? 'text-green-600' : 'text-red-600'"
+              th:text="${(transaction.type == T(com.pms.propertymanagement.enums.TransactionType).DEPOSIT) ? '+' : '-'} + ${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+            >
+              0 đ
+            </p>
+            <span
+              class="inline-block px-2 py-1 text-xs rounded-full"
+              th:classappend="${transaction.status.cssClass}"
+              th:text="${transaction.status.displayName}"
+            >
+              Trạng thái
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

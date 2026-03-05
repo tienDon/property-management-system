@@ -1,0 +1,43 @@
+<div>
+    <div class="flex flex-wrap items-center gap-3 text-sm">
+        <a th:href="@{/staff/maintenance}" class="text-blue-600 hover:underline">&larr; Danh sách việc</a>
+    </div>
+    <h1 class="text-2xl font-semibold mt-2">Chi tiết yêu cầu</h1>
+
+    <div th:if="${success}" class="mt-3 p-3 bg-green-100 text-green-800 rounded">
+        Thao tác thành công.
+    </div>
+
+    <div class="mt-4 border rounded p-4 space-y-2">
+        <p><span class="font-medium">Mã yêu cầu:</span> <span th:text="${request.code != null ? request.code : request.id}"></span></p>
+        <p><span class="font-medium">Phòng:</span> <span th:text="${request.room != null ? request.room.name : 'N/A'}"></span></p>
+        <p><span class="font-medium">Danh mục:</span> <span th:text="${request.category.displayName}"></span></p>
+        <p><span class="font-medium">Mô tả:</span></p>
+        <p class="text-gray-700 whitespace-pre-line" th:text="${request.description}"></p>
+        <p><span class="font-medium">Trạng thái:</span> <span th:text="${request.status.displayName}"></span></p>
+        <p><span class="font-medium">Phân công lúc:</span> <span th:text="${request.assignedAt != null ? #temporals.format(request.assignedAt, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+        <p><span class="font-medium">Bắt đầu lúc:</span> <span th:text="${request.startedAt != null ? #temporals.format(request.startedAt, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+        <p><span class="font-medium">Hoàn thành lúc:</span> <span th:text="${request.completedAt != null ? #temporals.format(request.completedAt, 'dd/MM/yyyy HH:mm') : '-'}"></span></p>
+        <div th:if="${request.completionNote != null}">
+            <p><span class="font-medium">Ghi chú hoàn thành:</span></p>
+            <p class="text-gray-700 whitespace-pre-line" th:text="${request.completionNote}"></p>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <div th:if="${request.status.name() == 'ASSIGNED'}">
+            <form th:action="@{|/staff/maintenance/${request.id}/start|}" method="post">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Bắt đầu xử lý</button>
+            </form>
+        </div>
+
+        <div th:if="${request.status.name() == 'IN_PROGRESS'}" class="mt-3">
+            <p class="text-sm text-red-600 mb-2" th:if="${errorComplete != null}" th:text="${errorComplete}"></p>
+            <form th:action="@{|/staff/maintenance/${request.id}/complete|}" method="post">
+                <label class="block text-sm font-medium mb-1">Hoàn thành - ghi chú</label>
+                <textarea name="note" rows="3" class="w-full border rounded px-3 py-2" th:text="${completeNote}"></textarea>
+                <button type="submit" class="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Hoàn thành</button>
+            </form>
+        </div>
+    </div>
+</div>

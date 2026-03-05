@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TenantRepository extends JpaRepository<Tenant, Long> {
     List<Tenant> findByOwner_Username(String username);
     List<Tenant> findByOwner_Id(Long ownerId); // Changed to underscore for JPA relationship safety
     boolean existsByCitizenId(String citizenId);
+    Optional<Tenant> findFirstByPhone(String phone);
+    Optional<Tenant> findFirstByEmail(String email);
 }

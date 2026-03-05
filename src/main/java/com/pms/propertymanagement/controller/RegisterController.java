@@ -1,0 +1,81 @@
+package com.pms.propertymanagement.controller;
+
+import com.pms.propertymanagement.dto.request.RegisterForm;
+import com.pms.propertymanagement.entity.Role;
+import com.pms.propertymanagement.entity.User;
+import com.pms.propertymanagement.repository.RoleRepository;
+import com.pms.propertymanagement.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequiredArgsConstructor
+public class RegisterController {
+
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+
+    @GetMapping("/register")
+    public String showRegister(Model model, HttpSession session) {
+        if (session.getAttribute("user") != null) return "redirect:/";
+        if (!model.containsAttribute("registerForm")) {
+            model.addAttribute("registerForm", new RegisterForm());
+        }
+        return "public/register";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String username,
+                           @RequestParam String password,
+                           @RequestParam(required = false) String fullName,
+                           @RequestParam(required = false) String email,
+                           @RequestParam(required = false) String phone,
+                           HttpSession session,
+                           RedirectAttributes ra) {
+        RegisterForm form = new RegisterForm();
+        form.setUsername(username);
+        form.setPassword(password);
+        form.setFullName(fullName);
+        form.setEmail(email);
+        form.setPhone(phone);
+
+        boolean hasError = false;
+        if (username == null || username.trim().isEmpty()) {
+            ra.addFlashAttribute("errorUsername", "Vui lòng nhập username");
+            hasError = true;
+        }
+        if (password == null || password.trim().isEmpty()) {
+            ra.addFlashAttribute("errorPassword", "Vui lòng nhập password");
+            hasError = true;
+        }
+        if (!hasError && userRepository.findByUsername(username.trim()).isPresent()) {
+            ra.addFlashAttribute("errorUsername", "Username đã tồn tại");
+            hasError = true;
+        }
+
+        ra.addFlashAttribute("registerForm", form);
+        if (hasError) return "redirect:/register";
+
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Role USER chưa tồn tại"));
+
+        User user = new User();
+        user.setUsername(username.trim());
+        user.setPassword(password);
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.getRoles().add(userRole);
+
+        userRepository.save(user);
+        session.setAttribute("user", user);
+        return "redirect:/tenant/rooms";
+    }
+}
+

@@ -16,6 +16,12 @@ public class UserInitializer {
     public void init() {
         createAdmin();
         createOwner1();
+        createOwner2();
+        createOwner3();
+        createOwner4();
+        createTenant1();
+        createStaff1();
+        createModerator1();
     }
 
     private void createAdmin() {
@@ -42,6 +48,48 @@ public class UserInitializer {
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);
+    }
+
+    private void createTenant1() {
+        if (userRepository.findByUsername("tenant1").isPresent()) return;
+
+        User tenant = new User();
+        tenant.setUsername("tenant1");
+        tenant.setPassword("123");
+        tenant.setFullName("Nguyễn Văn An");
+        tenant.setPhone("0901234567");
+        tenant.setEmail("nva@gmail.com");
+        tenant.getRoles().add(roleRepository.findByName("USER").get());
+
+        userRepository.save(tenant);
+    }
+
+    private void createStaff1() {
+        if (userRepository.findByUsername("staff1").isPresent()) return;
+
+        User staff = new User();
+        staff.setUsername("staff1");
+        staff.setPassword("123");
+        staff.setFullName("Staff 1");
+        staff.setPhone("0901111111");
+        staff.setEmail("staff1@gmail.com");
+        staff.getRoles().add(roleRepository.findByName("STAFF").get());
+
+        userRepository.save(staff);
+    }
+
+    private void createModerator1() {
+        if (userRepository.findByUsername("moderator1").isPresent()) return;
+
+        User mod = new User();
+        mod.setUsername("moderator1");
+        mod.setPassword("123");
+        mod.setFullName("Kiểm duyệt viên 1");
+        mod.setPhone("0900000099");
+        mod.setEmail("mod1@tromoi.com");
+        mod.getRoles().add(roleRepository.findByName("MODERATOR").get());
+
+        userRepository.save(mod);
     }
 
     private void createOwner2() {
@@ -79,7 +127,7 @@ public class UserInitializer {
         owner.setUsername("owner4");
         owner.setPassword("123");
         owner.setFullName("owner4");
-        owner.setPhone("0975893248");
+        owner.setPhone("0808080808");
         owner.setEmail("an@gmail.com");
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
