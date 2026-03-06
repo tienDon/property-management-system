@@ -58,6 +58,14 @@ public class RegisterController {
             ra.addFlashAttribute("errorUsername", "Username đã tồn tại");
             hasError = true;
         }
+        if (!hasError && email != null && !email.trim().isEmpty() && userRepository.findByEmail(email.trim()).isPresent()) {
+            ra.addFlashAttribute("errorEmail", "Email đã tồn tại");
+            hasError = true;
+        }
+        if (!hasError && phone != null && !phone.trim().isEmpty() && userRepository.findByPhone(phone.trim()).isPresent()) {
+            ra.addFlashAttribute("errorPhone", "Số điện thoại đã tồn tại");
+            hasError = true;
+        }
 
         ra.addFlashAttribute("registerForm", form);
         if (hasError) return "redirect:/register";
@@ -75,7 +83,72 @@ public class RegisterController {
 
         userRepository.save(user);
         session.setAttribute("user", user);
-        return "redirect:/tenant/rooms";
+        return "redirect:/ekyc?next=/tenant/rooms";
+    }
+
+    @GetMapping("/register/owner")
+    public String showOwnerRegister(Model model, HttpSession session) {
+        if (session.getAttribute("user") != null) return "redirect:/";
+        if (!model.containsAttribute("registerForm")) {
+            model.addAttribute("registerForm", new RegisterForm());
+        }
+        return "public/register-owner";
+    }
+
+    @PostMapping("/register/owner")
+    public String registerOwner(@RequestParam String username,
+                                @RequestParam String password,
+                                @RequestParam(required = false) String fullName,
+                                @RequestParam(required = false) String email,
+                                @RequestParam(required = false) String phone,
+                                HttpSession session,
+                                RedirectAttributes ra) {
+        RegisterForm form = new RegisterForm();
+        form.setUsername(username);
+        form.setPassword(password);
+        form.setFullName(fullName);
+        form.setEmail(email);
+        form.setPhone(phone);
+
+        boolean hasError = false;
+        if (username == null || username.trim().isEmpty()) {
+            ra.addFlashAttribute("errorUsername", "Vui lòng nhập username");
+            hasError = true;
+        }
+        if (password == null || password.trim().isEmpty()) {
+            ra.addFlashAttribute("errorPassword", "Vui lòng nhập password");
+            hasError = true;
+        }
+        if (!hasError && userRepository.findByUsername(username.trim()).isPresent()) {
+            ra.addFlashAttribute("errorUsername", "Username đã tồn tại");
+            hasError = true;
+        }
+        if (!hasError && email != null && !email.trim().isEmpty() && userRepository.findByEmail(email.trim()).isPresent()) {
+            ra.addFlashAttribute("errorEmail", "Email đã tồn tại");
+            hasError = true;
+        }
+        if (!hasError && phone != null && !phone.trim().isEmpty() && userRepository.findByPhone(phone.trim()).isPresent()) {
+            ra.addFlashAttribute("errorPhone", "Số điện thoại đã tồn tại");
+            hasError = true;
+        }
+
+        ra.addFlashAttribute("registerForm", form);
+        if (hasError) return "redirect:/register/owner";
+
+        Role ownerRole = roleRepository.findByName("OWNER")
+                .orElseThrow(() -> new RuntimeException("Role  chưa tồn tại"));
+
+        User user = new User();
+        user.setUsername(username.trim());
+        user.setPassword(password);
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
+        user.getRoles().add(ownerRole);
+
+        userRepository.save(user);
+        session.setAttribute("user", user);
+        return "redirect:/ekyc?next=/owner";
     }
 }
 

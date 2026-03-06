@@ -2,16 +2,16 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký</title>
+    <title>Đăng ký chủ trọ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://kit.fontawesome.com/a37ac37445.js" crossorigin="anonymous"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-gray-100">
 <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-    <h1 class="text-3xl font-bold text-center mb-6">Đăng ký</h1>
+    <h1 class="text-3xl font-bold text-center mb-6">Đăng ký chủ trọ</h1>
 
-    <form th:action="@{/register}" method="post" th:object="${registerForm}" class="space-y-4">
+    <form th:action="@{/register/owner}" method="post" th:object="${registerForm}" class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700">Username</label>
             <input type="text" name="username" th:field="*{username}"
@@ -53,7 +53,7 @@
 
     <p class="text-sm text-center text-gray-600 mt-4">
         Đã có tài khoản?
-        <a href="/login" class="text-blue-600 hover:underline">Đăng nhập</a>
+        <a href="/login/owner" class="text-blue-600 hover:underline">Đăng nhập</a>
     </p>
 </div>
 </body>

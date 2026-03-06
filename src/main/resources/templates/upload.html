@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload CCCD</title>
+</head>
+<body>
+<h2>Upload CCCD</h2>
+
+<form th:action="@{/upload}" method="post" enctype="multipart/form-data">
+
+    <div>
+        <label for="frontImage">Mặt trước CCCD:</label>
+        <input type="file" id="frontImage" name="frontImage" required/>
+    </div>
+
+    <div>
+        <label for="backImage">Mặt sau CCCD:</label>
+        <input type="file" id="backImage" name="backImage" required/>
+    </div>
+
+    <div>
+        <label for="faceImage">Ảnh khuôn mặt:</label>
+        <input type="file" id="faceImage" name="faceImage" required/>
+    </div>
+
+    <button type="submit">
+        Upload
+    </button>
+
+</form>
+</body>
+</html>

@@ -31,6 +31,7 @@ public class UserInitializer {
         admin.setUsername("admin");
         admin.setPassword("123");
         admin.setFullName("system admin");
+        admin.setEkycVerified(true);
         admin.getRoles().add(roleRepository.findByName("ADMIN").get());
 
         userRepository.save(admin);
@@ -45,6 +46,7 @@ public class UserInitializer {
         owner.setFullName("owner1");
         owner.setPhone("0975893248");
         owner.setEmail("don@gmail.com");
+        owner.setEkycVerified(true);
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);
@@ -59,6 +61,7 @@ public class UserInitializer {
         tenant.setFullName("Nguyễn Văn An");
         tenant.setPhone("0901234567");
         tenant.setEmail("nva@gmail.com");
+        tenant.setEkycVerified(true);
         tenant.getRoles().add(roleRepository.findByName("USER").get());
 
         userRepository.save(tenant);
@@ -73,6 +76,7 @@ public class UserInitializer {
         staff.setFullName("Staff 1");
         staff.setPhone("0901111111");
         staff.setEmail("staff1@gmail.com");
+        staff.setEkycVerified(true);
         staff.getRoles().add(roleRepository.findByName("STAFF").get());
 
         userRepository.save(staff);
@@ -87,6 +91,7 @@ public class UserInitializer {
         mod.setFullName("Kiểm duyệt viên 1");
         mod.setPhone("0900000099");
         mod.setEmail("mod1@tromoi.com");
+        mod.setEkycVerified(true);
         mod.getRoles().add(roleRepository.findByName("MODERATOR").get());
 
         userRepository.save(mod);
@@ -101,6 +106,7 @@ public class UserInitializer {
         owner.setFullName("owner2");
         owner.setPhone("0909090909");
         owner.setEmail("kiet@gmail.com");
+        owner.setEkycVerified(true);
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);
@@ -115,6 +121,7 @@ public class UserInitializer {
         owner.setFullName("owner3");
         owner.setPhone("0707070707");
         owner.setEmail("thach@gmail.com");
+        owner.setEkycVerified(true);
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);
@@ -129,6 +136,7 @@ public class UserInitializer {
         owner.setFullName("owner4");
         owner.setPhone("0808080808");
         owner.setEmail("an@gmail.com");
+        owner.setEkycVerified(true);
         owner.getRoles().add(roleRepository.findByName("OWNER").get());
 
         userRepository.save(owner);
