@@ -2,8 +2,8 @@ package com.pms.propertymanagement.controller;
 
 import com.pms.propertymanagement.entity.MaintenanceRequest;
 import com.pms.propertymanagement.entity.User;
-import com.pms.propertymanagement.repository.UserRepository;
 import com.pms.propertymanagement.service.MaintenanceWorkflowService;
+import com.pms.propertymanagement.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OwnerMaintenanceController {
     private final MaintenanceWorkflowService maintenanceWorkflowService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping
     public String list(HttpSession session, Model model) {
@@ -38,7 +38,7 @@ public class OwnerMaintenanceController {
         if (user == null) return "redirect:/login/owner";
         MaintenanceRequest req = maintenanceWorkflowService.getRequestDetailForOwner(id, user);
         model.addAttribute("request", req);
-        model.addAttribute("staffs", userRepository.findByRoles_Name("STAFF"));
+        model.addAttribute("staffs", userService.getUsersByRole("STAFF"));
         model.addAttribute("content", "owner/maintenance/detail");
         model.addAttribute("activeMenu", "maintenance");
         return "layout/owner-layout";

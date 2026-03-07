@@ -2,6 +2,7 @@ package com.pms.propertymanagement.controller;
 
 import com.pms.propertymanagement.dto.request.ContactRequest;
 import com.pms.propertymanagement.entity.MaintenanceRequest;
+import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.entity.Room;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.MaintenanceCategory;
@@ -9,6 +10,7 @@ import com.pms.propertymanagement.enums.MaintenanceStatus;
 import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.dto.request.MaintenanceCreateForm;
 import com.pms.propertymanagement.service.ContactService;
+import com.pms.propertymanagement.service.PostService;
 import com.pms.propertymanagement.service.TenantMaintenanceService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,11 +31,13 @@ public class TenantMaintenanceController {
 
     private final TenantMaintenanceService tenantMaintenanceService;
     private final ContactService contactService;
+    private final PostService postService;
 
     @GetMapping("/home")
     public String home(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         List<Room> rooms = tenantMaintenanceService.getAvailableRooms();
         model.addAttribute("rooms", rooms);
         model.addAttribute("content", "tenant/available-room-list");
@@ -42,10 +47,12 @@ public class TenantMaintenanceController {
     @PostMapping("/rooms/{roomId}/rent")
     public String rentRoom(@PathVariable Long roomId, HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
 
         if (!StringUtils.hasText(user.getPhone())) {
-            redirectAttributes.addFlashAttribute("rentError", "Vui lòng cập nhật số điện thoại trước khi gửi yêu cầu thuê.");
+            redirectAttributes.addFlashAttribute("rentError",
+                    "Vui lòng cập nhật số điện thoại trước khi gửi yêu cầu thuê.");
             return "redirect:/tenant/home";
         }
 
@@ -54,7 +61,10 @@ public class TenantMaintenanceController {
             redirectAttributes.addFlashAttribute("rentError", "Phòng này không còn trống.");
             return "redirect:/tenant/home";
         }
-        if (room.getProperty() == null || !StringUtils.hasText(room.getProperty().getSlug())) {
+        Post post = (room.getProperty() != null)
+                ? postService.findPostByPropertyId(room.getProperty().getId()).orElse(null)
+                : null;
+        if (post == null || !StringUtils.hasText(post.getSlug())) {
             redirectAttributes.addFlashAttribute("rentError", "Không tìm thấy bài đăng của phòng này.");
             return "redirect:/tenant/home";
         }
@@ -64,7 +74,7 @@ public class TenantMaintenanceController {
         contact.setPhone(user.getPhone());
         contact.setNote("Yêu cầu thuê phòng: " + room.getName() + " (roomId=" + room.getId() + ")");
 
-        contactService.createContact(room.getProperty().getSlug(), contact);
+        contactService.createContact(post.getSlug(), contact);
         redirectAttributes.addFlashAttribute("rentSuccess", true);
         return "redirect:/tenant/home";
     }
@@ -72,7 +82,8 @@ public class TenantMaintenanceController {
     @GetMapping("/rooms")
     public String listRooms(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         List<Room> rooms = tenantMaintenanceService.getRoomsForTenant(user);
         model.addAttribute("rooms", rooms);
         model.addAttribute("content", "tenant/room-list");
@@ -82,7 +93,8 @@ public class TenantMaintenanceController {
     @GetMapping("/rooms/{roomId}")
     public String roomDetail(@PathVariable Long roomId, HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         Room room = tenantMaintenanceService.getRoomDetail(roomId);
         boolean canRequestMaintenance = tenantMaintenanceService.isRoomRentedByTenant(roomId, user);
         model.addAttribute("room", room);
@@ -92,14 +104,11 @@ public class TenantMaintenanceController {
     }
 
     @GetMapping("/rooms/{roomId}/maintenance/create")
-    public String showCreateForm(@PathVariable Long roomId, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+    public String showCreateForm(@PathVariable Long roomId, HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         if (!tenantMaintenanceService.isRoomRentedByTenant(roomId, user)) {
-            return "redirect:/403";
-        }
-        if (tenantMaintenanceService.hasUnresolvedRequestForRoom(roomId)) {
-            redirectAttributes.addFlashAttribute("maintenanceError", "Phòng này đang có yêu cầu chưa được xử lý xong");
             return "redirect:/tenant/rooms/" + roomId;
         }
         Room room = tenantMaintenanceService.getRoomDetail(roomId);
@@ -129,7 +138,8 @@ public class TenantMaintenanceController {
                                   @RequestParam(name = "success", required = false) String success,
                                   @RequestParam(name = "createdId", required = false) Long createdId) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         List<MaintenanceRequest> requests = tenantMaintenanceService.getRequestsForTenant(user);
         model.addAttribute("requests", requests);
         model.addAttribute("success", success != null);
@@ -142,17 +152,12 @@ public class TenantMaintenanceController {
     public String createRequest(@PathVariable Long roomId,
                                 @RequestParam(name = "category", required = false) String categoryRaw,
                                 @RequestParam(name = "description", required = false) String description,
+                                @RequestParam(name = "image", required = false) MultipartFile image,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
-        if (!tenantMaintenanceService.isRoomRentedByTenant(roomId, user)) {
-            return "redirect:/403";
-        }
-        if (tenantMaintenanceService.hasUnresolvedRequestForRoom(roomId)) {
-            redirectAttributes.addFlashAttribute("maintenanceError", "Phòng này đang có yêu cầu chưa được xử lý xong");
-            return "redirect:/tenant/rooms/" + roomId;
-        }
+        if (user == null)
+            return "redirect:/login";
 
         boolean hasError = false;
         MaintenanceCategory category = null;
@@ -178,24 +183,19 @@ public class TenantMaintenanceController {
             return "redirect:/tenant/rooms/" + roomId + "/maintenance/create";
         }
 
-        try {
-            MaintenanceRequest saved = tenantMaintenanceService.createRequest(roomId, user, category, description);
-            return "redirect:/tenant/maintenance?success=true&createdId=" + saved.getId();
-        } catch (IllegalStateException ex) {
-            redirectAttributes.addFlashAttribute("maintenanceError", ex.getMessage());
-            return "redirect:/tenant/rooms/" + roomId;
-        }
+        MaintenanceRequest saved = tenantMaintenanceService.createRequest(roomId, user, category, description, image);
+        return "redirect:/tenant/maintenance?success=true&createdId=" + saved.getId();
     }
 
     @GetMapping("/maintenance/{id}")
     public String requestDetail(@PathVariable Long id, HttpSession session, Model model,
                                 @RequestParam(name = "success", required = false) String success) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         MaintenanceRequest req = tenantMaintenanceService.getTenantRequestDetail(id, user);
         model.addAttribute("request", req);
         model.addAttribute("success", success != null);
-        model.addAttribute("reopenCount", tenantMaintenanceService.countReopens(id));
         model.addAttribute("statuses", MaintenanceStatus.values());
         model.addAttribute("content", "tenant/maintenance-detail");
         return "layout/public-main";
@@ -204,13 +204,10 @@ public class TenantMaintenanceController {
     @PostMapping("/maintenance/{id}/confirm")
     public String confirm(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
-        try {
-            tenantMaintenanceService.confirmCompletion(id, user);
-            redirectAttributes.addAttribute("success", "true");
-        } catch (IllegalStateException ex) {
-            redirectAttributes.addFlashAttribute("errorAction", "Thao tác không hợp lệ");
-        }
+        if (user == null)
+            return "redirect:/login";
+        tenantMaintenanceService.confirmCompletion(id, user);
+        redirectAttributes.addAttribute("success", "true");
         return "redirect:/tenant/maintenance/" + id;
     }
 
@@ -220,23 +217,14 @@ public class TenantMaintenanceController {
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
+        if (user == null)
+            return "redirect:/login";
         if (reason == null || reason.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("errorReopen", "Vui lòng nhập lý do");
             return "redirect:/tenant/maintenance/" + id;
         }
-        try {
-            tenantMaintenanceService.reopenRequest(id, reason, user);
-            redirectAttributes.addAttribute("success", "true");
-        } catch (IllegalStateException ex) {
-            String msg = ex.getMessage();
-            if (msg != null && msg.contains("quá số lần")) {
-                redirectAttributes.addFlashAttribute("errorAction", msg);
-            } else {
-                redirectAttributes.addFlashAttribute("errorAction", "Thao tác không hợp lệ");
-            }
-        }
+        tenantMaintenanceService.reopenRequest(id, reason, user);
+        redirectAttributes.addAttribute("success", "true");
         return "redirect:/tenant/maintenance/" + id;
     }
 }
-

@@ -42,6 +42,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
         }
 
+        if (uri.contains("/moderator")) {
+            if (user == null || user.getRoles().stream().noneMatch(r -> r.getName().equals("MODERATOR"))) {
+                response.sendRedirect("/login/owner");
+                return false;
+            }
+        }
+
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 }

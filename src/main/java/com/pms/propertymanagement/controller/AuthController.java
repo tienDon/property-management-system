@@ -3,29 +3,35 @@ package com.pms.propertymanagement.controller;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * Authentication Controller - handles login and logout for all roles
+ */
 @Controller
-@RequestMapping("/login")
+@Slf4j
 public class AuthController {
 
     private final UserService userService;
+    
     public AuthController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping
-    public String loginUser(HttpSession session) {
+    // ========== TENANT / USER LOGIN ==========
+
+    @GetMapping("/login")
+    public String showUserLoginForm(HttpSession session) {
         if (session.getAttribute("user") != null) return "redirect:/";
         return "public/login-user";
     }
 
-    @PostMapping
+    @PostMapping("/login")
     public String loginUser(@RequestParam("username") String username,
                             @RequestParam("password") String password,
                             HttpSession session,
@@ -35,37 +41,83 @@ public class AuthController {
             model.addAttribute("error", "Sai username hoặc password");
             return "public/login-user";
         }
-
         session.setAttribute("user", user);
-        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-            return "redirect:/owner";
+        String target = resolveRoleTarget(user);
+        if (requiresEkyc(user) && !user.isEkycVerified()) {
+            return "redirect:/ekyc?next=" + target;
         }
-        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
-            return "redirect:/staff/maintenance";
-        }
-        return "redirect:/tenant/rooms";
+        return "redirect:" + target;
     }
 
-    @GetMapping("/owner")
-    public String login() {
+    // ========== OWNER / STAFF LOGIN ==========
+
+    @GetMapping("/login/owner")
+    public String showLoginForm() {
         return "public/login";
     }
 
-    @PostMapping("/owner")
-    public String login(@RequestParam("username") String username, @RequestParam("password") String password, HttpSession session, Model model) {
-        User  user = userService.authenticate(username, password);
+    @PostMapping("/login/owner")
+    public String login(@RequestParam("username") String username,
+                        @RequestParam("password") String password,
+                        HttpSession session,
+                        Model model) {
+        User user = userService.authenticate(username, password);
         if (user != null) {
             session.setAttribute("user", user);
-            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-                return "redirect:/owner";
+            String target = resolveRoleTarget(user);
+            if (requiresEkyc(user) && !user.isEkycVerified()) {
+                return "redirect:/ekyc?next=" + target;
             }
-            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
-                return "redirect:/staff/maintenance";
+            return "redirect:" + target;
+        }
+
+        model.addAttribute("error", "Sai username hoặc password");
+        return "public/login";
+    }
+
+    // ========== LOGOUT ==========
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session,
+                         @RequestParam(value = "redirect", required = false) String redirectUrl) {
+
+        if (session != null) {
+            session.invalidate();
+        }
+
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+            if (isValidRedirectUrl(redirectUrl)) {
+                return "redirect:" + redirectUrl;
+            } else {
+                log.warn("Invalid redirect URL attempted: {}", redirectUrl);
             }
         }
 
-            model.addAttribute("error", "Sai username hoặc password");
-            return "public/login";
+        return "redirect:/login/owner";
     }
 
+    /**
+     * Validate redirect URL to prevent open redirect attacks.
+     * Only allow internal paths (starting with /).
+     */
+    private boolean isValidRedirectUrl(String url) {
+        return url.startsWith("/") && !url.startsWith("//");
+    }
+
+    private boolean requiresEkyc(User user) {
+        return user.getRoles().stream().anyMatch(r -> r.getName().equals("USER") || r.getName().equals("OWNER"));
+    }
+
+    private String resolveRoleTarget(User user) {
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
+            return "/owner";
+        }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
+            return "/staff/maintenance";
+        }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("MODERATOR"))) {
+            return "/moderator";
+        }
+        return "/tenant/rooms";
+    }
 }

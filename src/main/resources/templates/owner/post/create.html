@@ -1,0 +1,201 @@
+<div th:fragment="content" class="bg-gray-50 min-h-screen py-8">
+  <div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+      <a
+        href="/owner/posts"
+        class="inline-flex items-center text-gray-500 hover:text-gray-700 mb-4"
+      >
+        <i class="fas fa-arrow-left mr-2"></i> Quay lại danh sách bài đăng
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Tạo bài đăng mới</h1>
+      <p class="text-gray-600 mt-1">
+        Tạo bài đăng để hiển thị nhà trọ của bạn trên marketplace
+      </p>
+    </div>
+
+    <!-- Info box -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+      <div class="flex">
+        <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+        <div class="space-y-1">
+          <p class="text-sm text-blue-700">
+            <strong>Quy trình duyệt bài:</strong>
+          </p>
+          <ol
+            class="text-sm text-blue-700 list-decimal list-inside space-y-0.5"
+          >
+            <li>
+              Bạn tạo bài đăng → trạng thái
+              <span class="font-semibold">Chờ duyệt</span>
+            </li>
+            <li>
+              Staff xem xét và duyệt → trạng thái
+              <span class="font-semibold text-green-700">Đang hiển thị</span> (7
+              ngày miễn phí)
+            </li>
+            <li>Nếu bị từ chối → chỉnh sửa lại và gửi lại</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Post Form -->
+    <form action="/owner/posts/create" method="POST" class="space-y-6">
+      <!-- Select Property -->
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+          <span class="w-1 h-6 bg-orange-500 mr-3 rounded"></span>
+          Chọn nhà trọ
+        </h2>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Nhà trọ <span class="text-red-500">*</span>
+          </label>
+          <select
+            name="propertyId"
+            id="propertySelect"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="suggestTitle()"
+          >
+            <option value="">-- Chọn nhà trọ để đăng bài --</option>
+            <option
+              th:each="prop : ${availableProperties}"
+              th:value="${prop.id}"
+              th:text="${prop.name} + ' (' + ${prop.numberOfRooms} + ' phòng - ' + ${#numbers.formatDecimal(prop.price, 0, 'COMMA', 0, 'POINT')} + 'đ/tháng)'"
+              th:data-name="${prop.name}"
+            ></option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">
+            Chỉ hiển thị nhà trọ chưa có bài đăng
+          </p>
+        </div>
+      </div>
+
+      <!-- Post Content -->
+      <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+          <span class="w-1 h-6 bg-blue-600 mr-3 rounded"></span>
+          Nội dung bài đăng
+        </h2>
+
+        <div class="space-y-4">
+          <!-- Title -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Tiêu đề bài đăng <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="title"
+              id="postTitle"
+              required
+              placeholder="Ví dụ: Phòng trọ giá rẻ gần ĐH Bách Khoa, đầy đủ tiện nghi"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              oninput="updateSlug()"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              Tiêu đề hấp dẫn giúp thu hút người thuê
+            </p>
+          </div>
+
+          <!-- Slug (auto-generated, editable) -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Đường dẫn (slug)
+            </label>
+            <div
+              class="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500"
+            >
+              <span
+                class="bg-gray-50 px-3 py-2 text-gray-500 text-sm border-r border-gray-300"
+                >/properties/</span
+              >
+              <input
+                type="text"
+                name="slug"
+                id="postSlug"
+                placeholder="tu-dong-tao-tu-tieu-de"
+                class="flex-1 px-3 py-2 focus:outline-none text-sm"
+              />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+              Tự động tạo từ tiêu đề, có thể chỉnh sửa
+            </p>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả bài đăng
+            </label>
+            <textarea
+              name="description"
+              rows="6"
+              placeholder="Mô tả chi tiết về nhà trọ: vị trí thuận tiện, tiện nghi, môi trường xung quanh, giá cả, điều kiện thuê..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-1">
+              Mô tả chi tiết giúp người thuê hiểu rõ hơn về nhà trọ
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end space-x-4">
+        <a
+          href="/owner/posts"
+          class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition"
+        >
+          Hủy bỏ
+        </a>
+        <button
+          type="submit"
+          class="px-8 py-2 bg-blue-600 text-white font-bold rounded-md hover:bg-blue-700 shadow-md transition flex items-center gap-2"
+        >
+          <i class="fas fa-paper-plane"></i>
+          Đăng bài
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function updateSlug() {
+    const title = document.getElementById("postTitle").value;
+    const slug = generateSlug(title);
+    document.getElementById("postSlug").value = slug;
+  }
+
+  function suggestTitle() {
+    const select = document.getElementById("propertySelect");
+    const selectedOption = select.options[select.selectedIndex];
+    const titleInput = document.getElementById("postTitle");
+    // Only suggest if title is empty
+    if (titleInput.value === "" && selectedOption.value !== "") {
+      const name = selectedOption.getAttribute("data-name");
+      titleInput.value = name;
+      updateSlug();
+    }
+  }
+
+  function generateSlug(str) {
+    return str
+      .toLowerCase()
+      .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, "a")
+      .replace(/[èéẹẻẽêềếệểễ]/g, "e")
+      .replace(/[ìíịỉĩ]/g, "i")
+      .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, "o")
+      .replace(/[ùúụủũưừứựửữ]/g, "u")
+      .replace(/[ỳýỵỷỹ]/g, "y")
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+</script>

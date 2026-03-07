@@ -22,6 +22,7 @@ public class MaintenanceSchemaInitializer implements CommandLineRunner {
         ensureMaintenanceRequestsStatusConstraint();
         ensureMaintenanceRequestsRequesterIdDoesNotBlockInserts();
         ensureMaintenanceRequestsDropPriority();
+        ensurePostsStatusConstraintIncludesPendingRevision();
     }
 
     private void ensureMaintenanceRequestsHasTenantId() {
@@ -300,6 +301,53 @@ public class MaintenanceSchemaInitializer implements CommandLineRunner {
                     "UPDATE maintenance_requests SET tenant_id = requester_id " +
                             "WHERE tenant_id IS NULL AND requester_id IS NOT NULL"
             );
+        }
+    }
+
+    /**
+     * Drop any auto-generated CHECK constraint on posts.status and recreate it
+     * to include the new PENDING_REVISION value introduced in 2026-02.
+     */
+    private void ensurePostsStatusConstraintIncludesPendingRevision() {
+        // Check if PENDING_REVISION is already allowed (constraint already updated)
+        Integer alreadyOk = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sys.check_constraints cc " +
+                "JOIN sys.objects o ON cc.parent_object_id = o.object_id " +
+                "WHERE o.name = 'posts' AND cc.definition LIKE '%PENDING_REVISION%'",
+                Integer.class
+        );
+        if (alreadyOk != null && alreadyOk > 0) {
+            return; // Already contains PENDING_REVISION — nothing to do
+        }
+
+        // Drop all existing CHECK constraints on the posts.status column
+        try {
+            String dropSql =
+                "DECLARE @sql NVARCHAR(MAX) = ''; " +
+                "SELECT @sql = @sql + 'ALTER TABLE posts DROP CONSTRAINT ' + cc.name + '; ' " +
+                "FROM sys.check_constraints cc " +
+                "JOIN sys.objects o   ON cc.parent_object_id = o.object_id " +
+                "JOIN sys.columns col ON cc.parent_object_id = col.object_id " +
+                "                    AND cc.parent_column_id = col.column_id " +
+                "WHERE o.name = 'posts' AND col.name = 'status'; " +
+                "EXEC sp_executesql @sql;";
+            jdbcTemplate.execute(dropSql);
+            System.out.println("[Schema] Dropped old posts.status CHECK constraint(s).");
+        } catch (Exception e) {
+            System.out.println("[Schema] Could not drop posts.status constraint (may not exist): " + e.getMessage());
+        }
+
+        // Recreate with all current PostStatus enum values
+        try {
+            jdbcTemplate.execute(
+                "ALTER TABLE posts ADD CONSTRAINT CK_posts_status_v2 " +
+                "CHECK (status IN (" +
+                "'PENDING_APPROVAL','PENDING_REVISION','REJECTED'," +
+                "'DRAFT','ACTIVE','EXPIRED','HIDDEN'))"
+            );
+            System.out.println("[Schema] Created new posts.status CHECK constraint with PENDING_REVISION.");
+        } catch (Exception e) {
+            System.out.println("[Schema] Could not create posts.status constraint: " + e.getMessage());
         }
     }
 }

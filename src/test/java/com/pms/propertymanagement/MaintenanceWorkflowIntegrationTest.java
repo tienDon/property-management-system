@@ -59,8 +59,8 @@ public class MaintenanceWorkflowIntegrationTest {
                 room.getId(),
                 tenant,
                 MaintenanceCategory.ELECTRICAL,
-                "Test workflow"
-        );
+                "Test workflow",
+                null);
         assertNotNull(created.getId());
         assertEquals(MaintenanceStatus.PENDING, created.getStatus());
 

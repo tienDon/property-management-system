@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác thực eKYC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+<div class="w-full max-w-lg bg-white p-8 rounded-xl shadow-lg">
+    <h1 class="text-3xl font-bold text-center mb-2">Xác thực eKYC</h1>
+    <p class="text-sm text-gray-600 text-center mb-6">Upload 3 ảnh để xác thực (CCCD mặt trước, CCCD mặt sau, ảnh khuôn mặt).</p>
+
+    <div th:if="${lastSubmissionAt != null}" class="text-sm text-gray-600 mb-4">
+        Lần gửi gần nhất: <span th:text="${#temporals.format(lastSubmissionAt, 'dd/MM/yyyy HH:mm:ss')}"></span>
+    </div>
+
+    <div th:if="${errors != null and !errors.isEmpty()}" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+        <div class="font-semibold text-red-700 mb-2">Có lỗi khi upload</div>
+        <ul class="list-disc list-inside text-red-700">
+            <li th:each="err : ${errors}" th:text="${err}"></li>
+        </ul>
+    </div>
+
+    <form th:action="@{/ekyc}" method="post" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="next" th:value="${next}"/>
+
+        <div>
+            <label for="frontImage" class="block text-sm font-medium text-gray-700">CCCD mặt trước</label>
+            <input type="file" id="frontImage" name="frontImage" accept="image/*" required
+                   class="mt-1 w-full px-4 py-2 border rounded-lg bg-white"/>
+        </div>
+
+        <div>
+            <label for="backImage" class="block text-sm font-medium text-gray-700">CCCD mặt sau</label>
+            <input type="file" id="backImage" name="backImage" accept="image/*" required
+                   class="mt-1 w-full px-4 py-2 border rounded-lg bg-white"/>
+        </div>
+
+        <div>
+            <label for="faceImage" class="block text-sm font-medium text-gray-700">Ảnh khuôn mặt</label>
+            <input type="file" id="faceImage" name="faceImage" accept="image/*" required
+                   class="mt-1 w-full px-4 py-2 border rounded-lg bg-white"/>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            Xác thực
+        </button>
+    </form>
+</div>
+</body>
+</html>
+

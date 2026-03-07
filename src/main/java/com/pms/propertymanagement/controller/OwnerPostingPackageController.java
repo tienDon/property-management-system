@@ -5,6 +5,8 @@ import com.pms.propertymanagement.entity.PostingPackage;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.service.PostingPackageService;
 import com.pms.propertymanagement.service.PostingOrderService;
+
+import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,29 @@ public class OwnerPostingPackageController {
 
     private final PostingPackageService postingPackageService;
     private final PostingOrderService postingOrderService;
+
+    @GetMapping
+    public String listPackages(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        // Load all posting packages using service
+        List<PostingPackage> packages = postingPackageService.findAll();
+        model.addAttribute("postingPackages", packages);
+        
+        model.addAttribute("content", "owner/package/list");
+        model.addAttribute("activeMenu", "packages");
+        return "layout/owner-layout";
+    }
+
+    @GetMapping("/buy/{packageId}")
+    public String buyPackage(@PathVariable Long packageId, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        PostingOrder order = postingOrderService.createOrderForPackage(user.getId(), packageId);
+        return "redirect:/owner/posting-packages/checkout/" + order.getId();
+    }
 
     @GetMapping("/new")
     public String createOrderAndGoCheckout(HttpSession session) {

@@ -3,16 +3,16 @@ package com.pms.propertymanagement.service.impl;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.repository.UserRepository;
 import com.pms.propertymanagement.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     public User authenticate(String username, String password) {
@@ -28,5 +28,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    @Override
+    public java.util.List<User> getUsersByRole(String roleName) {
+        return userRepository.findByRoles_Name(roleName);
     }
 }

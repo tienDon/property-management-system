@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "full_name")
+    @Column(name = "full_name", columnDefinition = "nvarchar(255)")
     private String fullName;
 
     @Column(unique = true)
@@ -33,11 +33,30 @@ public class User {
 
     @Column(unique = true)
     private String phone;
-
-
+    
+    @Column(name = "card_id")
+    private String cardId;
+    
+    @Column(name = "dob")
+    private String dob;
+    
+    @Column(name = "address", columnDefinition = "nvarchar(500)")
+    private String address;
+    
+    @Column(name = "hometown", columnDefinition = "nvarchar(500)")
+    private String hometown;
+    
+    @Column(name = "gender")
+    private String gender;
 
     @Column(name = "is_active")
     private boolean isActive = true;
+
+    @Column(name = "is_ekyc_verified")
+    private Boolean ekycVerified = false;
+
+    @Column(name = "ekyc_verified_at")
+    private LocalDateTime ekycVerifiedAt;
 
     @Column(name="create_at", updatable = false)
     private LocalDateTime createAt;
@@ -60,5 +79,9 @@ public class User {
     @PrePersist
     protected void onCreate(){
         this.createAt = LocalDateTime.now();
+    }
+
+    public boolean isEkycVerified() {
+        return Boolean.TRUE.equals(ekycVerified);
     }
 }

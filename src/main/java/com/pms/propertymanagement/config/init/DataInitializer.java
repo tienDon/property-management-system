@@ -47,6 +47,10 @@ public class DataInitializer implements CommandLineRunner {
     private final RoomInitializer roomInitializer;
     private final ContractInitializer contractInitializer;
     private final PostingPackageInitializer postingPackageInitializer;
+    private final ManagementPlanInitializer managementPlanInitializer;
+    private final PostPackageInitializer postPackageInitializer;
+    private final PostInitializer postInitializer;
+    private final OwnerDataInitializer ownerDataInitializer;
 
 
     @Override
@@ -68,6 +72,14 @@ public class DataInitializer implements CommandLineRunner {
         contactInitializer.init();
         contractInitializer.init();
         postingPackageInitializer.init();
+        managementPlanInitializer.init();
+        postPackageInitializer.init();
+        
+        // NEW ARCHITECTURE: Initialize Posts for Properties
+        postInitializer.init();
+
+        // Sample data: owner1 wallet + Enterprise subscription
+        ownerDataInitializer.init();
 
         System.out.println("Hệ thống đã sẵn sàng");
     }}

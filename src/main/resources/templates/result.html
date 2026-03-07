@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Success</title>
+</head>
+<body>
+<h2>Upload thành công</h2>
+
+<div th:if="${errors != null and !errors.isEmpty()}">
+    <h3>Có lỗi khi upload</h3>
+    <ul>
+        <li th:each="err : ${errors}" th:text="${err}"></li>
+    </ul>
+</div>
+
+<div>
+    <strong>Hash Mặt trước:</strong>
+    <p th:text="${frontHash != null ? frontHash : 'Không có'}"></p>
+</div>
+
+<div>
+    <strong>Hash Mặt sau:</strong>
+    <p th:text="${backHash != null ? backHash : 'Không có'}"></p>
+</div>
+
+<div>
+    <strong>Hash Khuôn mặt:</strong>
+    <p th:text="${faceHash != null ? faceHash : 'Không có'}"></p>
+</div>
+
+</body>
+</html>

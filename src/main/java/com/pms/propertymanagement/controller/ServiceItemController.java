@@ -59,7 +59,7 @@ public class ServiceItemController {
         return "redirect:/owner/services?success";
     }
 
-    @GetMapping("/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         serviceItemService.deleteService(id);
         return "redirect:/owner/services?deleted";

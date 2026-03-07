@@ -1,6 +1,8 @@
 package com.pms.propertymanagement.config;
 
 import com.pms.propertymanagement.interceptor.AuthInterceptor;
+import com.pms.propertymanagement.interceptor.EkycInterceptor;
+import com.pms.propertymanagement.interceptor.WalletInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Configuration;
@@ -12,11 +14,23 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
     private AuthInterceptor authInterceptor;
+    
+    @Autowired
+    private WalletInterceptor walletInterceptor;
+    
+    @Autowired
+    private EkycInterceptor ekycInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns("/owner/**", "/admin/**", "/staff/**")
                 .excludePathPatterns("/", "/home");
+                
+        registry.addInterceptor(walletInterceptor)
+                .addPathPatterns("/owner/**");
+
+        registry.addInterceptor(ekycInterceptor)
+                .addPathPatterns("/owner/**", "/tenant/**");
     }
 }

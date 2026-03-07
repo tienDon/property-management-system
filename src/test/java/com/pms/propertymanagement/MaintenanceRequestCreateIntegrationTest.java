@@ -55,8 +55,8 @@ public class MaintenanceRequestCreateIntegrationTest {
                 room.getId(),
                 tenant,
                 MaintenanceCategory.ELECTRICAL,
-                "Test yêu cầu bảo trì"
-        );
+                "Test yêu cầu bảo trì",
+                null);
 
         assertNotNull(saved.getId());
         assertNotNull(saved.getCode());

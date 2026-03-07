@@ -20,11 +20,29 @@
     </a>
 
     <a
-      href="#"
+      href="/owner/management-plans"
       class="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-tm-blue transition"
+      th:classappend="${activeMenu == 'management-plans'} ? 'bg-blue-50 text-tm-blue' : ''"
     >
-      <i class="fa-solid fa-rectangle-ad w-5"></i>
-      <span class="font-medium">Quảng cáo</span>
+      <i class="fa-solid fa-layer-group w-5"></i>
+      <span
+        class="font-medium"
+        th:classappend="${activeMenu == 'management-plans'} ? 'text-blue-500 font-semibold' : ''"
+        >Gói quản lý</span
+      >
+    </a>
+
+    <a
+      href="/owner/wallet"
+      class="flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-tm-blue transition"
+      th:classappend="${activeMenu == 'wallet'} ? 'bg-blue-50 text-tm-blue' : ''"
+    >
+      <i class="fa-solid fa-wallet w-5"></i>
+      <span
+        class="font-medium"
+        th:classappend="${activeMenu == 'wallet'} ? 'text-blue-500 font-semibold' : ''"
+        >Quản lý ví</span
+      >
     </a>
 
     <div class="pt-2">
@@ -44,6 +62,13 @@
           th:classappend="${activeMenu == 'properties'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
         >
           Nhà trọ
+        </a>
+        <a
+          href="/owner/posts"
+          class="block p-2 pl-4 hover:text-tm-blue"
+          th:classappend="${activeMenu == 'posts'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+        >
+          Bài đăng
         </a>
         <a
           href="/owner/rooms"
