@@ -7,6 +7,7 @@ import com.pms.propertymanagement.service.FileUploadService;
 import com.pms.propertymanagement.utils.ImageUtil;
 import com.pms.propertymanagement.utils.VnptErrorUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,11 +26,22 @@ import java.time.LocalDateTime;
 
 @Service
 public class FileUploadServiceImpl implements FileUploadService {
-private final String accessToken = "bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0cmFuc2FjdGlvbl9pZCI6ImQyODEwOGU5LTQ1NDctNDUzMC1hMWIxLTY3N2NiMGQ3Yzc1YyIsInN1YiI6ImM4MDgyODNiLTE4OTQtMTFmMS05ZGUwLWQ1NmJlYjFhODE2NyIsImF1ZCI6WyJyZXN0c2VydmljZSJdLCJ1c2VyX25hbWUiOiJsa2lldDI0MDQuMjAwNUBnbWFpbC5jb20iLCJzY29wZSI6WyJyZWFkIl0sImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0IiwibmFtZSI6ImxraWV0MjQwNC4yMDA1QGdtYWlsLmNvbSIsImV4cCI6MTc3Mjg1MzI5MywidXVpZF9hY2NvdW50IjoiYzgwODI4M2ItMTg5NC0xMWYxLTlkZTAtZDU2YmViMWE4MTY3IiwiYXV0aG9yaXRpZXMiOlsiVVNFUiJdLCJqdGkiOiIxY2Q5NTRmYi00YzE2LTRlMzUtYWNmYi03MTkxMzM4YjcwNDIiLCJjbGllbnRfaWQiOiJjbGllbnRhcHAifQ.d2VM9OVIJyRDi66i1ft8Q8vEopOebaPEt0Vw8h_QdaOh3IrPsCK1REQnsBCMx7tscuAfYL3Gt3ilv_IMZRsjQusab2EyP1wCLiAI6Al2t02IdsA-kP3YevtaNBRR3YByKNpgxRM__D-WMiDcQiXsBvinFnGh3u1FR6c2F12feq5hFFAk6ZHJ46zBlvNJi3-cpw5loUq30lAxYqCkspfWQtdAI4n55O26BmayYaCL6p2ZSBa4tBNLdPvyVkqg88VzPkqdZR2zTBdiHxNLdpxzauGYQsEcph0yUFAw579a3OBThLgWH1lvpdMPbRi2PuMRUqYtWyzffZaZWY8EtrpOaQ";
-private final String tokenId ="4c47abab-e520-5bd3-e063-62199f0a4340";
-private final String tokenKey = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIe1ZktuE0lsKFahFXh7h41LAdo3sXKOh2UO8YVynJer8zDM+FRsat0skgJUqRIzuzoRAWCYrFk0/5nKfsqVsFUCAwEAAQ==";
-@Autowired
-private UploadFileRepository uploadFileRepository;
+
+    @Value("${vnpt.access-token}")
+    private String accessToken;
+
+    @Value("${vnpt.token-id}")
+    private String tokenId;
+
+    @Value("${vnpt.token-key}")
+    private String tokenKey;
+    
+    @Value("${vnpt.base-url}")
+    private String baseUrl;
+
+    @Autowired
+    private UploadFileRepository uploadFileRepository;
+
     @Override
     public String uploadToVNPT(MultipartFile file, String title) throws IOException {
 
@@ -61,7 +73,7 @@ private UploadFileRepository uploadFileRepository;
 
             ResponseEntity<VNPTUploadResponse> response =
                     restTemplate.postForEntity(
-                            "https://api.idg.vnpt.vn/file-service/v1/addFile",
+                            baseUrl + "/file-service/v1/addFile",
                             request,
                             VNPTUploadResponse.class
                     );
