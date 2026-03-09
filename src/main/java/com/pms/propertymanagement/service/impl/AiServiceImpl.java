@@ -4,17 +4,24 @@ import com.pms.propertymanagement.dto.request.ClassifyIdRequest;
 import com.pms.propertymanagement.dto.request.LivenessRequest;
 import com.pms.propertymanagement.dto.response.ClassifyIdResponse;
 import com.pms.propertymanagement.dto.response.LivenessResponse;
+import com.pms.propertymanagement.entity.ApiLog;
+import com.pms.propertymanagement.repository.ApiLogRepository;
 import com.pms.propertymanagement.service.AiService;
 
 import com.pms.propertymanagement.utils.VnptErrorUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+import java.util.function.Supplier;
 
 import com.pms.propertymanagement.dto.request.FaceAddRequest;
 import com.pms.propertymanagement.dto.request.FaceCompareRequest;
@@ -39,6 +46,7 @@ import com.pms.propertymanagement.dto.response.OcrIdResponse;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AiServiceImpl implements AiService {
 
     @org.springframework.beans.factory.annotation.Value("${vnpt.access-token}")
@@ -55,39 +63,73 @@ public class AiServiceImpl implements AiService {
     @org.springframework.beans.factory.annotation.Value("${vnpt.base-url}")
     private String BASE_URL;
 
+    private final ApiLogRepository apiLogRepository;
+    private final RestTemplate restTemplate;
+
+    private <T> ResponseEntity<T> callApi(String apiName, String path, Supplier<ResponseEntity<T>> call) {
+        ApiLog apiLog = new ApiLog();
+        apiLog.setApiName(apiName);
+        apiLog.setPath(path);
+        apiLog.setTimestamp(LocalDateTime.now());
+        
+        try {
+            ResponseEntity<T> response = call.get();
+            apiLog.setStatusCode(response.getStatusCode().value());
+            return response;
+        } catch (HttpClientErrorException e) {
+            apiLog.setStatusCode(e.getStatusCode().value());
+            apiLog.setErrorMessage(e.getResponseBodyAsString());
+            throw e;
+        } catch (HttpServerErrorException e) {
+             apiLog.setStatusCode(e.getStatusCode().value());
+             apiLog.setErrorMessage(e.getResponseBodyAsString());
+             throw e;
+        } catch (Exception e) {
+            apiLog.setStatusCode(500);
+            apiLog.setErrorMessage(e.getMessage());
+            throw e;
+        } finally {
+            try {
+                apiLogRepository.save(apiLog);
+            } catch (Exception ex) {
+                log.error("Failed to save api log", ex);
+            }
+        }
+    }
+
     @Override
     public ClassifyIdResponse classifyId(ClassifyIdRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<ClassifyIdRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<ClassifyIdResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/classify/id",
-                entity,
-                ClassifyIdResponse.class
+            ResponseEntity<ClassifyIdResponse> response = callApi("Classify ID", "/ai/v1/classify/id", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/classify/id",
+                    entity,
+                    ClassifyIdResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
-            // Log error and return null or throw custom exception
-            // For now, rethrow or let global handler handle it
             throw e;
         }
     }
 
     @Override
     public LivenessResponse checkLiveness(LivenessRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<LivenessRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<LivenessResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/card/liveness",
-                entity,
-                LivenessResponse.class
+            ResponseEntity<LivenessResponse> response = callApi("Card liveness", "/ai/v1/card/liveness", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/card/liveness",
+                    entity,
+                    LivenessResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -97,16 +139,17 @@ public class AiServiceImpl implements AiService {
     
     @Override
     public OcrFrontResponse ocrFront(OcrFrontRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<OcrFrontRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<OcrFrontResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/ocr/id/front",
-                entity,
-                OcrFrontResponse.class
+            ResponseEntity<OcrFrontResponse> response = callApi("Ocr front", "/ai/v1/ocr/id/front", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/ocr/id/front",
+                    entity,
+                    OcrFrontResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -116,16 +159,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public OcrBackResponse ocrBack(OcrBackRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<OcrBackRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<OcrBackResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/ocr/id/back",
-                entity,
-                OcrBackResponse.class
+            ResponseEntity<OcrBackResponse> response = callApi("Ocr back", "/ai/v1/ocr/id/back", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/ocr/id/back",
+                    entity,
+                    OcrBackResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -135,16 +179,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public OcrIdResponse ocrId(OcrIdRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<OcrIdRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<OcrIdResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/ocr/id",
-                entity,
-                OcrIdResponse.class
+            ResponseEntity<OcrIdResponse> response = callApi("Ocr id", "/ai/v1/ocr/id", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/ocr/id",
+                    entity,
+                    OcrIdResponse.class
+                )
             );
             return response.getBody();
         } catch (HttpClientErrorException e) {
@@ -174,16 +219,17 @@ public class AiServiceImpl implements AiService {
     
     @Override
     public FaceCompareResponse faceCompare(FaceCompareRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceCompareRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceCompareResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/face/compare",
-                entity,
-                FaceCompareResponse.class
+            ResponseEntity<FaceCompareResponse> response = callApi("Face compare", "/ai/v1/face/compare", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/face/compare",
+                    entity,
+                    FaceCompareResponse.class
+                )
             );
             return response.getBody();
         } catch (HttpClientErrorException e) {
@@ -195,16 +241,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceLivenessResponse faceLiveness(FaceLivenessRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceLivenessRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceLivenessResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/face/liveness",
-                entity,
-                FaceLivenessResponse.class
+            ResponseEntity<FaceLivenessResponse> response = callApi("Face liveness", "/ai/v1/face/liveness", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/face/liveness",
+                    entity,
+                    FaceLivenessResponse.class
+                )
             );
             return response.getBody();
         } catch (HttpClientErrorException e) {
@@ -216,16 +263,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceMaskResponse faceMask(FaceMaskRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceMaskRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceMaskResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/ai/v1/face/mask",
-                entity,
-                FaceMaskResponse.class
+            ResponseEntity<FaceMaskResponse> response = callApi("Face mask V4", "/ai/v1/face/mask", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/ai/v1/face/mask",
+                    entity,
+                    FaceMaskResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -235,16 +283,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceAddResponse faceAdd(FaceAddRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceAddRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceAddResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/face-service/face/add",
-                entity,
-                FaceAddResponse.class
+            ResponseEntity<FaceAddResponse> response = callApi("Add face", "/face-service/face/add", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/face-service/face/add",
+                    entity,
+                    FaceAddResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -254,16 +303,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceVerifyResponse faceVerify(FaceVerifyRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceVerifyRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceVerifyResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/face-service/face/verify",
-                entity,
-                FaceVerifyResponse.class
+            ResponseEntity<FaceVerifyResponse> response = callApi("Verify face", "/face-service/face/verify", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/face-service/face/verify",
+                    entity,
+                    FaceVerifyResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -273,16 +323,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceSearchResponse faceSearch(FaceSearchRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceSearchRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceSearchResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/face-service/face/search",
-                entity,
-                FaceSearchResponse.class
+            ResponseEntity<FaceSearchResponse> response = callApi("Search face", "/face-service/face/search", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/face-service/face/search",
+                    entity,
+                    FaceSearchResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -292,16 +343,17 @@ public class AiServiceImpl implements AiService {
 
     @Override
     public FaceSearchKResponse faceSearchK(FaceSearchKRequest request) {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = createHeaders();
         
         HttpEntity<FaceSearchKRequest> entity = new HttpEntity<>(request, headers);
         
         try {
-            ResponseEntity<FaceSearchKResponse> response = restTemplate.postForEntity(
-                BASE_URL + "/face-service/face/search-k",
-                entity,
-                FaceSearchKResponse.class
+            ResponseEntity<FaceSearchKResponse> response = callApi("Search K face", "/face-service/face/search-k", () ->
+                restTemplate.postForEntity(
+                    BASE_URL + "/face-service/face/search-k",
+                    entity,
+                    FaceSearchKResponse.class
+                )
             );
             return response.getBody();
         } catch (Exception e) {
@@ -310,12 +362,16 @@ public class AiServiceImpl implements AiService {
     }
     
     private HttpHeaders createHeaders() {
+        log.info("Creating headers. TokenId present: {}, TokenKey present: {}", 
+                tokenId != null && !tokenId.isEmpty(), 
+                tokenKey != null && !tokenKey.isEmpty());
+        
         HttpHeaders headers = new HttpHeaders();
         String raw = accessToken == null ? "" : accessToken.trim();
         String token = raw.toLowerCase().startsWith("bearer ") ? raw.substring(7).trim() : raw;
         headers.setBearerAuth(token);
-        headers.set("Token-id", tokenId);
-        headers.set("Token-key", tokenKey);
+        headers.set("token-id", tokenId);
+        headers.set("token-key", tokenKey);
         headers.set("mac-address", macAddress);
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;

@@ -10,6 +10,7 @@ import com.pms.propertymanagement.service.AiService;
 import com.pms.propertymanagement.service.FileUploadService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,10 +26,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EkycController {
 
+    private final AiService aiService;
     private final FileUploadService fileUploadService;
     private final UserRepository userRepository;
     private final EkycSubmissionRepository ekycSubmissionRepository;
-    private final AiService aiService;
+    
+    @Value("${vnpt.unit}")
+    private String vnptUnit;
 
     private static final String CLIENT_SESSION = "ANDROID_nokia7.2_28_Simulator_2.4.2_08d2d8686ee5fa0e_1581910116532";
     private static final String TOKEN = "123456"; // Dummy token
@@ -226,7 +230,7 @@ public class EkycController {
             FaceAddRequest faceAddRequest = new FaceAddRequest();
             faceAddRequest.setBbox(null); // Optional?
             faceAddRequest.setLandmark(null); // Optional?
-            faceAddRequest.setUnit("TEST_UNIT"); // Dummy unit
+            faceAddRequest.setUnit(vnptUnit); // Use configured unit
             
             FaceAddRequest.CustomerInformation customerInfo = new FaceAddRequest.CustomerInformation();
             customerInfo.setFullname(ocrResult.getName());

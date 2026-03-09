@@ -43,9 +43,6 @@ public class AuthController {
         }
         session.setAttribute("user", user);
         String target = resolveRoleTarget(user);
-        if (requiresEkyc(user) && !user.isEkycVerified()) {
-            return "redirect:/ekyc?next=" + target;
-        }
         return "redirect:" + target;
     }
 
@@ -65,9 +62,6 @@ public class AuthController {
         if (user != null) {
             session.setAttribute("user", user);
             String target = resolveRoleTarget(user);
-            if (requiresEkyc(user) && !user.isEkycVerified()) {
-                return "redirect:/ekyc?next=" + target;
-            }
             return "redirect:" + target;
         }
 
