@@ -20,5 +20,11 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
 
     List<Room> findByProperty_Owner_Id(Long ownerId);
 
+    @Query("SELECT COUNT(r) FROM Room r WHERE r.property.owner.id = :ownerId AND r.status = :status")
+    long countByOwnerIdAndStatus(Long ownerId, RoomStatus status);
+
+    @Query("SELECT COUNT(r) FROM Room r WHERE r.property.owner.id = :ownerId")
+    long countByOwnerId(Long ownerId);
+
     List<Room> findByStatus(RoomStatus status);
 }

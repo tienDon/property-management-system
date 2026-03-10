@@ -51,6 +51,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PostPackageInitializer postPackageInitializer;
     private final PostInitializer postInitializer;
     private final OwnerDataInitializer ownerDataInitializer;
+    private final LargeScaleDataInitializer largeScaleDataInitializer;
 
 
     @Override
@@ -80,6 +81,9 @@ public class DataInitializer implements CommandLineRunner {
 
         // Sample data: owner1 wallet + Enterprise subscription
         ownerDataInitializer.init();
+
+        // Large scale data for statistics
+        largeScaleDataInitializer.init();
 
         System.out.println("Hệ thống đã sẵn sàng");
     }}

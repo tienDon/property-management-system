@@ -1,11 +1,11 @@
 package com.pms.propertymanagement.enums;
 
 public enum MaintenanceCategory {
-    ELECTRICAL("Điện"),
-    PLUMBING("Nước"),
-    AIRCON("Điều hòa"),
-    FURNITURE("Nội thất"),
-    OTHER("Khác");
+    ELECTRICAL("Electrical"),
+    PLUMBING("Plumbing"),
+    AIRCON("Aircon"),
+    FURNITURE("Furniture"),
+    OTHER("Other");
 
     private final String displayName;
 

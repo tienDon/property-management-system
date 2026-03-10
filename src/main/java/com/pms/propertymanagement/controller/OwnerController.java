@@ -26,12 +26,8 @@ public class OwnerController {
     private final PropertyManagementService propertyManagementService;
 
     @GetMapping
-    public String dashboard(Model model, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login/owner";
-
-        model.addAttribute("content", "owner/dashboard");
-        return "layout/owner-layout";
+    public String dashboard() {
+        return "redirect:/owner/dashboard";
     }
 
     @GetMapping("/properties")

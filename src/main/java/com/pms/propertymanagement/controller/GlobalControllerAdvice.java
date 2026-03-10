@@ -15,6 +15,10 @@ public class GlobalControllerAdvice {
 
     @ModelAttribute("categories")
     public List<CategoryResponse> getCategories() {
-        return categoryService.findAll();
+        try {
+            return categoryService.findAll();
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 }

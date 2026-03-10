@@ -1,5 +1,8 @@
 <div>
     <h1 class="text-2xl font-semibold mb-4">Phòng của tôi</h1>
+    <div th:if="${#lists.isEmpty(rooms)}" class="p-4 border rounded text-gray-700">
+        Bạn chưa được gán phòng nào, vui lòng liên hệ Owner
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div th:each="r : ${rooms}" class="border rounded-lg p-4 shadow">
             <div class="flex items-center justify-between">

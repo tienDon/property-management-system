@@ -33,9 +33,16 @@
     </style>
   </head>
 
-  <body class="bg-gray-50 text-gray-800">
+  <body class="bg-gray-50 text-gray-800" x-data="{ sidebarOpen: true }">
     <div class="flex min-h-screen">
       <aside
+        x-show="sidebarOpen"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="-translate-x-full opacity-0"
+        x-transition:enter-end="translate-x-0 opacity-100"
+        x-transition:leave="transition ease-in duration-300"
+        x-transition:leave-start="translate-x-0 opacity-100"
+        x-transition:leave-end="-translate-x-full opacity-0"
         class="w-64 bg-white border-r border-gray-200 flex flex-col sticky top-0 h-screen overflow-y-auto"
       >
         <div th:replace="~{layout/owner-sidebar :: sidebar}"></div>

@@ -14,6 +14,7 @@ import java.util.List;
 
 @Repository
 public interface ContractRepository extends JpaRepository<Contract, Long> {
+    List<Contract> findByRoom_Property_Owner_Id(Long ownerId);
     Page<Contract> findByRoom_Property_Owner_Id(Long ownerId, Pageable pageable);
     
     @Query("SELECT c FROM Contract c WHERE c.room.property.owner.id = :ownerId AND (:status IS NULL OR c.status = :status)")
@@ -59,4 +60,14 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
               and c.status = com.pms.propertymanagement.enums.ContractStatus.ACTIVE
             """)
     long countActiveContractsByRoomId(@Param("roomId") Long roomId);
+    @Query("SELECT COUNT(c) FROM Contract c " +
+           "WHERE c.room.property.owner.id = :ownerId " +
+           "AND c.status = :status")
+    long countContractsByOwnerAndStatus(@Param("ownerId") Long ownerId, @Param("status") ContractStatus status);
+
+    @Query("SELECT SUM(c.rentPrice) FROM Contract c " +
+           "WHERE c.room.property.owner.id = :ownerId " +
+           "AND c.status = :status")
+    Double sumRentPriceByOwnerAndStatus(@Param("ownerId") Long ownerId, @Param("status") ContractStatus status);
+
 }
