@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.entity;
 
+import com.pms.propertymanagement.enums.GeocodeStatus;
 import com.pms.propertymanagement.enums.PropertyStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,7 +13,9 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "properties")
+@Table(name = "properties", indexes = {
+        @Index(name = "idx_property_geo", columnList = "latitude, longitude")
+})
 @Getter
 @Setter
 public class Property {
@@ -40,15 +43,29 @@ public class Property {
     @Column(nullable = false, columnDefinition = "nvarchar(255)")
     private String addressNumber;
 
+    // Địa chỉ đầy đủ do owner nhập (build từ addressNumber + ward + province)
+    @Column(columnDefinition = "nvarchar(500)")
+    private String originalAddress;
+
+    // Formatted address do OpenCage API trả về (chỉ có khi geocodeStatus = SUCCESS)
+    @Column(columnDefinition = "nvarchar(500)")
+    private String normalizedAddress;
+
+    //Vĩ độ — tự điền bởi hệ thống sau khi geocode thành công
+    @Column(nullable = true)
+    private Double latitude;
+
+    //Kinh độ — tự điền bởi hệ thống sau khi geocode thành công
+    @Column(nullable = true)
+    private Double longitude;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true, columnDefinition = "varchar(255) default 'PENDING'")
+    private GeocodeStatus geocodeStatus = GeocodeStatus.PENDING;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
-
-//    //Vĩ độ
-//    private Double latitude;
-//
-//    //Kinh độ
-//    private Double longitude;
 
 
 

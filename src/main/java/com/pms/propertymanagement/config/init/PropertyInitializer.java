@@ -1,6 +1,7 @@
 package com.pms.propertymanagement.config.init;
 
 import com.pms.propertymanagement.entity.*;
+import com.pms.propertymanagement.enums.GeocodeStatus;
 import com.pms.propertymanagement.repository.*;
 import com.pms.propertymanagement.utils.SlugUtil;
 
@@ -140,6 +141,84 @@ public class PropertyInitializer {
                 25.0, 1600000, 10, "Chỉ nhận nữ, sạch sẽ, có camera giám sát, giờ giấc 11h đóng cửa."));
         }
 
+        // =========================================================================
+        // TEST DATA — Tăng Nhơn Phú & Phước Long (Thủ Đức) + Làng Đại Học (HCM + BD)
+        // Phân bố budget để cover 3 case của REFINING:
+        //   HCM "Dưới 2 triệu"  →  ~14 posts → REFINING_FEW  (6-20)
+        //   HCM "2 – 4 triệu"   →  ~26 posts → REFINING_MANY (>20)
+        //   HCM "7 – 15 triệu"  →   ~5 posts → REFINING_SKIP (≤5)
+        // =========================================================================
+        Ward wardTNP = findWardByName(allWards, "Tăng Nhơn Phú");
+        Ward wardPL  = findWardByName(allWards, "Phường Phước Long");
+        Ward wardLX  = findWardByName(allWards, "Phường Linh Xuân");
+        Ward wardDH  = findWardByName(allWards, "Phường Đông Hòa");
+
+        // ── 12 nhà trọ · Tăng Nhơn Phú (gần Khu CNC Thủ Đức) ──────────────────
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Anh Khôi",         "312/5 Lê Văn Việt",         18.0, 1_500_000, 4, 10.8448, 106.8035));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Thắng Lợi",        "45 Đường Tăng Nhơn Phú",    20.0, 1_800_000, 5, 10.8461, 106.8051));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ Minh Đức",       "28 Hẻm 62 Lê Văn Việt",     16.0, 2_000_000, 6, 10.8439, 106.8028));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Bà Mai",           "150/3 Đường D14",            22.0, 2_200_000, 4, 10.8472, 106.8063));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ Ánh Dương",      "67 Hẻm 24 Đường Số 8",      20.0, 2_500_000, 5, 10.8455, 106.8039));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Hương Giang",      "99 Đường D5",                24.0, 2_800_000, 4, 10.8467, 106.8055));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ Tiến Thành",     "33/1 Tăng Nhơn Phú A",      25.0, 3_000_000, 6, 10.8443, 106.8031));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Phúc Lợi",         "78 Đường Linh Đông",         28.0, 3_200_000, 5, 10.8479, 106.8067));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Văn Minh",         "210 Lê Văn Việt",            30.0, 4_000_000, 4, 10.8452, 106.8047));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ cao cấp TNP",    "55 Đường Số 3 Tăng Nhơn Phú",35.0, 5_000_000, 3, 10.8464, 106.8059));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Thanh Niên TNP",   "188 Đường Linh Trung",       32.0, 5_500_000, 3, 10.8435, 106.8025));
+        properties.add(createPropertyAt(owner, catNhaTro, wardTNP, allAmenities, allSurroundings, allTargets,
+                "Phòng mini Khu CNC",       "36 Đường Số 12",             40.0, 7_000_000, 2, 10.8476, 106.8071));
+
+        // ── 8 nhà trọ · Phường Phước Long (Thủ Đức) ────────────────────────────
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Cô Hoa",           "102 Đường Số 6",             18.0, 1_500_000, 5, 10.8261, 106.7841));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ Anh Hùng",       "234 Lê Văn Việt",            20.0, 2_000_000, 4, 10.8278, 106.7858));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Bình Yên PL",      "56/4 Hẻm 30 Phước Long",    22.0, 2_500_000, 6, 10.8255, 106.7835));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ An Khang PL",      "88 Đường Phước Long",        25.0, 3_000_000, 5, 10.8285, 106.7865));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ Vạn Phát",       "111 Đường D7",               28.0, 3_500_000, 4, 10.8272, 106.7852));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Đăng Khoa",        "40 Liên Phường",             30.0, 4_500_000, 3, 10.8264, 106.7845));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Phan Linh",        "75 Đường Số 9 Phước Long",   35.0, 6_000_000, 2, 10.8281, 106.7861));
+        properties.add(createPropertyAt(owner, catNhaTro, wardPL, allAmenities, allSurroundings, allTargets,
+                "Phòng studio Phước Long",  "62 Liên Khu 1-2",            45.0, 8_000_000, 2, 10.8258, 106.7838));
+
+        // ── 5 nhà trọ + KTX · Phường Linh Xuân (gần Làng ĐH ĐHQG, phía HCM) ──
+        properties.add(createPropertyAt(owner, catKTX, wardLX, allAmenities, allSurroundings, allTargets,
+                "KTX Làng ĐH Linh Xuân 1",  "Khu phố 1 Linh Xuân",       12.0,   800_000, 20, 10.8708, 106.7633));
+        properties.add(createPropertyAt(owner, catKTX, wardLX, allAmenities, allSurroundings, allTargets,
+                "KTX Làng ĐH Linh Xuân 2",  "Khu phố 2 Linh Xuân",       14.0, 1_000_000, 16, 10.8725, 106.7649));
+        properties.add(createPropertyAt(owner, catNhaTro, wardLX, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ SV Linh Xuân",     "45 Đường Kha Vạn Cân",      18.0, 1_200_000,  8, 10.8701, 106.7627));
+        properties.add(createPropertyAt(owner, catNhaTro, wardLX, allAmenities, allSurroundings, allTargets,
+                "Phòng trọ cạnh Làng ĐH",   "120 Linh Xuân",              20.0, 1_500_000,  6, 10.8732, 106.7656));
+        properties.add(createPropertyAt(owner, catNhaTro, wardLX, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ Gần ĐHQG HCM",    "88 Đường Số 8 Linh Xuân",   22.0, 2_000_000,  5, 10.8719, 106.7644));
+
+        // ── 4 nhà trọ + KTX · Phường Đông Hòa, Bình Dương (gần Làng ĐH, phía BD) ──
+        properties.add(createPropertyAt(owner, catKTX, wardDH, allAmenities, allSurroundings, allTargets,
+                "KTX ĐHQG Bình Dương 1",    "Làng Đại Học Đông Hòa",     10.0,   700_000, 30, 10.9006, 106.7566));
+        properties.add(createPropertyAt(owner, catKTX, wardDH, allAmenities, allSurroundings, allTargets,
+                "KTX ĐHQG Bình Dương 2",    "Khu nhà ở SV ĐHQG BD",      12.0,   900_000, 20, 10.9022, 106.7582));
+        properties.add(createPropertyAt(owner, catNhaTro, wardDH, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ SV Đông Hòa",      "55 Đường N8 Đông Hòa",      18.0, 1_300_000,  6, 10.8999, 106.7559));
+        properties.add(createPropertyAt(owner, catNhaTro, wardDH, allAmenities, allSurroundings, allTargets,
+                "Nhà trọ cạnh ĐHQG BD",     "88 Đường Số 4 Đông Hòa",    22.0, 1_800_000,  5, 10.9029, 106.7589));
+
         propertyRepository.saveAll(properties);
     }
 
@@ -191,7 +270,20 @@ public class PropertyInitializer {
             "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_1/54-3-NguyenBinhKhiem/54_3_nguyenbinhkhiem9.jpg",
             "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Ba-Dinh/Ngo266DoiCan/ngo266doican3.jpg",
             "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Tay-Ho/pho-tu-lien-duong-au-co/pho_tu_lien1(1).jpg",
-            "https://tromoi.com/uploads/guest/1768900126374_13c85297fc2c73722a3d18.jpg"
+            "https://tromoi.com/uploads/guest/1768900126374_13c85297fc2c73722a3d18.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_6/633.12.29/img_2469.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_4/170-32/img_2217.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Bac-Tu-Liem/So24-Ngo155XuanDinh/so24_ngo155xuandinh12.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Ba-Dinh/Ngo266DoiCan/ngo266doican3.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_6/59.14/1_3.png",
+            "https://tromoi.com/uploads/guest/69aea8289320d-image1.png",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/622.40.4A-CongHoa-canchung/622_40_4A-CongHoa-canchung8.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/120.12%20bui%20thi%20xuan/img_2293.jpg",
+            "https://tromoi.com/uploads/guest/1772956167753_112063646_868692700290270_7371760822449243675_n.jpg",
+            "https://tromoi.com/uploads/guest/1773049163579_img_1769847478963_1769847522030.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/622.40.4A-CongHoa-canrieng/622_40_4A-CongHoa-canrieng4.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Cau-Giay/S%E1%BB%91%2022%20Nghach%2014%20Ngo%2079/z7565442358425_9ada4c7702d80c659f52d366ff822df1.jpg",
+
         };
         
         // Add 2-3 images
@@ -205,6 +297,96 @@ public class PropertyInitializer {
         }
         p.setImages(images);
 
+        return p;
+    }
+
+    /** Finds a ward by exact name; falls back to first ward if not found. */
+    private Ward findWardByName(List<Ward> wards, String name) {
+        return wards.stream()
+                .filter(w -> w.getName().equals(name))
+                .findFirst()
+                .orElseGet(() -> wards.get(0));
+    }
+
+    /**
+     * Creates a Property at a specific ward with hardcoded coordinates.
+     * geocodeStatus is set to SUCCESS so bounding-box queries work immediately.
+     */
+    private Property createPropertyAt(User owner, Category category, Ward ward,
+                                       List<Amenity> allAmenities, List<Surrounding> allSurroundings,
+                                       List<TargetTenant> allTargets,
+                                       String name, String address, double acreage,
+                                       int price, int rooms, Double lat, Double lng) {
+        Random random = new Random();
+        Property p = new Property();
+        p.setName(name);
+        p.setAddressNumber(address);
+        p.setOwner(owner);
+        p.setCategory(category);
+        p.setAcreage(acreage);
+        p.setPrice(price);
+        p.setNumberOfRooms(rooms);
+        p.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(30)));
+        p.setUpdatedAt(LocalDateTime.now());
+        p.setWard(ward);
+
+        if (lat != null && lng != null) {
+            p.setLatitude(lat);
+            p.setLongitude(lng);
+            p.setGeocodeStatus(GeocodeStatus.SUCCESS);
+        }
+
+        // Random Amenities (3–6 items for richer recommendations)
+        if (!allAmenities.isEmpty()) {
+            List<Amenity> shuffled = new ArrayList<>(allAmenities);
+            Collections.shuffle(shuffled);
+            p.setAmenities(new HashSet<>(shuffled.subList(0, Math.min(shuffled.size(), random.nextInt(4) + 3))));
+        }
+
+        // Random Surroundings (2–4 items)
+        if (!allSurroundings.isEmpty()) {
+            List<Surrounding> shuffled = new ArrayList<>(allSurroundings);
+            Collections.shuffle(shuffled);
+            p.setSurroundings(new HashSet<>(shuffled.subList(0, Math.min(shuffled.size(), random.nextInt(3) + 2))));
+        }
+
+        // Random Target Tenants (1–2 items)
+        if (!allTargets.isEmpty()) {
+            List<TargetTenant> shuffled = new ArrayList<>(allTargets);
+            Collections.shuffle(shuffled);
+            p.setTargetTenants(new HashSet<>(shuffled.subList(0, Math.min(shuffled.size(), random.nextInt(2) + 1))));
+        }
+
+       String[] sampleImages = {
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_11/153%20tran%20quy/img_3410.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_1/54-3-NguyenBinhKhiem/54_3_nguyenbinhkhiem9.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Ba-Dinh/Ngo266DoiCan/ngo266doican3.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Tay-Ho/pho-tu-lien-duong-au-co/pho_tu_lien1(1).jpg",
+            "https://tromoi.com/uploads/guest/1768900126374_13c85297fc2c73722a3d18.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_6/633.12.29/img_2469.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_4/170-32/img_2217.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Bac-Tu-Liem/So24-Ngo155XuanDinh/so24_ngo155xuandinh12.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Ba-Dinh/Ngo266DoiCan/ngo266doican3.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_6/59.14/1_3.png",
+            "https://tromoi.com/uploads/guest/69aea8289320d-image1.png",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/622.40.4A-CongHoa-canchung/622_40_4A-CongHoa-canchung8.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/120.12%20bui%20thi%20xuan/img_2293.jpg",
+            "https://tromoi.com/uploads/guest/1772956167753_112063646_868692700290270_7371760822449243675_n.jpg",
+            "https://tromoi.com/uploads/guest/1773049163579_img_1769847478963_1769847522030.jpg",
+            "https://tromoi.com/uploads/static/phong_tro_hcm/Quan_Tan_Binh/622.40.4A-CongHoa-canrieng/622_40_4A-CongHoa-canrieng4.jpg",
+            "https://tromoi.com/uploads/static/phong-tro-ha-noi/1-Cau-Giay/S%E1%BB%91%2022%20Nghach%2014%20Ngo%2079/z7565442358425_9ada4c7702d80c659f52d366ff822df1.jpg",
+            
+        };
+        List<PropertyImage> images = new ArrayList<>();
+        int imgCount = random.nextInt(2) + 2;
+        for (int i = 0; i < imgCount; i++) {
+            PropertyImage img = new PropertyImage();
+            img.setImageUrl(sampleImages[random.nextInt(sampleImages.length)]);
+            img.setIsPrimary(i == 0);
+            img.setProperty(p);
+            images.add(img);
+        }
+        p.setImages(images);
         return p;
     }
 }
