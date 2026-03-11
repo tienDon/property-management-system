@@ -38,4 +38,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     );
     
     java.util.List<Payment> findTop5ByOwnerIdOrderByPaymentDateDesc(Long ownerId);
+
+    java.util.List<Payment> findTop5ByOwnerIdAndPaymentDateLessThanEqualOrderByPaymentDateDesc(Long ownerId, LocalDateTime date);
 }
