@@ -31,4 +31,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdWithLock(@Param("id") Long id);
 
     List<User> findByRoles_Name(String roleName);
+    
+    long countByRoles_Name(String roleName);
 }

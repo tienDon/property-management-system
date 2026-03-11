@@ -103,8 +103,11 @@ public class AuthController {
     }
 
     private String resolveRoleTarget(User user) {
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("ADMIN"))) {
+            return "/admin/dashboard";
+        }
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-            return "/owner";
+            return "/owner/dashboard";
         }
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
             return "/staff/maintenance";
