@@ -1,105 +1,266 @@
 # Property Management System (PMS)
 
-This project is a comprehensive web application built with Spring Boot and Thymeleaf, designed to support the management, leasing, and operation of real estate properties (boarding houses, apartments, houses).
-
-## Introduction
-
-The system provides a platform connecting Owners and tenants, while offering convenient tools for managing contracts, services, and payments.
-
-### Technologies Used
-
-- **Backend:** Java (Spring Boot Framework)
-- **Frontend:** Thymeleaf (Server-side rendering), Tailwind CSS, JavaScript, FontAwesome Icons
-- **Database:** Microsoft SQL Server
-- **Build Tool:** Maven
-- **Payment:** VNPay Integration
+A comprehensive web application built with Spring Boot and Thymeleaf for managing, leasing, and operating real estate properties (boarding houses, apartments, houses). The system connects property owners with tenants and provides tools for contracts, maintenance, payments, and AI-powered room recommendations.
 
 ---
 
-## Features & Benefits
+## Technologies Used
 
-### 1. User Roles
+| Layer                 | Technology                                       |
+| --------------------- | ------------------------------------------------ |
+| Backend               | Java, Spring Boot                                |
+| Frontend              | Thymeleaf, Tailwind CSS, JavaScript, FontAwesome |
+| Database              | Microsoft SQL Server (JPA / Hibernate)           |
+| Build Tool            | Maven                                            |
+| Payment               | VNPay (sandbox)                                  |
+| Image Storage         | Cloudinary                                       |
+| AI Chatbot            | Google Gemini 2.5 Flash                          |
+| Geocoding             | OpenCage Geocoding API                           |
+| Identity Verification | VNPT AI (eKYC: OCR + face liveness)              |
 
-The system supports the following main roles:
+---
 
-- **Guest (Public):** View property listings, search, and view details.
-- **Owner:** Manage all properties and leasing activities.
-- **Tenant:** Manage rental information(Will be added later).
-- **Admin:** (Will be added later).
+## User Roles
 
-### 2. Landlord (Owner) Features
+| Role               | Access                                       |
+| ------------------ | -------------------------------------------- |
+| **Guest (Public)** | Browse listings, search properties, register |
+| **Owner**          | Full property & leasing management           |
+| **Tenant**         | Browse rooms, submit maintenance requests    |
+| **Staff**          | Approve posts, handle maintenance requests   |
+| **Moderator**      | Review and moderate property posts           |
+| **Admin**          | System-wide statistics dashboard             |
 
-- **Dashboard:** Overview statistics of business performance.
-- **Property Management:** Add, edit, delete information for houses/rooms.
-- **Contract Management:** Create and manage lease agreements.
-- **Service Management:** Configure accompanying services (electricity, water, internet, cleaning...).
-- **Tenant Management:** Manage tenant information.
-- **Posting Packages:** Purchase packages to list rooms, payment via VNPay.
+---
 
-### 3. Public Features
+## Features
 
-- Search for boarding houses/apartments with filters.
-- View detailed information, images, amenities, and prices.
+### Public / Guest
 
-### 4. Data Initialization
+- Browse homepage with all active property listings
+- Filter listings by category
+- View property detail pages (images, amenities, pricing, location)
+- Increment post view counter on detail visit
+- Tenant registration with redirect to eKYC verification
+- Owner registration
+- Separate login pages for tenants (`/login`) and owners/staff (`/login/owner`)
 
-The project comes with a built-in **Data Initialization** mechanism.
+#### AI Chat — Room Recommendation
 
-- When running the application for the first time, the system automatically loads sample data from `com.pms.propertymanagement.config.init.DataInitializer`.
-- This data includes: Sample accounts, initial configurations, or necessary categories so you can experience the app immediately without manual data entry.
+- Gemini-powered chatbot widget on the homepage
+- Multi-phase conversation: collects budget, location, room type, and amenities from natural language input
+- Uses OpenCage Geocoding to resolve location mentions
+- Ranks results by boost status, amenity match, budget proximity, location distance, and post longevity
+- Rate-limited at 20 requests per 10 minutes per session; 30-minute session timeout
+- Contextual quick-reply chips at each conversation phase
+
+---
+
+### eKYC — Identity Verification
+
+Triggered after tenant or owner registration:
+
+- Upload front and back of national ID (CCCD) and a face selfie
+- VNPT AI performs OCR on both ID sides and extracts personal information
+- Face liveness detection and face comparison (ID photo vs. selfie)
+- On success: marks user as `ekycVerified`, saves `EkycSubmission` record
+- Skipped automatically if user is already verified
+
+---
+
+### Owner
+
+**Dashboard**
+
+- Business performance statistics summary
+- Income chart filterable by date range
+- Recent activity feed
+
+**Property Management** (`/owner/properties`)
+
+- Create, edit, and delete properties
+- Configure property name, address (province/ward via AJAX), category, rooms count, price, area, images (uploaded to Cloudinary), amenities, surroundings, and target tenants
+- Geocoding via OpenCage API on create/edit
+
+**Room Management** (`/owner/rooms`)
+
+- List all rooms across all owned properties
+- Create rooms linked to a property; AJAX loads property-specific services
+- Delete rooms
+
+**Post Management** (`/owner/posts`)
+
+- Create posts for properties: title, slug, description → submitted for staff approval
+- Edit posts (title/description) → resubmitted for moderator review
+- Hide or show a post from the public marketplace
+- Renew expired posts (deducted from wallet)
+- View post analytics (view count, etc.)
+- Post lifecycle: `PENDING_APPROVAL` → `ACTIVE` (7-day free trial) → `EXPIRED`; rejections loop back for editing
+
+**Service Items** (`/owner/services`)
+
+- Create and manage services (electricity, water, internet, cleaning, etc.) per property
+- Delete services
+
+**Tenant Management** (`/owner/tenants`)
+
+- List, create, and delete tenant records linked to owned properties
+
+**Contract Management** (`/owner/contracts`)
+
+- List contracts with pagination and filters (status, keyword)
+- Create contracts: select property → AJAX-load available rooms → assign tenant, dates
+- Terminate contracts
+
+**Maintenance Oversight** (`/owner/maintenance`)
+
+- View all maintenance requests submitted by tenants across owned properties
+- View full request detail with activity log
+- Assign request to a staff member
+- Reject request with reason
+
+**Contact Inquiries** (`/owner/contact`)
+
+- View all contact messages submitted on property posts
+- Toggle read/unread status
+
+**Wallet** (`/owner/wallet`)
+
+- Dashboard: balance, total deposited, total spent, monthly spending, last 10 transactions
+- Top-up via VNPay (10,000 – 50,000,000 VNĐ)
+- Full paginated transaction history
+
+**Subscription Plans** (`/owner/management-plans`)
+
+- View all management plans with current subscription status
+- Subscribe, upgrade, downgrade (with impact confirmation), or cancel
+- Automatic plan expiration handled by a background scheduler (every 5 minutes)
+
+**Posting Packages** (`/owner/posting-packages`)
+
+- Browse available posting packages (duration bundles)
+- Purchase packages via VNPay checkout
+
+---
+
+### Tenant
+
+- Browse all available rooms (`/tenant/home`)
+- Request to rent a room (validated: user must have a phone number, room must be available; creates a `Contact` entry for the owner)
+- View list of currently rented rooms
+- Room detail view
+- Create maintenance requests for rented rooms: category, description, optional image upload
+- View own maintenance request list and status
+- View maintenance request detail
+
+**Maintenance Request Categories:** Plumbing, Electrical, Air Conditioning, Furniture, Door Lock, Cleaning, Pest Control, Other
+
+---
+
+### Staff
+
+- **Post Approval** (`/staff/posts`): list all pending posts, approve (starts 7-day free trial) or reject with reason
+- **Maintenance Handling** (`/staff/maintenance`): list assigned requests, mark as In Progress, complete with mandatory resolution note
+
+---
+
+### Moderator
+
+- Dashboard with counts of pending and under-review posts
+- List and review `PENDING_APPROVAL` and `PENDING_REVISION` posts
+- Approve or reject posts with mandatory reason
+- Badge counts injected on every moderator page
+
+---
+
+### Admin
+
+- System-wide statistics dashboard (`AdminStatisticsDTO`)
+- API usage statistics table per endpoint
+
+---
+
+## Data Initialization
+
+On first startup the application automatically seeds sample data via `DataInitializer`:
+
+- Sample user accounts for each role
+- Initial categories, management plans, and posting packages
 
 ---
 
 ## Prerequisites
 
-Before running the project, ensure your computer has the following installed:
-
-1. **Java Development Kit (JDK):** Recommended version compatible with `pom.xml` (project is configured for Java 25, but can run with recent JDK versions).
-2. **Maven:** For dependency management and building the project.
-3. **Microsoft SQL Server:** The primary database.
+1. **JDK** — Java 21 or later
+2. **Maven** — for dependency management and build
+3. **Microsoft SQL Server** — primary database
 
 ---
 
-## Installation and Run Guide
+## Installation & Setup
 
-### Step 1: Clone the Project
+### 1. Clone the Project
 
 ```bash
 git clone <your-repo-url>
 cd "Property Management System"
 ```
 
-### Step 2: Database Configuration
+### 2. Configure the Database
 
-1. Create a new database in SQL Server named `PropertyManagementDB` (or any name you prefer).
-2. Open `src/main/resources/application.properties`.
-3. Update the database connection information to match your environment:
+1. Create a database in SQL Server (e.g., `PropertyManagementDB`).
+2. Open `src/main/resources/application.properties` and update the connection settings:
 
 ```properties
 spring.datasource.url=jdbc:sqlserver://localhost:1433;databaseName=PropertyManagementDB;encrypt=true;trustServerCertificate=true
-spring.datasource.username=<YOUR_USERNAME>  # e.g., sa
-spring.datasource.password=<YOUR_PASSWORD>  # e.g., 123456
+spring.datasource.username=<YOUR_USERNAME>
+spring.datasource.password=<YOUR_PASSWORD>
 ```
 
-### Step 3: Run the Application
+### 3. Configure External Services (optional)
 
-Open a terminal at the project root and run:
+Set the following keys in `application.properties` or as environment variables to enable optional services:
+
+```properties
+# Cloudinary (image uploads)
+cloudinary.cloud-name=...
+cloudinary.api-key=...
+cloudinary.api-secret=...
+
+# OpenCage (geocoding)
+opencage.api.key=...
+
+# Gemini AI (chatbot)
+gemini.api.key=...
+
+# VNPT AI (eKYC)
+vnpt.ai.token=...
+```
+
+### 4. Run the Application
 
 ```bash
 mvn spring-boot:run
 ```
 
-_The first run may take some time to download Maven dependencies._
+_The first run downloads Maven dependencies and initializes the database schema via Hibernate._
 
-### Step 4: Access the Application
+### 5. Access the Application
 
-Once the application starts successfully (Console shows "Started..."), open your browser:
+| URL                                 | Description                             |
+| ----------------------------------- | --------------------------------------- |
+| `http://localhost:8080`             | Public homepage                         |
+| `http://localhost:8080/login`       | Tenant / user login                     |
+| `http://localhost:8080/login/owner` | Owner / staff / moderator / admin login |
 
-- **Home:** [http://localhost:8080](http://localhost:8080)
-- **Owner Login:** [http://localhost:8080/login/owner](http://localhost:8080/login/owner)
-  - **Username:** `owner1`
-  - **Password:** `123`
-  - _Use this account to access the Dashboard to test "Post Properties" features._
+**Sample credentials** (seeded by `DataInitializer`):
+
+| Role      | Username     | Password |
+| --------- | ------------ | -------- |
+| Owner     | `owner1`     | `123`    |
+| Staff     | `staff1`     | `123`    |
+| Moderator | `moderator1` | `123`    |
+| Admin     | `admin1`     | `123`    |
 
 ---
 
@@ -107,17 +268,19 @@ Once the application starts successfully (Console shows "Started..."), open your
 
 ```
 src/main/java/com/pms/propertymanagement
-├── config/          # Configuration 
-├── controller/      # Controllers (Owner, Public, Auth...)
-├── entity/          # JPA Entities
-├── repository/      # JPA Repositories
-├── service/         # Business Logic
-└── PropertyManagementSystemApplication.java  # Main class
+├── config/          # App configuration, schedulers, data initializer
+├── controller/      # MVC & REST controllers per role
+├── dto/             # Data transfer objects
+├── entity/          # JPA entities (32 total)
+├── repository/      # Spring Data JPA repositories
+├── service/         # Business logic (30+ services)
+└── PropertyManagementSystemApplication.java
 ```
+
+---
 
 ## Notes
 
-- **Default Port:** 8080.
-- **Sample Accounts:** Check `DataInitializer.java` or the console logs at startup for login credentials (if logged).
-
-Hope you have a great experience with this Property Management System!
+- **Default Port:** `8080`
+- **Database schema** is auto-created on first run (`spring.jpa.hibernate.ddl-auto=create`). Change to `update` on subsequent runs to preserve data.
+- The **subscription expiration scheduler** runs every 5 minutes to expire plans and sync post statuses automatically.
