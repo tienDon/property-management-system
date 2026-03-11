@@ -213,4 +213,82 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      * Find posts by status ordered by creation date (oldest first for fairness)
      */
     List<Post> findByStatusOrderByCreatedAtAsc(PostStatus status);
+
+    // === CHAT RECOMMENDATION QUERIES ===
+
+    /**
+     * Main recommendation query: filter by budget + ward codes + amenities + category.
+     * GROUP BY p ensures unique results (JPQL must GROUP BY entity, not p.id).
+     * HAVING checks minimum amenity match count when amenityIds is set.
+     * Boost-first ordering: boosted posts appear before non-boosted.
+     *
+     * ⚠️ amenityMatchCount: pass amenityIds.size() when amenityIds != null, pass 0L when amenityIds == null.
+     * (Prevents NPE from calling .size() on null; 0L is safe because HAVING is skipped when amenityIds IS NULL)
+     */
+    @Query("SELECT p FROM Post p " +
+           "JOIN p.property prop " +
+           "JOIN prop.rooms r " +
+           "LEFT JOIN prop.amenities a " +
+           "WHERE p.status = 'ACTIVE' AND p.postExpiredAt > :now " +
+           "AND r.status = 'AVAILABLE' " +
+           "AND (:maxPrice IS NULL OR r.price <= :maxPrice) " +
+           "AND (:provinceCode IS NULL OR prop.ward.province.code = :provinceCode) " +
+           "AND (:wardCodes IS NULL OR prop.ward.code IN :wardCodes) " +
+           "AND (:categoryId IS NULL OR prop.category.id = :categoryId) " +
+           "AND (:amenityIds IS NULL OR a.id IN :amenityIds) " +
+           "GROUP BY p " +
+           "HAVING (:amenityIds IS NULL OR COUNT(DISTINCT a.id) >= :amenityMatchCount) " +
+           "ORDER BY CASE WHEN p.boostExpiredAt > :now THEN 0 ELSE 1 END, p.postExpiredAt DESC")
+    List<Post> findRecommendedPosts(
+            @Param("now") LocalDateTime now,
+            @Param("maxPrice") Double maxPrice,
+            @Param("provinceCode") String provinceCode,
+            @Param("wardCodes") List<String> wardCodes,
+            @Param("categoryId") Long categoryId,
+            @Param("amenityIds") List<Long> amenityIds,
+            @Param("amenityMatchCount") long amenityMatchCount);
+
+    /**
+     * Relaxed recommendation: drops ward filter, loosens budget constraint.
+     * SELECT DISTINCT p avoids duplicates from the JOIN across multiple rooms.
+     * ORDER BY postExpiredAt because boostExpiredAt cannot be selected after DISTINCT.
+     */
+    @Query("SELECT DISTINCT p FROM Post p JOIN p.property prop JOIN prop.rooms r " +
+           "WHERE p.status = 'ACTIVE' AND p.postExpiredAt > :now " +
+           "AND r.status = 'AVAILABLE' AND r.price <= :maxPrice " +
+           "AND (:provinceCode IS NULL OR prop.ward.province.code = :provinceCode) " +
+           "ORDER BY p.postExpiredAt DESC")
+    List<Post> findRelaxedRecommendedPosts(
+            @Param("now") LocalDateTime now,
+            @Param("maxPrice") Double maxPrice,
+            @Param("provinceCode") String provinceCode);
+
+    /**
+     * Bounding box query for geo-based recommendation (Step 1 of 2: coarse DB filter).
+     * Step 2: Haversine filter in Java trims the bounding box corners into a true circle.
+     * Only returns posts where the property has coordinates set.
+     */
+    @Query("SELECT p FROM Post p JOIN p.property prop " +
+           "WHERE p.status = 'ACTIVE' AND p.postExpiredAt > :now " +
+           "AND prop.latitude IS NOT NULL AND prop.longitude IS NOT NULL " +
+           "AND prop.latitude BETWEEN :minLat AND :maxLat " +
+           "AND prop.longitude BETWEEN :minLng AND :maxLng")
+    List<Post> findPostsInBoundingBox(
+            @Param("now") LocalDateTime now,
+            @Param("minLat") Double minLat,
+            @Param("maxLat") Double maxLat,
+            @Param("minLng") Double minLng,
+            @Param("maxLng") Double maxLng);
+
+    /**
+     * Quick count of available posts in a province within budget — used by REFINING phase
+     * to decide whether to ask the user for more filters.
+     */
+    @Query("SELECT COUNT(DISTINCT p) FROM Post p JOIN p.property prop JOIN prop.rooms r " +
+           "WHERE p.status = 'ACTIVE' AND p.postExpiredAt > :now " +
+           "AND r.status = 'AVAILABLE' AND r.price <= :maxPrice " +
+           "AND prop.ward.province.code = :provinceCode")
+    long countByProvinceAndBudget(@Param("now") LocalDateTime now,
+                                   @Param("maxPrice") Double maxPrice,
+                                   @Param("provinceCode") String provinceCode);
 }

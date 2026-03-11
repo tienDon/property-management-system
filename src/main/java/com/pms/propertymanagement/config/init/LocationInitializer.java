@@ -38,7 +38,8 @@ public class LocationInitializer {
         hcm.getWards().add(new Ward("26881", "Phường Hiệp Phú", hcm)); // Gần khu Công nghệ cao
         hcm.getWards().add(new Ward("26875", "Phường Long Thạnh Mỹ", hcm)); // Gần Vinhome Grand Park
         hcm.getWards().add(new Ward("26878", "Phường Long Bình", hcm));
-        
+        hcm.getWards().add(new Ward("26844", "Phường Linh Xuân", hcm)); // Làng Đại Học ĐHQG TP.HCM
+
         // Quận Bình Thạnh
         hcm.getWards().add(new Ward("27151", "Phường 25", hcm)); // Gần Hutech, Ngoại thương
         

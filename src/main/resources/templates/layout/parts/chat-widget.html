@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!-- ============================================================
+     AI Chat Widget — floating button + slide-up panel
+     Vanilla JS + Tailwind, no extra dependencies.
+     API: POST /api/chat/message  { guestId, message }
+     ============================================================ -->
+    <div th:fragment="chat-widget">
+      <!-- Floating toggle button (positioned above scroll-to-top button) -->
+      <button
+        id="chatToggle"
+        title="Tìm phòng bằng AI"
+        class="fixed bottom-24 right-10 z-50 w-14 h-14 rounded-full bg-[#0054a5] shadow-xl flex items-center justify-center text-white hover:bg-blue-700 active:scale-95 transition-all"
+      >
+        <i id="chatToggleIcon" class="fa-solid fa-comments text-xl"></i>
+      </button>
+
+      <!-- Chat panel -->
+      <div
+        id="chatPanel"
+        class="fixed bottom-40 right-10 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col hidden"
+        style="height: 520px"
+      >
+        <!-- Header -->
+        <div
+          class="bg-[#0054a5] text-white px-4 py-3 rounded-t-2xl flex items-center justify-between flex-shrink-0"
+        >
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"
+            >
+              <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-sm leading-tight">
+                Trợ lý tìm phòng
+              </p>
+              <p class="text-xs text-blue-200">Hỏi mình về phòng trọ nhé!</p>
+            </div>
+          </div>
+          <button
+            id="chatClose"
+            class="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Message list -->
+        <div
+          id="chatMessages"
+          class="flex-1 overflow-y-auto px-4 py-3 space-y-3"
+        >
+          <!-- Welcome bubble (static) -->
+          <div class="flex gap-2">
+            <div
+              class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
+            >
+              <i class="fa-solid fa-robot text-blue-600 text-xs"></i>
+            </div>
+            <div
+              class="bg-gray-100 rounded-2xl rounded-tl-none px-3 py-2 text-sm text-gray-700 max-w-[82%] leading-relaxed"
+            >
+              Xin chào! Mình là trợ lý tìm phòng của Trọ Mới 🏠<br />
+              Cho mình biết nhu cầu của bạn nhé!
+            </div>
+          </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="px-3 py-3 border-t border-gray-100 flex-shrink-0">
+          <div class="flex gap-2 items-center">
+            <input
+              id="chatInput"
+              type="text"
+              placeholder="Nhập tin nhắn..."
+              autocomplete="off"
+              class="flex-1 px-3 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              id="chatSend"
+              class="w-9 h-9 bg-[#0054a5] hover:bg-blue-700 text-white rounded-full flex-shrink-0 flex items-center justify-center transition active:scale-90"
+            >
+              <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          "use strict";
+
+          /* ── Initial quick replies — property types only (shown on fresh welcome + after reset) ── */
+          const INIT_QUICK_REPLIES = [
+            "Căn hộ",
+            "Ký túc xá / KTX",
+            "Nhà trọ / Phòng trọ",
+            "Nhà nguyên căn",
+          ];
+          const CHAT_LOG_KEY = "chatMsgLog";
+
+          /* ── DOM refs ── */
+          const toggle = document.getElementById("chatToggle");
+          const toggleIcon = document.getElementById("chatToggleIcon");
+          const panel = document.getElementById("chatPanel");
+          const closeBtn = document.getElementById("chatClose");
+          const messages = document.getElementById("chatMessages");
+          const input = document.getElementById("chatInput");
+          const sendBtn = document.getElementById("chatSend");
+
+          let isOpen = false;
+          let isRestoring = false;
+          let msgLog = [];
+          let autoFollowupTimer = null;
+          let userTypedSinceResults = false;
+
+          /* ── Message log persistence (sessionStorage — survives page navigation within same tab) ── */
+          function saveLog() {
+            try {
+              sessionStorage.setItem(CHAT_LOG_KEY, JSON.stringify(msgLog));
+            } catch (e) {}
+          }
+
+          function restoreLog() {
+            try {
+              const saved = JSON.parse(
+                sessionStorage.getItem(CHAT_LOG_KEY) || "[]",
+              );
+              if (!Array.isArray(saved) || saved.length === 0) return;
+              isRestoring = true;
+              saved.forEach(function (entry) {
+                if (entry.type === "user") appendUser(entry.text);
+                else if (entry.type === "bot") appendBot(entry.text);
+                else if (entry.type === "cards")
+                  appendCards(entry.results, entry.highlightSlug || null);
+              });
+              isRestoring = false;
+            } catch (e) {
+              isRestoring = false;
+            }
+          }
+
+          /* ── guestId — generate once, persist forever ── */
+          function getGuestId() {
+            let id = localStorage.getItem("chatGuestId");
+            if (!id) {
+              id =
+                "g_" +
+                Date.now() +
+                "_" +
+                Math.random().toString(36).slice(2, 9);
+              localStorage.setItem("chatGuestId", id);
+            }
+            return id;
+          }
+
+          /* ── chatParams — 7-day TTL ── */
+          function saveChatParams(data) {
+            if (!data) return;
+            localStorage.setItem(
+              "chatParams",
+              JSON.stringify({
+                data: data,
+                savedAt: Date.now(),
+                ttl: 7 * 24 * 60 * 60 * 1000,
+              }),
+            );
+          }
+
+          /* ── Toggle open / close ── */
+          toggle.addEventListener("click", () => {
+            isOpen = !isOpen;
+            panel.classList.toggle("hidden", !isOpen);
+            toggleIcon.className = isOpen
+              ? "fa-solid fa-xmark text-xl"
+              : "fa-solid fa-comments text-xl";
+            if (isOpen) {
+              input.focus();
+              scrollBottom();
+            }
+          });
+
+          closeBtn.addEventListener("click", () => {
+            isOpen = false;
+            panel.classList.add("hidden");
+            toggleIcon.className = "fa-solid fa-comments text-xl";
+          });
+
+          /* ── Enter to send ── */
+          input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          });
+          /* Mark that user is typing — cancels auto follow-up */
+          input.addEventListener("input", function () {
+            userTypedSinceResults = true;
+          });
+          sendBtn.addEventListener("click", sendMessage);
+
+          /* ── Scroll helpers ── */
+          function scrollBottom() {
+            requestAnimationFrame(() => {
+              messages.scrollTop = messages.scrollHeight;
+            });
+          }
+
+          /* ── Safe HTML escape ── */
+          function esc(str) {
+            if (str == null) return "";
+            return String(str)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;");
+          }
+
+          /* ── Remove all quick-reply chip rows ── */
+          function removeQuickReplies() {
+            document
+              .querySelectorAll("#chatMessages .qr-wrap")
+              .forEach((el) => el.remove());
+          }
+
+          /* ── Append quick-reply chips ── */
+          function appendQuickReplies(replies) {
+            if (!replies || replies.length === 0) return;
+            const wrap = document.createElement("div");
+            wrap.className = "qr-wrap flex flex-wrap gap-1.5 pl-9 pr-1";
+            replies.forEach(function (label) {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.textContent = label;
+              btn.className =
+                "qr-chip px-2.5 py-1 rounded-full text-xs border border-blue-300 " +
+                "text-[#0054a5] bg-white hover:bg-blue-50 hover:border-blue-500 " +
+                "active:scale-95 transition cursor-pointer";
+              btn.addEventListener("click", function () {
+                input.value = label;
+                removeQuickReplies();
+                sendMessage();
+              });
+              wrap.appendChild(btn);
+            });
+            messages.appendChild(wrap);
+            scrollBottom();
+          }
+
+          /* ── Append user bubble ── */
+          function appendUser(text) {
+            const div = document.createElement("div");
+            div.className = "flex justify-end";
+            div.innerHTML =
+              '<div class="bg-[#0054a5] text-white rounded-2xl rounded-tr-none px-3 py-2 text-sm max-w-[82%] leading-relaxed">' +
+              esc(text) +
+              "</div>";
+            messages.appendChild(div);
+            scrollBottom();
+            if (!isRestoring) {
+              msgLog.push({ type: "user", text });
+              saveLog();
+            }
+          }
+
+          /* ── Append bot bubble ── */
+          function appendBot(text) {
+            const div = document.createElement("div");
+            div.className = "flex gap-2";
+            div.innerHTML =
+              '<div class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">' +
+              '<i class="fa-solid fa-robot text-blue-600 text-xs"></i></div>' +
+              '<div class="bg-gray-100 rounded-2xl rounded-tl-none px-3 py-2 text-sm text-gray-700 max-w-[82%] leading-relaxed">' +
+              esc(text) +
+              "</div>";
+            messages.appendChild(div);
+            scrollBottom();
+            if (!isRestoring) {
+              msgLog.push({ type: "bot", text });
+              saveLog();
+            }
+          }
+
+          /* ── Append property cards ── */
+          function appendCards(results, highlightSlug) {
+            if (!results || results.length === 0) return;
+            const wrap = document.createElement("div");
+            wrap.className = "flex flex-col gap-2 pl-9";
+
+            results.forEach(function (r) {
+              const isHl = highlightSlug && r.postSlug === highlightSlug;
+              const price =
+                r.price != null
+                  ? Number(r.price).toLocaleString("vi-VN") + "\u00a0đ/tháng"
+                  : "Liên hệ";
+              const area = r.area != null ? r.area + "\u00a0m²" : "";
+              const loc =
+                [r.wardName, r.provinceName].filter(Boolean).join(" · ") +
+                (area ? " · " + area : "");
+              const tags = (r.amenityNames || []).slice(0, 3).join(", ");
+
+              const card = document.createElement("div");
+              card.className =
+                "property-card rounded-xl border p-3 text-sm transition-all cursor-default " +
+                (isHl
+                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-400"
+                  : "border-gray-100 bg-white hover:border-gray-200");
+              card.dataset.slug = r.postSlug || "";
+
+              card.innerHTML =
+                '<div class="flex items-start gap-2">' +
+                '<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0054a5] text-white text-[11px] font-bold flex-shrink-0 mt-0.5">' +
+                esc(r.displayIndex) +
+                "</span>" +
+                '<div class="min-w-0 flex-1">' +
+                '<p class="font-semibold text-gray-800 truncate text-sm">' +
+                esc(r.postTitle || "") +
+                "</p>" +
+                '<p class="text-[#0054a5] font-bold text-sm mt-0.5">' +
+                esc(price) +
+                "</p>" +
+                (loc
+                  ? '<p class="text-gray-400 text-xs mt-0.5 truncate">' +
+                    esc(loc) +
+                    "</p>"
+                  : "") +
+                (tags
+                  ? '<p class="text-gray-400 text-xs mt-1 truncate"><i class="fa-solid fa-circle-check text-green-400 mr-1"></i>' +
+                    esc(tags) +
+                    "</p>"
+                  : "") +
+                "</div></div>" +
+                '<a href="/public/property/' +
+                esc(r.postSlug) +
+                '" target="_blank" rel="noopener noreferrer"' +
+                ' class="mt-2 block w-full text-center py-1.5 rounded-lg text-xs font-semibold transition ' +
+                (isHl
+                  ? "bg-[#0054a5] text-white hover:bg-blue-700"
+                  : "bg-gray-50 text-[#0054a5] border border-blue-200 hover:bg-blue-50") +
+                '">' +
+                'Xem chi tiết <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[10px]"></i>' +
+                "</a>";
+
+              wrap.appendChild(card);
+            });
+
+            messages.appendChild(wrap);
+            scrollBottom();
+            if (!isRestoring) {
+              msgLog.push({
+                type: "cards",
+                results,
+                highlightSlug: highlightSlug || null,
+              });
+              saveLog();
+            }
+          }
+
+          function highlightCard(slug) {
+            if (!slug) return;
+            document
+              .querySelectorAll("#chatMessages .property-card")
+              .forEach(function (card) {
+                const match = card.dataset.slug === slug;
+                card.classList.toggle("border-blue-500", match);
+                card.classList.toggle("bg-blue-50", match);
+                card.classList.toggle("ring-2", match);
+                card.classList.toggle("ring-blue-400", match);
+                card.classList.toggle("border-gray-100", !match);
+                card.classList.toggle("bg-white", !match);
+                const btn = card.querySelector("a");
+                if (btn) {
+                  btn.className =
+                    "mt-2 block w-full text-center py-1.5 rounded-lg text-xs font-semibold transition " +
+                    (match
+                      ? "bg-[#0054a5] text-white hover:bg-blue-700"
+                      : "bg-gray-50 text-[#0054a5] border border-blue-200 hover:bg-blue-50");
+                }
+                if (match)
+                  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              });
+          }
+
+          /* ── Typing indicator ── */
+          function showTyping() {
+            const div = document.createElement("div");
+            div.id = "chatTyping";
+            div.className = "flex gap-2";
+            div.innerHTML =
+              '<div class="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">' +
+              '<i class="fa-solid fa-robot text-blue-600 text-xs"></i></div>' +
+              '<div class="bg-gray-100 rounded-2xl rounded-tl-none px-3 py-2">' +
+              '<span class="flex gap-1 items-center h-4">' +
+              '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:0ms"></span>' +
+              '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:150ms"></span>' +
+              '<span class="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style="animation-delay:300ms"></span>' +
+              "</span></div>";
+            messages.appendChild(div);
+            scrollBottom();
+          }
+
+          function removeTyping() {
+            const el = document.getElementById("chatTyping");
+            if (el) el.remove();
+          }
+
+          /* ── Input enable / disable during request ── */
+          function setDisabled(disabled) {
+            input.disabled = disabled;
+            sendBtn.disabled = disabled;
+            sendBtn.className =
+              "w-9 h-9 " +
+              (disabled
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#0054a5] hover:bg-blue-700 active:scale-90") +
+              " text-white rounded-full flex-shrink-0 flex items-center justify-center transition";
+          }
+
+          /* ── Main send logic ── */
+          async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+
+            removeQuickReplies();
+            appendUser(text);
+            setDisabled(true);
+            showTyping();
+
+            try {
+              const res = await fetch("/api/chat/message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ guestId: getGuestId(), message: text }),
+              });
+
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              const data = await res.json();
+
+              removeTyping();
+
+              /* resetChat = true → clear all messages except welcome, re-add chips */
+              if (data.resetChat) {
+                while (messages.children.length > 1) {
+                  messages.removeChild(messages.lastChild);
+                }
+                msgLog = [];
+                saveLog();
+                appendQuickReplies(INIT_QUICK_REPLIES);
+              }
+
+              /* Always show bot message */
+              if (data.message) appendBot(data.message);
+
+              /* Quick-reply chips from server */
+              if (data.quickReplies && data.quickReplies.length > 0) {
+                appendQuickReplies(data.quickReplies);
+              }
+
+              /* New results → render cards */
+              if (data.results && data.results.length > 0) {
+                appendCards(data.results, null);
+                saveChatParams({ _resultsAt: Date.now() });
+                /* Auto follow-up after 6 seconds if user hasn't typed */
+                userTypedSinceResults = false;
+                clearTimeout(autoFollowupTimer);
+                autoFollowupTimer = setTimeout(function () {
+                  if (!userTypedSinceResults) {
+                    const followUp =
+                      "Danh sách này có phù hợp với bạn không ạ? Bạn muốn tìm thêm tiện ích, đổi khu vực, hay tìm lại từ đầu?";
+                    appendBot(followUp);
+                    appendQuickReplies([
+                      "Tìm thêm tiện ích",
+                      "Đổi khu vực",
+                      "Phù hợp rồi 👍",
+                    ]);
+                  }
+                }, 6000);
+              }
+
+              /* Interest action → highlight matching card */
+              if (data.postSlug) {
+                highlightCard(data.postSlug);
+                appendBot(
+                  'Đây là phòng bạn quan tâm ☝️ Bấm "Xem chi tiết" để xem thêm nhé!',
+                );
+              }
+            } catch (err) {
+              removeTyping();
+              appendBot("Xin lỗi, có lỗi kết nối. Vui lòng thử lại sau.");
+              console.error("[Chat]", err);
+            } finally {
+              setDisabled(false);
+              input.focus();
+            }
+          }
+
+          /* ── Init: restore saved chat log or show welcome chips ── */
+          (function initChat() {
+            try {
+              const saved = JSON.parse(
+                sessionStorage.getItem(CHAT_LOG_KEY) || "[]",
+              );
+              if (Array.isArray(saved) && saved.length > 0) {
+                msgLog = saved;
+                restoreLog();
+                return;
+              }
+            } catch (e) {}
+            appendQuickReplies(INIT_QUICK_REPLIES);
+          })();
+        })();
+      </script>
+    </div>
+  </body>
+</html>
