@@ -27,4 +27,6 @@ public interface TenantMaintenanceService {
     MaintenanceRequest confirmCompletion(Long id, User tenant);
 
     MaintenanceRequest reopenRequest(Long id, String reason, User tenant);
+    boolean hasUnresolvedRequestForRoom(Long roomId);
+    long countReopens(Long requestId);
 }

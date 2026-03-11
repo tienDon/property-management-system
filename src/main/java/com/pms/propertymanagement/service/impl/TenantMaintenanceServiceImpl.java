@@ -97,6 +97,9 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
         if (!isRoomRentedByTenant(roomId, tenant)) {
             throw new ForbiddenException("Bạn chỉ có thể tạo yêu cầu cho phòng đang thuê");
         }
+        if (hasUnresolvedRequestForRoom(roomId)) {
+            throw new IllegalStateException("Phòng này đang có yêu cầu chưa được xử lý xong");
+        }
         Room room = roomRepository.findById(roomId).orElseThrow(() -> new ResourceNotFoundException("Room not found"));
         MaintenanceRequest req = new MaintenanceRequest();
         req.setCode(generateRequestCode());
@@ -176,6 +179,9 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
         if (req.getStatus() != MaintenanceStatus.COMPLETED) {
             throw new IllegalStateException("Chỉ mở lại khi trạng thái là COMPLETED");
         }
+        if (countReopens(id) >= 3) {
+            throw new IllegalStateException("Bạn đã yêu cầu làm lại quá số lần cho phép, vui lòng liên hệ trực tiếp Owner");
+        }
         req.setStatus(MaintenanceStatus.REOPENED);
         req.setReopenedReason(reason);
         req.setUpdatedAt(LocalDateTime.now());
@@ -189,6 +195,29 @@ public class TenantMaintenanceServiceImpl implements TenantMaintenanceService {
         logRepository.save(log);
 
         return saved;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasUnresolvedRequestForRoom(Long roomId) {
+        if (roomId == null) {
+            return false;
+        }
+        List<MaintenanceStatus> statuses = List.of(
+                MaintenanceStatus.PENDING,
+                MaintenanceStatus.ASSIGNED,
+                MaintenanceStatus.IN_PROGRESS
+        );
+        return maintenanceRequestRepository.countByRoom_IdAndStatusIn(roomId, statuses) > 0;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countReopens(Long requestId) {
+        if (requestId == null) {
+            return 0;
+        }
+        return logRepository.countByRequest_IdAndStatus(requestId, MaintenanceStatus.REOPENED);
     }
 
     private Optional<Tenant> findTenantProfile(User tenantUser) {

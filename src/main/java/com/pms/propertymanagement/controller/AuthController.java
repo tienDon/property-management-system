@@ -42,16 +42,8 @@ public class AuthController {
             return "public/login-user";
         }
         session.setAttribute("user", user);
-        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-            return "redirect:/owner";
-        }
-        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
-            return "redirect:/staff/maintenance";
-        }
-        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("MODERATOR"))) {
-            return "redirect:/moderator";
-        }
-        return "redirect:/tenant/rooms";
+        String target = resolveRoleTarget(user);
+        return "redirect:" + target;
     }
 
     // ========== OWNER / STAFF LOGIN ==========
@@ -69,15 +61,8 @@ public class AuthController {
         User user = userService.authenticate(username, password);
         if (user != null) {
             session.setAttribute("user", user);
-            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
-                return "redirect:/owner";
-            }
-            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
-                return "redirect:/staff/maintenance";
-            }
-            if (user.getRoles().stream().anyMatch(role -> role.getName().equals("MODERATOR"))) {
-                return "redirect:/moderator";
-            }
+            String target = resolveRoleTarget(user);
+            return "redirect:" + target;
         }
 
         model.addAttribute("error", "Sai username hoặc password");
@@ -89,10 +74,6 @@ public class AuthController {
     @GetMapping("/logout")
     public String logout(HttpSession session,
                          @RequestParam(value = "redirect", required = false) String redirectUrl) {
-
-        if (session != null && session.getAttribute("user") != null) {
-            log.info("User logout: {}", session.getAttribute("user"));
-        }
 
         if (session != null) {
             session.invalidate();
@@ -115,5 +96,25 @@ public class AuthController {
      */
     private boolean isValidRedirectUrl(String url) {
         return url.startsWith("/") && !url.startsWith("//");
+    }
+
+    private boolean requiresEkyc(User user) {
+        return user.getRoles().stream().anyMatch(r -> r.getName().equals("USER") || r.getName().equals("OWNER"));
+    }
+
+    private String resolveRoleTarget(User user) {
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("ADMIN"))) {
+            return "/admin/dashboard";
+        }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("OWNER"))) {
+            return "/owner/dashboard";
+        }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("STAFF"))) {
+            return "/staff/maintenance";
+        }
+        if (user.getRoles().stream().anyMatch(role -> role.getName().equals("MODERATOR"))) {
+            return "/moderator";
+        }
+        return "/tenant/rooms";
     }
 }
