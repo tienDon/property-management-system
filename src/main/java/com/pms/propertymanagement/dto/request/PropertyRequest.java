@@ -38,4 +38,11 @@ public class PropertyRequest {
 
     // === IMAGES ===
     private List<String> imageUrls;
+
+    // === NEW FIELDS ===
+    private Double latitude;
+    private Double longitude;
+    private List<String> rules;
+    private List<ServiceItemDTO> serviceItems;
+    private String status; // PUBLISHED, DRAFT, etc.
 }

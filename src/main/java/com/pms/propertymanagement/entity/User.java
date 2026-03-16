@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import com.pms.propertymanagement.enums.AccountType;
 
 @Entity
 @Table(name = "users")
@@ -57,6 +58,10 @@ public class User {
 
     @Column(name = "ekyc_verified_at")
     private LocalDateTime ekycVerifiedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type")
+    private AccountType accountType;
 
     @Column(name="create_at", updatable = false)
     private LocalDateTime createAt;

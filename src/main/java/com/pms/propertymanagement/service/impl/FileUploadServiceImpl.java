@@ -1,8 +1,11 @@
 package com.pms.propertymanagement.service.impl;
 
 import com.pms.propertymanagement.dto.response.VNPTUploadResponse;
+import com.pms.propertymanagement.dto.response.CloudinaryResponse;
+import com.pms.propertymanagement.dto.response.UploadImageResult;
 import com.pms.propertymanagement.entity.UploadFile;
 import com.pms.propertymanagement.repository.UploadFileRepository;
+import com.pms.propertymanagement.service.CloudinaryService;
 import com.pms.propertymanagement.service.FileUploadService;
 import com.pms.propertymanagement.utils.ImageUtil;
 import com.pms.propertymanagement.utils.VnptErrorUtil;
@@ -39,16 +42,25 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Value("${vnpt.base-url}")
     private String baseUrl;
 
+    @Value("${ekyc.persist-uploadfile:true}")
+    private boolean persistUploadFile;
+
     @Autowired
     private UploadFileRepository uploadFileRepository;
 
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
     @Override
     public String uploadToVNPT(MultipartFile file, String title) throws IOException {
+        return uploadToVNPTWithCloudinary(file, title).getHash();
+    }
 
+    @Override
+    public UploadImageResult uploadToVNPTWithCloudinary(MultipartFile file, String title) throws IOException {
+        File resizedFile = null;
         try {
-
-            File resizedFile = ImageUtil.resizeImage(file);
-
+            resizedFile = ImageUtil.resizeImage(file);
             RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
@@ -83,19 +95,40 @@ public class FileUploadServiceImpl implements FileUploadService {
                             .getObject()
                             .getHash();
 
+            CloudinaryResponse cloudinaryResponse = null;
+            try {
+                cloudinaryResponse = cloudinaryService.uploadImage(resizedFile, "ekyc");
+            } catch (Exception ignored) { }
+
             UploadFile entity = new UploadFile();
             entity.setFileName(file.getOriginalFilename());
             entity.setHash(hash);
             entity.setUploadTime(LocalDateTime.now().toString());
+            if (cloudinaryResponse != null) {
+                entity.setCloudinaryUrl(cloudinaryResponse.getUrl());
+                entity.setCloudinaryPublicId(cloudinaryResponse.getPublicId());
+            }
 
-            uploadFileRepository.save(entity);
+            if (persistUploadFile) {
+                uploadFileRepository.save(entity);
+            }
 
-            return hash;
+            return UploadImageResult.builder()
+                    .hash(hash)
+                    .cloudinaryUrl(cloudinaryResponse != null ? cloudinaryResponse.getUrl() : null)
+                    .cloudinaryPublicId(cloudinaryResponse != null ? cloudinaryResponse.getPublicId() : null)
+                    .build();
 
         } catch (HttpClientErrorException e) {
             throw new RuntimeException("Lỗi upload ảnh lên VNPT: " + VnptErrorUtil.extractErrorMessage(e));
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                if (resizedFile != null && resizedFile.exists()) {
+                    resizedFile.delete();
+                }
+            } catch (Exception ignored) { }
         }
     }
 }

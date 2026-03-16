@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.service.impl;
 
+import com.pms.propertymanagement.dto.request.PostFilterDTO;
 import com.pms.propertymanagement.dto.response.PostAnalyticsDTO;
 import com.pms.propertymanagement.dto.response.PostOwnerResponse;
 import com.pms.propertymanagement.entity.Post;
@@ -17,9 +18,12 @@ import com.pms.propertymanagement.service.ManagementPlanService;
 import com.pms.propertymanagement.service.PostService;
 import com.pms.propertymanagement.service.SubscriptionManagementService;
 import com.pms.propertymanagement.service.WalletService;
+import com.pms.propertymanagement.specification.PostSpecification;
 import com.pms.propertymanagement.utils.DateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +49,14 @@ public class PostServiceImpl implements PostService {
     private final WalletService walletService;
     private final SubscriptionManagementService subscriptionManagementService;
     private final ManagementPlanService managementPlanService;
+
+    // === SEARCH & DISCOVERY ===
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Post> searchPosts(PostFilterDTO filter, Pageable pageable) {
+        return postRepository.findAll(PostSpecification.filter(filter), pageable);
+    }
 
     // === POST CREATION & CONTENT MANAGEMENT ===
 

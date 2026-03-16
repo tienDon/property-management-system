@@ -63,6 +63,9 @@ public class AiServiceImpl implements AiService {
     @org.springframework.beans.factory.annotation.Value("${vnpt.base-url}")
     private String BASE_URL;
 
+    @org.springframework.beans.factory.annotation.Value("${vnpt.unit:}")
+    private String vnptUnit;
+
     private final ApiLogRepository apiLogRepository;
     private final RestTemplate restTemplate;
 
@@ -345,6 +348,9 @@ public class AiServiceImpl implements AiService {
     public FaceSearchKResponse faceSearchK(FaceSearchKRequest request) {
         HttpHeaders headers = createHeaders();
         
+        if (request != null && (request.getUnit() == null || request.getUnit().isBlank())) {
+            request.setUnit(vnptUnit);
+        }
         HttpEntity<FaceSearchKRequest> entity = new HttpEntity<>(request, headers);
         
         try {
@@ -356,6 +362,8 @@ public class AiServiceImpl implements AiService {
                 )
             );
             return response.getBody();
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException(VnptErrorUtil.extractErrorMessage(e));
         } catch (Exception e) {
             throw e;
         }

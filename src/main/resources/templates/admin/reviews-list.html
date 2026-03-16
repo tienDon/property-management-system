@@ -1,0 +1,123 @@
+<div th:fragment="content" class="p-6 space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Quản lý đánh giá</h1>
+            <p class="text-gray-500">Duyệt hoặc từ chối các đánh giá từ người thuê.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+                <tr>
+                    <th class="px-6 py-4">Bất động sản</th>
+                    <th class="px-6 py-4">Người thuê</th>
+                    <th class="px-6 py-4">Đánh giá</th>
+                    <th class="px-6 py-4">Nhận xét</th>
+                    <th class="px-6 py-4">Ngày tạo</th>
+                    <th class="px-6 py-4 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                <tr th:each="review : ${pendingReviews}" class="hover:bg-gray-50 transition">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900" th:text="${review.propertyId}">ID</div>
+                        <div class="text-xs text-gray-400">Property ID</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900" th:text="${review.tenantName}">Tên người thuê</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex text-yellow-400 text-xs">
+                            <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                               th:class="${i <= review.averageRating} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-1" th:text="${#numbers.formatDecimal(review.averageRating, 1, 1)}">4.5</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-700 max-w-xs truncate" th:title="${review.comment}" th:text="${review.comment}">Nhận xét</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}">
+                        12/03/2026 10:00
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button th:onclick="'approveReview(' + ${review.id} + ')'" class="text-green-600 hover:bg-green-50 px-3 py-1 rounded-lg text-sm transition">
+                            <i class="fa-solid fa-check mr-1"></i> Duyệt
+                        </button>
+                        <button th:onclick="'openRejectModal(' + ${review.id} + ')'" class="text-red-600 hover:bg-red-50 px-3 py-1 rounded-lg text-sm transition">
+                            <i class="fa-solid fa-xmark mr-1"></i> Từ chối
+                        </button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pendingReviews)}">
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">
+                        Không có đánh giá nào đang chờ duyệt.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-2xl">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Từ chối đánh giá</h3>
+                <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="rejectReviewId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Lý do từ chối</label>
+                    <textarea id="rejectReason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Nhập lý do từ chối..."></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeRejectModal()" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50">Hủy</button>
+                    <button onclick="submitReject()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">Xác nhận từ chối</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function approveReview(id) {
+            if (confirm('Bạn có chắc chắn muốn duyệt đánh giá này?')) {
+                fetch(`/api/admin/reviews/${id}/approve`, { method: 'POST' })
+                    .then(res => {
+                        if (res.ok) {
+                            alert('Đã duyệt đánh giá.');
+                            location.reload();
+                        }
+                    });
+            }
+        }
+
+        function openRejectModal(id) {
+            document.getElementById('rejectReviewId').value = id;
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+
+        function submitReject() {
+            const id = document.getElementById('rejectReviewId').value;
+            const reason = document.getElementById('rejectReason').value;
+            if (!reason) {
+                alert('Vui lòng nhập lý do từ chối');
+                return;
+            }
+
+            fetch(`/api/admin/reviews/${id}/reject?reason=${encodeURIComponent(reason)}`, { method: 'POST' })
+                .then(res => {
+                    if (res.ok) {
+                        alert('Đã từ chối đánh giá.');
+                        location.reload();
+                    }
+                });
+        }
+    </script>
+</div>

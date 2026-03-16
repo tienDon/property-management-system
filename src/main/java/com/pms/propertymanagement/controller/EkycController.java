@@ -5,6 +5,7 @@ import com.pms.propertymanagement.dto.response.*;
 import com.pms.propertymanagement.entity.EkycSubmission;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.repository.EkycSubmissionRepository;
+import com.pms.propertymanagement.repository.UploadFileRepository;
 import com.pms.propertymanagement.repository.UserRepository;
 import com.pms.propertymanagement.service.AiService;
 import com.pms.propertymanagement.service.FileUploadService;
@@ -30,13 +31,21 @@ public class EkycController {
     private final FileUploadService fileUploadService;
     private final UserRepository userRepository;
     private final EkycSubmissionRepository ekycSubmissionRepository;
+    private final UploadFileRepository uploadFileRepository;
     
     @Value("${vnpt.unit}")
     private String vnptUnit;
 
+    @Value("${ekyc.persist-vnpt-hash:true}")
+    private boolean persistVnptHash;
+
+    @Value("${ekyc.purge-uploadfile-after-ekyc:false}")
+    private boolean purgeUploadFileAfterEkyc;
+
     private static final String CLIENT_SESSION = "ANDROID_nokia7.2_28_Simulator_2.4.2_08d2d8686ee5fa0e_1581910116532";
     private static final String TOKEN = "123456"; // Dummy token
     private static final String CROP_PARAM = "0.14,0.3";
+    private static final String REDACTED_HASH = "REDACTED";
 
     @GetMapping("/ekyc")
     public String showEkyc(@RequestParam(value = "next", required = false) String next,
@@ -48,7 +57,13 @@ public class EkycController {
         User user = userRepository.findById(sessionUser.getId()).orElse(sessionUser);
         session.setAttribute("user", user);
 
-        if (!requiresEkyc(user) || user.isEkycVerified()) {
+        if (!requiresEkyc(user)) {
+            return "redirect:" + safeNextOrDefault(next, user);
+        }
+        if (user.isEkycVerified()) {
+            if (user.getAccountType() == null) {
+                return "redirect:/ekyc/choose-role?next=" + safeNextOrDefault(next, user);
+            }
             return "redirect:" + safeNextOrDefault(next, user);
         }
 
@@ -83,10 +98,14 @@ public class EkycController {
         String frontHash = null;
         String backHash = null;
         String faceHash = null;
+        UploadImageResult frontUpload = null;
+        UploadImageResult backUpload = null;
+        UploadImageResult faceUpload = null;
 
         try {
             System.out.println("Uploading front image...");
-            frontHash = fileUploadService.uploadToVNPT(frontImage, "cccd front");
+            frontUpload = fileUploadService.uploadToVNPTWithCloudinary(frontImage, "cccd front");
+            frontHash = frontUpload.getHash();
             System.out.println("Front hash: " + frontHash);
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,7 +114,8 @@ public class EkycController {
 
         try {
             System.out.println("Uploading back image...");
-            backHash = fileUploadService.uploadToVNPT(backImage, "cccd back");
+            backUpload = fileUploadService.uploadToVNPTWithCloudinary(backImage, "cccd back");
+            backHash = backUpload.getHash();
             System.out.println("Back hash: " + backHash);
         } catch (Exception e) {
             e.printStackTrace();
@@ -104,7 +124,8 @@ public class EkycController {
 
         try {
             System.out.println("Uploading face image...");
-            faceHash = fileUploadService.uploadToVNPT(faceImage, "face");
+            faceUpload = fileUploadService.uploadToVNPTWithCloudinary(faceImage, "face");
+            faceHash = faceUpload.getHash();
             System.out.println("Face hash: " + faceHash);
         } catch (Exception e) {
             e.printStackTrace();
@@ -218,11 +239,27 @@ public class EkycController {
         session.setAttribute("user", saved);
 
         // 5. Save Submission Record
+        String frontHashForStore = persistVnptHash ? frontHash : REDACTED_HASH;
+        String backHashForStore = persistVnptHash ? backHash : REDACTED_HASH;
+        String faceHashForStore = persistVnptHash ? faceHash : REDACTED_HASH;
+
         EkycSubmission submission = new EkycSubmission();
         submission.setUser(user);
-        submission.setFrontHash(frontHash);
-        submission.setBackHash(backHash);
-        submission.setFaceHash(faceHash);
+        submission.setFrontHash(frontHashForStore);
+        submission.setBackHash(backHashForStore);
+        submission.setFaceHash(faceHashForStore);
+        if (frontUpload != null) {
+            submission.setFrontCloudinaryUrl(frontUpload.getCloudinaryUrl());
+            submission.setFrontCloudinaryPublicId(frontUpload.getCloudinaryPublicId());
+        }
+        if (backUpload != null) {
+            submission.setBackCloudinaryUrl(backUpload.getCloudinaryUrl());
+            submission.setBackCloudinaryPublicId(backUpload.getCloudinaryPublicId());
+        }
+        if (faceUpload != null) {
+            submission.setFaceCloudinaryUrl(faceUpload.getCloudinaryUrl());
+            submission.setFaceCloudinaryPublicId(faceUpload.getCloudinaryPublicId());
+        }
         ekycSubmissionRepository.save(submission);
 
         // 6. Add Face to System (Async or just try-catch)
@@ -257,7 +294,19 @@ public class EkycController {
             System.err.println("Failed to add face to system: " + e.getMessage());
         }
 
-        return "redirect:" + safeNextOrDefault(next, saved);
+        if (purgeUploadFileAfterEkyc) {
+            try {
+                uploadFileRepository.deleteByHash(frontHash);
+            } catch (Exception ignored) { }
+            try {
+                uploadFileRepository.deleteByHash(backHash);
+            } catch (Exception ignored) { }
+            try {
+                uploadFileRepository.deleteByHash(faceHash);
+            } catch (Exception ignored) { }
+        }
+
+        return "redirect:/ekyc/choose-role?next=" + safeNextOrDefault(next, saved);
     }
 
     private boolean requiresEkyc(User user) {

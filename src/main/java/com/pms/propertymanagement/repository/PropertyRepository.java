@@ -30,6 +30,7 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
      * Find properties by owner and status
      */
     List<Property> findByOwnerIdAndStatus(Long ownerId, PropertyStatus status);
+    List<Property> findByOwnerIdAndStatusIn(Long ownerId, List<PropertyStatus> statuses);
 
     /**
      * Find properties by IDs, owner, and status (for bulk operations)
@@ -38,11 +39,16 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
     List<Property> findByIdInAndOwnerIdAndStatus(@Param("propertyIds") List<Long> propertyIds, 
                                                 @Param("ownerId") Long ownerId, 
                                                 @Param("status") PropertyStatus status);
+    @Query("SELECT p FROM Property p WHERE p.id IN :propertyIds AND p.owner.id = :ownerId AND p.status IN :statuses")
+    List<Property> findByIdInAndOwnerIdAndStatusIn(@Param("propertyIds") List<Long> propertyIds,
+                                                   @Param("ownerId") Long ownerId,
+                                                   @Param("statuses") List<PropertyStatus> statuses);
 
     /**
      * Count properties by owner and status
      */
     int countByOwnerIdAndStatus(Long ownerId, PropertyStatus status);
+    int countByOwnerIdAndStatusIn(Long ownerId, List<PropertyStatus> statuses);
 
     /**
      * Bulk update property status for specific owner and current status
@@ -50,7 +56,7 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
      */
     @Modifying
     @Query("UPDATE Property p SET p.status = :newStatus, p.managementLockedAt = " +
-           "CASE WHEN :newStatus = 'PLAN_LOCKED' THEN CURRENT_TIMESTAMP ELSE NULL END " +
+           "CASE WHEN :newStatus = 'PLAN_LOCKED' OR :newStatus = 'TEMPORARILY_LOCKED' THEN CURRENT_TIMESTAMP ELSE NULL END " +
            "WHERE p.owner.id = :ownerId AND p.status = :currentStatus")
     int updateStatusByOwnerIdAndCurrentStatus(@Param("ownerId") Long ownerId, 
                                             @Param("currentStatus") PropertyStatus currentStatus,

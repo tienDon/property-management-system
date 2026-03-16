@@ -176,6 +176,7 @@ public class LargeScaleDataInitializer {
             p.setNumberOfRooms(5 + random.nextInt(10));
             p.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(60)));
             p.setUpdatedAt(LocalDateTime.now());
+            p.setStatus(PropertyStatus.ACTIVE);
             
             // Add amenities
             if (!amenities.isEmpty()) {

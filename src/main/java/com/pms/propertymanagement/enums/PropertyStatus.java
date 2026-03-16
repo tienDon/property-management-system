@@ -5,8 +5,13 @@ package com.pms.propertymanagement.enums;
  * Controls property access based on management plan limits
  */
 public enum PropertyStatus {
-    ACTIVE,         // Property is active and can be managed
-    PLAN_LOCKED,    // Locked due to management plan limits (view-only)
-    ADMIN_LOCKED,   // Locked by administrator
-    SUSPENDED       // Suspended (future use for compliance issues)
+    ACTIVE,
+    PUBLISHED,
+    DRAFT,
+    OCCUPIED,
+    PLAN_LOCKED,
+    TEMPORARILY_LOCKED,
+    ARCHIVED,
+    ADMIN_LOCKED,
+    SUSPENDED
 }

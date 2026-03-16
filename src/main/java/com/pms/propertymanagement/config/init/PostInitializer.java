@@ -8,6 +8,7 @@ import com.pms.propertymanagement.repository.PropertyRepository;
 import com.pms.propertymanagement.utils.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +28,13 @@ public class PostInitializer {
     private final PropertyRepository propertyRepository;
     private final PostRepository postRepository;
 
+    @Value("${pms.demo.refresh-expired-posts:true}")
+    private boolean refreshExpiredPosts;
+
     @Transactional
     public void init() {
+        LocalDateTime now = LocalDateTime.now();
+
         // Only run if there are properties without posts
         if (propertyRepository.count() == 0) {
             log.info("No properties found, skipping post initialization");
@@ -37,6 +43,14 @@ public class PostInitializer {
 
         long existingPosts = postRepository.count();
         if (existingPosts > 0) {
+            if (refreshExpiredPosts) {
+                int visibleCount = postRepository.findMarketplacePosts(now).size();
+                if (visibleCount == 0) {
+                    LocalDateTime newExpiry = now.plusDays(30);
+                    int refreshed = postRepository.refreshExpiredMarketplacePosts(now, newExpiry);
+                    log.info("Marketplace had no visible posts; refreshed {} expired posts (expiry: {})", refreshed, newExpiry);
+                }
+            }
             log.info("{} posts already exist, skipping initialization", existingPosts);
             return;
         }
@@ -68,7 +82,7 @@ public class PostInitializer {
                 post.setViewCount(0);
                 
                 // Set 7-day free trial for existing properties
-                post.setPostExpiredAt(LocalDateTime.now().plusDays(7));
+                post.setPostExpiredAt(now.plusDays(365));
                 post.setStatus(PostStatus.ACTIVE);
                 
                 postRepository.save(post);

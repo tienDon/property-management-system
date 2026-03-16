@@ -178,6 +178,241 @@
           </div>
         </section>
 
+        <!-- Reviews Section -->
+        <section class="bg-white p-6 rounded-2xl shadow-sm">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+              Đánh giá & Bình luận
+            </h2>
+            <!-- Review/Comment Button -->
+            <div th:if="${currentUser == null}">
+              <a href="/login" class="bg-gray-100 text-gray-500 px-4 py-2 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">
+                Đăng nhập để bình luận
+              </a>
+            </div>
+            <div th:if="${currentUser != null}">
+              <button th:if="${isEligibleToReview}" onclick="openReviewModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                Viết đánh giá
+              </button>
+              <button th:if="${!isEligibleToReview}" onclick="openCommentModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition">
+                Để lại bình luận
+              </button>
+            </div>
+          </div>
+
+          <!-- Star Distribution & Overall Rating -->
+          <div th:if="${landlordRating != null}" class="bg-blue-50 p-6 rounded-xl mb-8">
+            <div class="flex flex-col md:flex-row gap-8 items-center">
+              <div class="text-center shrink-0">
+                <p class="text-4xl font-bold text-blue-700" th:text="${#numbers.formatDecimal(landlordRating.averageRating, 1, 1)}">4.5</p>
+                <div class="flex text-yellow-400 my-2 justify-center">
+                  <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                     th:class="${i <= landlordRating.averageRating} ? 'fa-solid fa-star' : (${i - 0.5 <= landlordRating.averageRating} ? 'fa-solid fa-star-half-stroke' : 'fa-regular fa-star')"></i>
+                </div>
+                <p class="text-xs text-gray-500" th:text="${landlordRating.totalReviews + ' đánh giá'}">12 đánh giá</p>
+              </div>
+              
+              <!-- Star Distribution Chart -->
+              <div class="flex-1 w-full space-y-2">
+                <div th:each="star : ${#numbers.sequence(5, 1)}" class="flex items-center gap-3">
+                  <span class="text-xs text-gray-600 w-4" th:text="${star}">5</span>
+                  <i class="fa-solid fa-star text-[10px] text-yellow-400"></i>
+                  <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-yellow-400" th:style="'width: ' + 
+                      (star == 5 ? starDistribution.fiveStarPercentage : 
+                      (star == 4 ? starDistribution.fourStarPercentage : 
+                      (star == 3 ? starDistribution.threeStarPercentage : 
+                      (star == 2 ? starDistribution.twoStarPercentage : starDistribution.oneStarPercentage)))) + '%'"></div>
+                  </div>
+                  <span class="text-[10px] text-gray-400 w-8" th:text="${
+                    (star == 5 ? starDistribution.fiveStarPercentage : 
+                    (star == 4 ? starDistribution.fourStarPercentage : 
+                    (star == 3 ? starDistribution.threeStarPercentage : 
+                    (star == 2 ? starDistribution.twoStarPercentage : starDistribution.oneStarPercentage)))) + '%'}">0%</span>
+                </div>
+              </div>
+
+              <div class="hidden lg:block w-px h-24 bg-blue-100"></div>
+
+              <!-- Detail Ratings -->
+              <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-gray-600">
+                    <span>Vệ sinh</span>
+                    <span class="font-semibold" th:text="${#numbers.formatDecimal(landlordRating.hygieneAverage, 1, 1)}">4.5</span>
+                  </div>
+                  <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" th:style="'width: ' + (landlordRating.hygieneAverage * 20) + '%'"></div>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-gray-600">
+                    <span>Thái độ</span>
+                    <span class="font-semibold" th:text="${#numbers.formatDecimal(landlordRating.attitudeAverage, 1, 1)}">4.2</span>
+                  </div>
+                  <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" th:style="'width: ' + (landlordRating.attitudeAverage * 20) + '%'"></div>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-gray-600">
+                    <span>Tiện ích</span>
+                    <span class="font-semibold" th:text="${#numbers.formatDecimal(landlordRating.utilitiesAverage, 1, 1)}">4.0</span>
+                  </div>
+                  <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" th:style="'width: ' + (landlordRating.utilitiesAverage * 20) + '%'"></div>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-gray-600">
+                    <span>An toàn</span>
+                    <span class="font-semibold" th:text="${#numbers.formatDecimal(landlordRating.safetyAverage, 1, 1)}">4.8</span>
+                  </div>
+                  <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" th:style="'width: ' + (landlordRating.safetyAverage * 20) + '%'"></div>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[10px] text-gray-600">
+                    <span>Giá</span>
+                    <span class="font-semibold" th:text="${#numbers.formatDecimal(landlordRating.priceAverage, 1, 1)}">4.3</span>
+                  </div>
+                  <div class="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500" th:style="'width: ' + (landlordRating.priceAverage * 20) + '%'"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review List -->
+          <div class="space-y-8 mt-8">
+            <div th:each="review : ${reviews}" class="border-b border-gray-100 pb-8 last:border-0">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                    <span th:text="${#strings.substring(review.tenantName, 0, 1)}">T</span>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-800" th:text="${review.tenantName}">Nguyễn Văn A</h4>
+                    <p class="text-xs text-gray-400" th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy')}">12/03/2026</p>
+                  </div>
+                </div>
+                <div class="flex text-yellow-400 text-sm">
+                  <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                     th:class="${i <= review.averageRating} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+                </div>
+              </div>
+              
+              <p class="text-gray-700 text-sm leading-relaxed mb-4" th:text="${review.comment}">
+                Phòng sạch sẽ, chủ nhà rất nhiệt tình hỗ trợ.
+              </p>
+
+              <!-- Review Images -->
+              <div th:if="${not #lists.isEmpty(review.imageUrls)}" class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                <img th:each="url : review.imageUrls" th:src="${url}" class="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition" onclick="openGallery(this)"/>
+              </div>
+
+              <!-- Vote & Reply Buttons -->
+              <div class="flex items-center gap-4 text-xs text-gray-500">
+                <button th:onclick="'voteReview(' + ${review.id} + ', true)'" class="flex items-center gap-1 hover:text-blue-600">
+                  <i class="fa-regular fa-thumbs-up"></i> Hữu ích (<span th:text="${review.helpfulVotes}">0</span>)
+                </button>
+                <button th:onclick="'voteReview(' + ${review.id} + ', false)'" class="flex items-center gap-1 hover:text-red-600">
+                  <i class="fa-regular fa-thumbs-down"></i> Không hữu ích (<span th:text="${review.unhelpfulVotes}">0</span>)
+                </button>
+                
+                <button th:if="${currentUser != null}" 
+                        th:onclick="'openReplyModal(null, ' + ${review.id} + ')'" 
+                        class="text-blue-600 hover:underline">
+                  Phản hồi
+                </button>
+                
+                <button th:if="${currentUser != null}" 
+                        th:onclick="'openReportModal(\'REVIEW\', ' + ${review.id} + ')'" 
+                        class="text-red-500 hover:underline ml-auto">
+                  Báo cáo
+                </button>
+              </div>
+
+              <!-- Landlord Reply (Official) -->
+              <div th:if="${review.landlordReply != null}" class="mt-4 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs font-bold text-blue-600">Chủ nhà phản hồi</span>
+                </div>
+                <p class="text-sm text-gray-600 italic" th:text="${review.landlordReply}">
+                  Cảm ơn bạn đã đánh giá! Rất mong được đón tiếp bạn lần sau.
+                </p>
+              </div>
+
+              <!-- Other Replies (Comments) -->
+              <div class="mt-4 space-y-4 pl-8 border-l-2 border-gray-100">
+                <div th:each="comment : ${comments}" th:if="${comment.parentReviewId == review.id}" class="space-y-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                      <span th:text="${#strings.substring(comment.userName, 0, 1)}">U</span>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-700" th:text="${comment.userName}">User</span>
+                    <span class="text-[10px] text-gray-400" th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy')}">Date</span>
+                  </div>
+                  <p class="text-xs text-gray-600" th:text="${comment.content}">Content</p>
+                  <div class="flex gap-3 text-[10px] text-gray-400">
+                    <button th:onclick="'voteComment(' + ${comment.id} + ', true)'" class="hover:text-blue-600">Thích (<span th:text="${comment.helpfulVotes}">0</span>)</button>
+                    <button th:if="${currentUser != null}" th:onclick="'openReportModal(\'COMMENT\', ' + ${comment.id} + ')'" class="hover:text-red-500">Báo cáo</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- General Comments (not replies to reviews) -->
+            <div th:if="${not #lists.isEmpty(comments)}" class="mt-12 pt-8 border-t border-gray-100">
+              <h3 class="text-lg font-bold text-gray-800 mb-6">Bình luận công khai</h3>
+              <div class="space-y-8">
+                <div th:each="comment : ${comments}" th:if="${comment.parentReviewId == null && comment.parentCommentId == null}" class="space-y-4">
+                  <div class="flex justify-between items-start">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm">
+                        <span th:text="${#strings.substring(comment.userName, 0, 1)}">U</span>
+                      </div>
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-800" th:text="${comment.userName}">User</h4>
+                        <p class="text-[10px] text-gray-400" th:text="${#temporals.format(comment.createdAt, 'dd/MM/yyyy')}">Date</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-700" th:text="${comment.content}">Content</p>
+                  <div class="flex items-center gap-4 text-xs text-gray-500">
+                    <button th:onclick="'voteComment(' + ${comment.id} + ', true)'" class="hover:text-blue-600">
+                      <i class="fa-regular fa-thumbs-up"></i> Thích (<span th:text="${comment.helpfulVotes}">0</span>)
+                    </button>
+                    <button th:if="${currentUser != null}" th:onclick="'openReplyModal(' + ${comment.id} + ', null)'" class="text-blue-600 hover:underline">Phản hồi</button>
+                    <button th:if="${currentUser != null}" th:onclick="'openReportModal(\'COMMENT\', ' + ${comment.id} + ')'" class="text-red-500 hover:underline ml-auto">Báo cáo</button>
+                  </div>
+
+                  <!-- Comment Replies -->
+                  <div th:if="${not #lists.isEmpty(comment.replies)}" class="pl-8 border-l-2 border-gray-100 space-y-4 mt-4">
+                    <div th:each="reply : ${comment.replies}" class="space-y-2">
+                      <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                          <span th:text="${#strings.substring(reply.userName, 0, 1)}">U</span>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-700" th:text="${reply.userName}">User</span>
+                        <span class="text-[10px] text-gray-400" th:text="${#temporals.format(reply.createdAt, 'dd/MM/yyyy')}">Date</span>
+                      </div>
+                      <p class="text-xs text-gray-600" th:text="${reply.content}">Content</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div th:if="${#lists.isEmpty(reviews) && #lists.isEmpty(comments)}" class="text-center py-12 text-gray-400 italic">
+              Chưa có đánh giá hay bình luận nào cho bất động sản này.
+            </div>
+          </div>
+        </section>
+
         <!-- Đã tích hợp phần Môi trường xung quanh vào section trên, xoá section cũ bên dưới -->
       </div>
 
@@ -309,4 +544,406 @@
       </div>
     </div>
   </div>
+
+  <!-- Review Modal -->
+  <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-900">Đánh giá bất động sản</h3>
+        <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <form id="reviewForm" class="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
+        <input type="hidden" name="propertyId" th:value="${p.id}">
+        <input type="hidden" name="contractId" th:value="${eligibleContractId}">
+        <input type="hidden" name="tenantId" th:value="${currentUser != null ? currentUser.id : ''}">
+
+        <!-- Category Ratings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Vệ sinh</label>
+            <div class="star-rating flex gap-1 text-2xl text-gray-300 cursor-pointer" data-category="hygiene">
+              <i class="fa-solid fa-star" data-value="1"></i>
+              <i class="fa-solid fa-star" data-value="2"></i>
+              <i class="fa-solid fa-star" data-value="3"></i>
+              <i class="fa-solid fa-star" data-value="4"></i>
+              <i class="fa-solid fa-star" data-value="5"></i>
+              <input type="hidden" name="hygieneRating" required>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Thái độ</label>
+            <div class="star-rating flex gap-1 text-2xl text-gray-300 cursor-pointer" data-category="attitude">
+              <i class="fa-solid fa-star" data-value="1"></i>
+              <i class="fa-solid fa-star" data-value="2"></i>
+              <i class="fa-solid fa-star" data-value="3"></i>
+              <i class="fa-solid fa-star" data-value="4"></i>
+              <i class="fa-solid fa-star" data-value="5"></i>
+              <input type="hidden" name="attitudeRating" required>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Tiện ích</label>
+            <div class="star-rating flex gap-1 text-2xl text-gray-300 cursor-pointer" data-category="utilities">
+              <i class="fa-solid fa-star" data-value="1"></i>
+              <i class="fa-solid fa-star" data-value="2"></i>
+              <i class="fa-solid fa-star" data-value="3"></i>
+              <i class="fa-solid fa-star" data-value="4"></i>
+              <i class="fa-solid fa-star" data-value="5"></i>
+              <input type="hidden" name="utilitiesRating" required>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">An toàn</label>
+            <div class="star-rating flex gap-1 text-2xl text-gray-300 cursor-pointer" data-category="safety">
+              <i class="fa-solid fa-star" data-value="1"></i>
+              <i class="fa-solid fa-star" data-value="2"></i>
+              <i class="fa-solid fa-star" data-value="3"></i>
+              <i class="fa-solid fa-star" data-value="4"></i>
+              <i class="fa-solid fa-star" data-value="5"></i>
+              <input type="hidden" name="safetyRating" required>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">Giá</label>
+            <div class="star-rating flex gap-1 text-2xl text-gray-300 cursor-pointer" data-category="price">
+              <i class="fa-solid fa-star" data-value="1"></i>
+              <i class="fa-solid fa-star" data-value="2"></i>
+              <i class="fa-solid fa-star" data-value="3"></i>
+              <i class="fa-solid fa-star" data-value="4"></i>
+              <i class="fa-solid fa-star" data-value="5"></i>
+              <input type="hidden" name="priceRating" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comment -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Nhận xét của bạn</label>
+          <textarea name="comment" rows="4" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none" placeholder="Chia sẻ trải nghiệm của bạn về bất động sản này..."></textarea>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Hình ảnh (tối đa 5 ảnh)</label>
+          <div class="flex flex-wrap gap-3" id="imagePreviewContainer">
+            <label class="w-20 h-20 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:text-blue-500 transition">
+              <i class="fa-solid fa-plus text-xl"></i>
+              <span class="text-[10px] mt-1">Thêm ảnh</span>
+              <input type="file" name="images" multiple accept="image/*" class="hidden" onchange="previewImages(this)">
+            </label>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="button" onclick="closeReviewModal()" class="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition">Hủy</button>
+          <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-200">Gửi đánh giá</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Comment Modal -->
+  <div id="commentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-900">Để lại bình luận</h3>
+        <button onclick="closeCommentModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <form id="commentForm" class="p-6 space-y-4">
+        <input type="hidden" name="propertyId" th:value="${p.id}">
+        <input type="hidden" name="userId" th:value="${currentUser != null ? currentUser.id : ''}">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung bình luận</label>
+          <textarea name="content" rows="4" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none" placeholder="Nhập bình luận của bạn..."></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeCommentModal()" class="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition">Hủy</button>
+          <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-100">Gửi bình luận</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Report Modal -->
+  <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-900">Báo cáo vi phạm</h3>
+        <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <form id="reportForm" class="p-6 space-y-4">
+        <input type="hidden" name="targetType" id="reportTargetType">
+        <input type="hidden" name="targetId" id="reportTargetId">
+        <input type="hidden" name="userId" th:value="${currentUser != null ? currentUser.id : ''}">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Lý do báo cáo</label>
+          <select name="reason" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none">
+            <option value="Spam">Spam / Quảng cáo</option>
+            <option value="Offensive">Nội dung xúc phạm / Thiếu văn hóa</option>
+            <option value="False Information">Thông tin sai sự thật</option>
+            <option value="Other">Lý do khác</option>
+          </select>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeReportModal()" class="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition">Hủy</button>
+          <button type="submit" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition shadow-lg shadow-red-100">Gửi báo cáo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reply Modal -->
+  <div id="replyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-900">Phản hồi</h3>
+        <button onclick="closeReplyModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <form id="replyForm" class="p-6 space-y-4">
+        <input type="hidden" name="parentCommentId" id="replyParentCommentId">
+        <input type="hidden" name="parentReviewId" id="replyParentReviewId">
+        <input type="hidden" name="propertyId" th:value="${p.id}">
+        <input type="hidden" name="userId" th:value="${currentUser != null ? currentUser.id : ''}">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung phản hồi</label>
+          <textarea name="content" rows="4" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeReplyModal()" class="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition">Hủy</button>
+          <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-100">Gửi phản hồi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    function openReviewModal() {
+      document.getElementById('reviewModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function openCommentModal() {
+      document.getElementById('commentModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCommentModal() {
+      document.getElementById('commentModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function openReportModal(targetType, targetId) {
+      document.getElementById('reportTargetType').value = targetType;
+      document.getElementById('reportTargetId').value = targetId;
+      document.getElementById('reportModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function openReplyModal(commentId, reviewId) {
+      document.getElementById('replyParentCommentId').value = commentId || '';
+      document.getElementById('replyParentReviewId').value = reviewId || '';
+      document.getElementById('replyModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeReplyModal() {
+      document.getElementById('replyModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Star Rating Interaction
+    document.querySelectorAll('.star-rating i').forEach(star => {
+      star.addEventListener('mouseover', function() {
+        const value = this.getAttribute('data-value');
+        const stars = this.parentElement.querySelectorAll('i');
+        stars.forEach(s => {
+          if (s.getAttribute('data-value') <= value) {
+            s.classList.replace('fa-regular', 'fa-solid');
+            s.classList.add('text-yellow-400');
+          } else {
+            s.classList.replace('fa-solid', 'fa-regular');
+            s.classList.remove('text-yellow-400');
+          }
+        });
+      });
+
+      star.addEventListener('click', function() {
+        const value = this.getAttribute('data-value');
+        const container = this.parentElement;
+        container.querySelector('input').value = value;
+        container.setAttribute('data-selected', value);
+      });
+    });
+
+    document.querySelectorAll('.star-rating').forEach(container => {
+      container.addEventListener('mouseleave', function() {
+        const selected = this.getAttribute('data-selected') || 0;
+        const stars = this.querySelectorAll('i');
+        stars.forEach(s => {
+          if (s.getAttribute('data-value') <= selected) {
+            s.classList.replace('fa-regular', 'fa-solid');
+            s.classList.add('text-yellow-400');
+          } else {
+            s.classList.replace('fa-solid', 'fa-regular');
+            s.classList.remove('text-yellow-400');
+          }
+        });
+      });
+    });
+
+    // Image Preview
+    function previewImages(input) {
+      const container = document.getElementById('imagePreviewContainer');
+      const existingPreviews = container.querySelectorAll('.image-preview');
+      existingPreviews.forEach(p => p.remove());
+
+      if (input.files) {
+        const filesArray = Array.from(input.files).slice(0, 5);
+        filesArray.forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'w-20 h-20 relative image-preview';
+            div.innerHTML = `
+              <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl">
+              <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]" onclick="this.parentElement.remove()">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            `;
+            container.insertBefore(div, container.firstChild);
+          }
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    // AJAX Form Submissions
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      
+      // Basic validation
+      let valid = true;
+      ['hygieneRating', 'attitudeRating', 'utilitiesRating', 'safetyRating', 'priceRating'].forEach(name => {
+        if (!formData.get(name)) valid = false;
+      });
+      if (!valid) {
+        alert('Vui lòng chọn đầy đủ các hạng mục đánh giá');
+        return;
+      }
+
+      fetch('/api/reviews', {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        if (res.ok) {
+          alert('Đánh giá của bạn đã được gửi và đang chờ kiểm duyệt.');
+          location.reload();
+        } else {
+          alert('Có lỗi xảy ra, vui lòng thử lại.');
+        }
+      });
+    });
+
+    document.getElementById('commentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/api/comments', {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        if (res.ok) {
+          alert('Bình luận của bạn đã được gửi và đang chờ kiểm duyệt.');
+          location.reload();
+        }
+      });
+    });
+
+    document.getElementById('replyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/api/comments', {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        if (res.ok) {
+          alert('Phản hồi của bạn đã được gửi và đang chờ kiểm duyệt.');
+          location.reload();
+        }
+      });
+    });
+
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(this));
+      const targetType = formData.get('targetType');
+      const targetId = formData.get('targetId');
+      const url = targetType === 'REVIEW' ? `/api/reviews/${targetId}/report` : `/api/comments/${targetId}/report`;
+
+      fetch(url, {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        if (res.ok) {
+          alert('Báo cáo của bạn đã được gửi. Cảm ơn bạn đã giúp cộng đồng sạch đẹp hơn!');
+          closeReportModal();
+        }
+      });
+    });
+
+    function voteReview(reviewId, helpful) {
+      const userId = /*[[${currentUser != null ? currentUser.id : null}]]*/ null;
+      if (!userId) {
+        alert('Vui lòng đăng nhập để bình chọn');
+        return;
+      }
+      
+      fetch(`/api/reviews/${reviewId}/vote?userId=${userId}&helpful=${helpful}`, {
+        method: 'POST'
+      }).then(res => {
+        if (res.ok) {
+          location.reload();
+        }
+      });
+    }
+
+    function voteComment(commentId, helpful) {
+      const userId = /*[[${currentUser != null ? currentUser.id : null}]]*/ null;
+      if (!userId) {
+        alert('Vui lòng đăng nhập để bình chọn');
+        return;
+      }
+      
+      fetch(`/api/comments/${commentId}/vote?userId=${userId}&helpful=${helpful}`, {
+        method: 'POST'
+      }).then(res => {
+        if (res.ok) {
+          location.reload();
+        }
+      });
+    }
+
+    function openGallery(img) {
+      // Basic gallery implementation could be added here
+      window.open(img.src, '_blank');
+    }
+  </script>
 </div>

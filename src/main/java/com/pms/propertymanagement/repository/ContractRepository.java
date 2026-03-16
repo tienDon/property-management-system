@@ -70,4 +70,12 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
            "AND c.status = :status")
     Double sumRentPriceByOwnerAndStatus(@Param("ownerId") Long ownerId, @Param("status") ContractStatus status);
 
+    @Query("""
+            SELECT c FROM Contract c 
+            LEFT JOIN c.tenants t 
+            WHERE c.room.property.id = :propertyId 
+              AND (t.email = :email OR c.representative.email = :email OR t.phone = :phone OR c.representative.phone = :phone) 
+              AND (c.status = com.pms.propertymanagement.enums.ContractStatus.EXPIRED OR c.status = com.pms.propertymanagement.enums.ContractStatus.TERMINATED)
+            """)
+    List<Contract> findEndedContractsByUser(@Param("propertyId") Long propertyId, @Param("email") String email, @Param("phone") String phone);
 }

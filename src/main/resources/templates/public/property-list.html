@@ -12,10 +12,30 @@
             </aside>
 
             <main class="w-full md:w-3/4">
-                <div class="flex items-center justify-between mb-6">
-                    <h1 class="text-xl font-bold text-gray-800">
-                        Tìm nhà trọ, phòng trọ giá rẻ mới nhất [[${#calendars.format(#calendars.createNow(), 'MM/yyyy')}]]
-                    </h1>
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">
+                            Kết quả tìm kiếm trọ [[${#calendars.format(#calendars.createNow(), 'MM/yyyy')}]]
+                        </h1>
+                        <p class="text-xs text-gray-500" th:if="${page != null}">
+                            <span th:text="${page.totalElements}">0</span> kết quả · Trang
+                            <span th:text="${page.number + 1}">1</span>/<span th:text="${page.totalPages}">1</span>
+                        </p>
+                    </div>
+
+                    <!-- Sắp xếp -->
+                    <form th:if="${page != null}" th:action="@{/public/search}" method="get" class="flex items-center gap-2">
+                        <input type="hidden" name="keyword" th:value="${filter != null ? filter.keyword : ''}">
+                        <input type="hidden" name="categoryId" th:value="${filter != null ? filter.categoryId : ''}">
+                        <input type="hidden" name="page" th:value="${page.number + 1}">
+                        <select name="sort" class="border rounded px-2 py-1 text-xs bg-white">
+                            <option th:value="'createdAt,DESC'" th:selected="${sort == null || sort == 'createdAt,DESC'}">Mới nhất</option>
+                            <option th:value="'price,ASC'" th:selected="${sort == 'price,ASC'}">Giá tăng dần</option>
+                            <option th:value="'price,DESC'" th:selected="${sort == 'price,DESC'}">Giá giảm dần</option>
+                            <option th:value="'viewCount,DESC'" th:selected="${sort == 'viewCount,DESC'}">Xem nhiều</option>
+                        </select>
+                        <button type="submit" class="text-xs px-3 py-1 border rounded bg-gray-50 hover:bg-gray-100">Sắp xếp</button>
+                    </form>
                 </div>
 
                 <div th:each="prop : ${properties}">
@@ -24,6 +44,35 @@
 
                 <div th:if="${#lists.isEmpty(properties)}" class="text-center py-20 bg-white rounded-lg border">
                     <p class="text-gray-400">Không tìm thấy kết quả phù hợp với bộ lọc.</p>
+                </div>
+
+                <!-- Pagination -->
+                <div th:if="${page != null and page.totalPages > 1}" class="mt-8 flex justify-center">
+                    <nav class="inline-flex rounded-md shadow-sm -space-x-px text-sm" aria-label="Pagination">
+                        <a th:if="${page.number > 0}"
+                           th:href="@{/public/search(page=${page.number}, size=${page.size}, sort=${sort}, keyword=${filter != null ? filter.keyword : null}, categoryId=${filter != null ? filter.categoryId : null})}"
+                           class="px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 rounded-l-md">
+                            Trước
+                        </a>
+                        <span th:if="${page.number == 0}"
+                              class="px-3 py-1 border border-gray-300 bg-gray-100 text-gray-400 rounded-l-md">
+                            Trước
+                        </span>
+
+                        <span class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700">
+                            Trang <span th:text="${page.number + 1}">1</span>/<span th:text="${page.totalPages}">1</span>
+                        </span>
+
+                        <a th:if="${page.number + 1 < page.totalPages}"
+                           th:href="@{/public/search(page=${page.number + 2}, size=${page.size}, sort=${sort}, keyword=${filter != null ? filter.keyword : null}, categoryId=${filter != null ? filter.categoryId : null})}"
+                           class="px-3 py-1 border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 rounded-r-md">
+                            Sau
+                        </a>
+                        <span th:if="${page.number + 1 >= page.totalPages}"
+                              class="px-3 py-1 border border-gray-300 bg-gray-100 text-gray-400 rounded-r-md">
+                            Sau
+                        </span>
+                    </nav>
                 </div>
             </main>
         </div>

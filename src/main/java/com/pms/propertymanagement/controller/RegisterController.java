@@ -83,7 +83,7 @@ public class RegisterController {
 
         userRepository.save(user);
         session.setAttribute("user", user);
-        return "redirect:/ekyc?next=/tenant/rooms";
+        return "redirect:/ekyc?next=/ekyc/choose-role";
     }
 
     @GetMapping("/register/owner")
@@ -135,8 +135,8 @@ public class RegisterController {
         ra.addFlashAttribute("registerForm", form);
         if (hasError) return "redirect:/register/owner";
 
-        Role ownerRole = roleRepository.findByName("OWNER")
-                .orElseThrow(() -> new RuntimeException("Role  chưa tồn tại"));
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Role USER chưa tồn tại"));
 
         User user = new User();
         user.setUsername(username.trim());
@@ -144,11 +144,11 @@ public class RegisterController {
         user.setFullName(fullName);
         user.setEmail(email);
         user.setPhone(phone);
-        user.getRoles().add(ownerRole);
+        user.getRoles().add(userRole);
 
         userRepository.save(user);
         session.setAttribute("user", user);
-        return "redirect:/ekyc?next=/owner";
+        return "redirect:/ekyc?next=/ekyc/choose-role";
     }
 }
 

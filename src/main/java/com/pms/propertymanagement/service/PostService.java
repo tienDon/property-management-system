@@ -7,6 +7,10 @@ import com.pms.propertymanagement.entity.PostingPackage;
 import com.pms.propertymanagement.entity.Property;
 import com.pms.propertymanagement.enums.PostStatus;
 
+import com.pms.propertymanagement.dto.request.PostFilterDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +19,9 @@ import java.util.Optional;
  * NEW ARCHITECTURE: Separates marketing content (Post) from real estate data (Property)
  */
 public interface PostService {
+
+    // === SEARCH & DISCOVERY ===
+    Page<Post> searchPosts(PostFilterDTO filter, Pageable pageable);
 
     // === POST CREATION & CONTENT MANAGEMENT ===
 

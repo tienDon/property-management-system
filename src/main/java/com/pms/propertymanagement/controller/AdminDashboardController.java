@@ -17,6 +17,7 @@ import java.util.List;
 public class AdminDashboardController {
 
     private final StatisticsService statisticsService;
+    private final com.pms.propertymanagement.service.ReviewService reviewService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -27,6 +28,13 @@ public class AdminDashboardController {
         model.addAttribute("apiStats", apiStats);
         
         model.addAttribute("content", "admin/dashboard");
+        return "layout/admin-layout";
+    }
+
+    @GetMapping("/reviews")
+    public String reviewManagement(Model model) {
+        model.addAttribute("pendingReviews", reviewService.getPendingReviews());
+        model.addAttribute("content", "admin/reviews-list");
         return "layout/admin-layout";
     }
 }

@@ -32,6 +32,24 @@ public class EkycSubmission {
     @Column(name = "face_hash", nullable = false)
     private String faceHash;
 
+    @Column(name = "front_cloudinary_url")
+    private String frontCloudinaryUrl;
+
+    @Column(name = "back_cloudinary_url")
+    private String backCloudinaryUrl;
+
+    @Column(name = "face_cloudinary_url")
+    private String faceCloudinaryUrl;
+
+    @Column(name = "front_cloudinary_public_id")
+    private String frontCloudinaryPublicId;
+
+    @Column(name = "back_cloudinary_public_id")
+    private String backCloudinaryPublicId;
+
+    @Column(name = "face_cloudinary_public_id")
+    private String faceCloudinaryPublicId;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

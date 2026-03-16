@@ -153,12 +153,72 @@ public class StatisticsServiceImpl implements StatisticsService {
             totalRevenue = 0.0;
         }
 
-        LocalDateTime startOfMonth = LocalDateTime.of(LocalDate.now().withDayOfMonth(1), LocalTime.MIN);
+        LocalDate today = LocalDate.now();
+
+        // Doanh thu theo năm
+        LocalDateTime startOfCurrentYear = LocalDateTime.of(today.withDayOfYear(1), LocalTime.MIN);
+        LocalDateTime endOfCurrentYear = LocalDateTime.of(today.withDayOfYear(today.lengthOfYear()), LocalTime.MAX);
+        if (endOfCurrentYear.isAfter(LocalDateTime.now())) {
+            endOfCurrentYear = LocalDateTime.now();
+        }
+
+        LocalDate lastYearDate = today.minusYears(1);
+        LocalDateTime startOfLastYear = LocalDateTime.of(lastYearDate.withDayOfYear(1), LocalTime.MIN);
+        LocalDateTime endOfLastYear = LocalDateTime.of(lastYearDate.withDayOfYear(lastYearDate.lengthOfYear()), LocalTime.MAX);
+
+        Double currentYearRevenue = postingOrderRepository.calculateTotalRevenueByStatusAndDateRange(
+            PaymentStatus.PAID,
+            startOfCurrentYear,
+            endOfCurrentYear
+        );
+        if (currentYearRevenue == null) {
+            currentYearRevenue = 0.0;
+        }
+
+        Double lastYearRevenue = postingOrderRepository.calculateTotalRevenueByStatusAndDateRange(
+            PaymentStatus.PAID,
+            startOfLastYear,
+            endOfLastYear
+        );
+        if (lastYearRevenue == null) {
+            lastYearRevenue = 0.0;
+        }
+
+        Double yearOverYearGrowth;
+        if (lastYearRevenue == 0) {
+            yearOverYearGrowth = currentYearRevenue > 0 ? 100.0 : 0.0;
+        } else {
+            yearOverYearGrowth = ((currentYearRevenue - lastYearRevenue) / lastYearRevenue) * 100.0;
+        }
+
+        LocalDateTime startOfMonth = LocalDateTime.of(today.withDayOfMonth(1), LocalTime.MIN);
         LocalDateTime endOfMonth = LocalDateTime.now();
 
         Double monthlyRevenue = postingOrderRepository.calculateTotalRevenueByStatusAndDateRange(PaymentStatus.PAID, startOfMonth, endOfMonth);
         if (monthlyRevenue == null) {
             monthlyRevenue = 0.0;
+        }
+
+        // Doanh thu tháng trước (so sánh tháng này với tháng trước)
+        LocalDate firstDayOfThisMonth = today.withDayOfMonth(1);
+        LocalDate lastMonthDate = firstDayOfThisMonth.minusMonths(1);
+        LocalDateTime startOfLastMonth = LocalDateTime.of(lastMonthDate.withDayOfMonth(1), LocalTime.MIN);
+        LocalDateTime endOfLastMonth = LocalDateTime.of(lastMonthDate.withDayOfMonth(lastMonthDate.lengthOfMonth()), LocalTime.MAX);
+
+        Double previousMonthRevenue = postingOrderRepository.calculateTotalRevenueByStatusAndDateRange(
+            PaymentStatus.PAID,
+            startOfLastMonth,
+            endOfLastMonth
+        );
+        if (previousMonthRevenue == null) {
+            previousMonthRevenue = 0.0;
+        }
+
+        Double monthOverMonthGrowth;
+        if (previousMonthRevenue == 0) {
+            monthOverMonthGrowth = monthlyRevenue > 0 ? 100.0 : 0.0;
+        } else {
+            monthOverMonthGrowth = ((monthlyRevenue - previousMonthRevenue) / previousMonthRevenue) * 100.0;
         }
 
         // Hardcoded target for now, e.g., 50,000,000 VND
@@ -216,11 +276,16 @@ public class StatisticsServiceImpl implements StatisticsService {
             .collect(Collectors.toList());
 
         return new AdminStatisticsDTO(
-            totalRevenue, 
+            totalRevenue,
+            currentYearRevenue,
+            lastYearRevenue,
+            yearOverYearGrowth,
             monthlyRevenue,
+            previousMonthRevenue,
+            monthOverMonthGrowth,
             targetAchievement,
             revenueChartData,
-            ownersPurchased, 
+            ownersPurchased,
             totalOwners,
             totalRooms,
             rentedRooms,

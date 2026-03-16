@@ -1,0 +1,90 @@
+<div>
+  <!-- Page title -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Báo cáo chờ xử lý</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        <span th:text="${reviewReports.size() + commentReports.size()}">0</span> báo cáo
+      </p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div th:if="${#lists.isEmpty(reviewReports) && #lists.isEmpty(commentReports)}"
+       class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
+    <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
+    <p class="text-sm text-gray-500 italic">Không có báo cáo nào đang chờ xử lý.</p>
+  </div>
+
+  <!-- Review Reports Table -->
+  <div th:if="${!#lists.isEmpty(reviewReports)}" class="mb-12">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+      Báo cáo Đánh giá
+    </h3>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="px-6 py-4 font-bold">Người báo cáo</th>
+            <th class="px-6 py-4 font-bold">Nội dung đánh giá</th>
+            <th class="px-6 py-4 font-bold">Lý do</th>
+            <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr th:each="r : ${reviewReports}" class="hover:bg-blue-50/30 transition-colors">
+            <td class="px-6 py-4">
+              <p class="font-semibold text-gray-900" th:text="${r.reporter.fullName}"></p>
+            </td>
+            <td class="px-6 py-4">
+              <p class="text-xs text-gray-600 line-clamp-2" th:text="${r.review.comment}"></p>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium" th:text="${r.reason}">Reason</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+               <a th:href="@{|/moderator/reviews/pending|}" class="text-blue-600 hover:underline">Đi tới Review</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Comment Reports Table -->
+  <div th:if="${!#lists.isEmpty(commentReports)}">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+      Báo cáo Bình luận
+    </h3>
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="px-6 py-4 font-bold">Người báo cáo</th>
+            <th class="px-6 py-4 font-bold">Nội dung bình luận</th>
+            <th class="px-6 py-4 font-bold">Lý do</th>
+            <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr th:each="r : ${commentReports}" class="hover:bg-blue-50/30 transition-colors">
+            <td class="px-6 py-4">
+              <p class="font-semibold text-gray-900" th:text="${r.reporter.fullName}"></p>
+            </td>
+            <td class="px-6 py-4">
+              <p class="text-xs text-gray-600 line-clamp-2" th:text="${r.comment.content}"></p>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium" th:text="${r.reason}">Reason</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+               <a th:href="@{|/moderator/comments/pending|}" class="text-blue-600 hover:underline">Đi tới Bình luận</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

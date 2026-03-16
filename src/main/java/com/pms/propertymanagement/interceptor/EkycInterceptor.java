@@ -35,11 +35,11 @@ public class EkycInterceptor implements HandlerInterceptor {
         User user = userRepository.findById(sessionUser.getId()).orElse(sessionUser);
         request.getSession().setAttribute("user", user);
 
-        // eKYC check removed as per requirement: "only used for registration"
-        // if (requiresEkyc(user) && !user.isEkycVerified()) {
-        //    response.sendRedirect("/ekyc?next=" + uri);
-        //    return false;
-        // }
+        // Bắt buộc eKYC cho các đường dẫn /owner/** và /tenant/** với user cần eKYC
+        if (requiresEkyc(user) && !user.isEkycVerified()) {
+            response.sendRedirect("/ekyc?next=" + uri);
+            return false;
+        }
 
         return true;
     }

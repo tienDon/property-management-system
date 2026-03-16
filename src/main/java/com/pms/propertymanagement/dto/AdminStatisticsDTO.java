@@ -10,7 +10,12 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminStatisticsDTO {
     private Double totalRevenue;
+    private Double currentYearRevenue;
+    private Double lastYearRevenue;
+    private Double yearOverYearGrowth;
     private Double monthlyRevenue;
+    private Double previousMonthRevenue;
+    private Double monthOverMonthGrowth;
     private Double targetAchievement;
     private List<ChartDataDTO> revenueChartData;
     private long ownersPurchased;

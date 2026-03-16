@@ -1,5 +1,6 @@
 package com.pms.propertymanagement.dto.response;
 
+import com.pms.propertymanagement.dto.request.ServiceItemDTO;
 import lombok.*;
 
 import java.util.List;
@@ -25,6 +26,14 @@ public class PropertyDetailResponse {
     private String slug; 
 
     private int numberOfRooms;
+
+    // Map Coordinates
+    private Double latitude;
+    private Double longitude;
+
+    // Rules & Costs
+    private List<String> rules;
+    private List<ServiceItemDTO> serviceItems;
 
     // Thông tin danh mục
     private String categoryName;

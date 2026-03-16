@@ -159,6 +159,7 @@ public class PropertyInitializer {
         p.setNumberOfRooms(rooms);
         p.setCreatedAt(LocalDateTime.now().minusDays(random.nextInt(30)));
         p.setUpdatedAt(LocalDateTime.now());
+        p.setStatus(com.pms.propertymanagement.enums.PropertyStatus.ACTIVE);
         
         // Random Ward from list
         p.setWard(wards.get(random.nextInt(wards.size())));

@@ -4,6 +4,8 @@ import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.enums.PostStatus;
 import com.pms.propertymanagement.service.PostService;
+import com.pms.propertymanagement.service.ReviewService;
+import com.pms.propertymanagement.service.PropertyCommentService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,10 @@ import java.util.List;
 public class ModeratorController {
 
     private final PostService postService;
+    private final ReviewService reviewService;
+    private final PropertyCommentService commentService;
+    private final com.pms.propertymanagement.repository.ReviewReportRepository reviewReportRepository;
+    private final com.pms.propertymanagement.repository.PropertyCommentReportRepository commentReportRepository;
 
     // ========== COMMON: Inject badge counts into every moderator page ==========
 
@@ -116,7 +122,77 @@ public class ModeratorController {
         return "layout/moderator-layout";
     }
 
-    // ========== APPROVE ==========
+    // ========== REVIEWS ==========
+
+    @GetMapping("/reviews/pending")
+    public String pendingReviews(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        model.addAttribute("reviews", reviewService.getPendingReviews());
+        model.addAttribute("activeMenu", "reviews");
+        model.addAttribute("activeTab", "pending");
+        model.addAttribute("activeSection", "manage");
+        model.addAttribute("content", "moderator/management/reviews/list");
+        return "layout/moderator-layout";
+    }
+
+    @PostMapping("/reviews/{id}/approve")
+    public String approveReview(@PathVariable Long id) {
+        reviewService.approveReview(id);
+        return "redirect:/moderator/reviews/pending";
+    }
+
+    @PostMapping("/reviews/{id}/reject")
+    public String rejectReview(@PathVariable Long id, @RequestParam String reason) {
+        reviewService.rejectReview(id, reason);
+        return "redirect:/moderator/reviews/pending";
+    }
+
+    // ========== COMMENTS ==========
+
+    @GetMapping("/comments/pending")
+    public String pendingComments(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        model.addAttribute("comments", commentService.getPendingComments());
+        model.addAttribute("activeMenu", "comments");
+        model.addAttribute("activeTab", "pending");
+        model.addAttribute("activeSection", "manage");
+        model.addAttribute("content", "moderator/management/comments/list");
+        return "layout/moderator-layout";
+    }
+
+    @PostMapping("/comments/{id}/approve")
+    public String approveComment(@PathVariable Long id) {
+        commentService.approveComment(id);
+        return "redirect:/moderator/comments/pending";
+    }
+
+    @PostMapping("/comments/{id}/reject")
+    public String rejectComment(@PathVariable Long id, @RequestParam String reason) {
+        commentService.rejectComment(id, reason);
+        return "redirect:/moderator/comments/pending";
+    }
+
+    // ========== REPORTS ==========
+
+    @GetMapping("/reports/pending")
+    public String pendingReports(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login/owner";
+
+        model.addAttribute("reviewReports", reviewReportRepository.findByStatus(com.pms.propertymanagement.enums.ReportStatus.PENDING));
+        model.addAttribute("commentReports", commentReportRepository.findByStatus(com.pms.propertymanagement.enums.ReportStatus.PENDING));
+        model.addAttribute("activeMenu", "reports");
+        model.addAttribute("activeTab", "pending");
+        model.addAttribute("activeSection", "manage");
+        model.addAttribute("content", "moderator/management/reports/list");
+        return "layout/moderator-layout";
+    }
+
+    // ========== MODERATION ACTIONS ==========
 
     @PostMapping("/posts/{id}/approve")
     public String approvePost(@PathVariable Long id,

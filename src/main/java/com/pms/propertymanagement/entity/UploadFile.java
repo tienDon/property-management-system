@@ -13,6 +13,8 @@ public class UploadFile {
     private String fileName;
     private String hash;
     private String uploadTime;
+    private String cloudinaryUrl;
+    private String cloudinaryPublicId;
 
     public UploadFile() {
     }
@@ -55,13 +57,31 @@ public class UploadFile {
         this.uploadTime = updateTime;
     }
 
+    public String getCloudinaryUrl() {
+        return cloudinaryUrl;
+    }
+
+    public void setCloudinaryUrl(String cloudinaryUrl) {
+        this.cloudinaryUrl = cloudinaryUrl;
+    }
+
+    public String getCloudinaryPublicId() {
+        return cloudinaryPublicId;
+    }
+
+    public void setCloudinaryPublicId(String cloudinaryPublicId) {
+        this.cloudinaryPublicId = cloudinaryPublicId;
+    }
+
     @Override
     public String toString() {
         return "UploadFile{" +
                 "id=" + id +
                 ", fileName='" + fileName + '\'' +
                 ", hash='" + hash + '\'' +
-                ", updateTime='" + uploadTime + '\'' +
+                ", uploadTime='" + uploadTime + '\'' +
+                ", cloudinaryUrl='" + cloudinaryUrl + '\'' +
+                ", cloudinaryPublicId='" + cloudinaryPublicId + '\'' +
                 '}';
     }
 }

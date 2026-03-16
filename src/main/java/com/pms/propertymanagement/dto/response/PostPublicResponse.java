@@ -42,6 +42,7 @@ public class PostPublicResponse {
     private List<String> imageUrls; // all images for gallery
 
     // ── Owner ─────────────────────────────────────────────────────────────
+    private Long ownerId;
     private String ownerName;
     private String ownerPhone;
 
@@ -70,6 +71,7 @@ public class PostPublicResponse {
 
         String ownerName  = (prop.getOwner() != null) ? prop.getOwner().getFullName() : "";
         String ownerPhone = (prop.getOwner() != null) ? prop.getOwner().getPhone()    : "";
+        Long ownerId = (prop.getOwner() != null) ? prop.getOwner().getId() : null;
 
         return PostPublicResponse.builder()
                 .id(post.getId())
@@ -87,6 +89,7 @@ public class PostPublicResponse {
                 .provinceName(provinceName)
                 .imageUrl(thumbnail)
                 .imageUrls(urls)
+                .ownerId(ownerId)
                 .ownerName(ownerName)
                 .ownerPhone(ownerPhone)
                 .amenities(prop.getAmenities())

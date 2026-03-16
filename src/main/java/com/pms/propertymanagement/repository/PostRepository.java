@@ -4,6 +4,7 @@ import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.enums.PostStatus;
 import com.pms.propertymanagement.enums.PropertyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +19,7 @@ import java.util.Optional;
  * Uses composite indexes for performance
  */
 @Repository
-public interface PostRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 
     // === BASIC QUERIES ===
 
@@ -127,6 +128,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     @Query("SELECT p FROM Post p WHERE p.postExpiredAt < :currentTime AND p.status = 'ACTIVE'")
     List<Post> findExpiredActivePosts(@Param("currentTime") LocalDateTime currentTime);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.status = 'ACTIVE', p.postExpiredAt = :newExpiry " +
+           "WHERE (p.status = 'EXPIRED' OR (p.status = 'ACTIVE' AND p.postExpiredAt <= :now))")
+    int refreshExpiredMarketplacePosts(@Param("now") LocalDateTime now,
+                                       @Param("newExpiry") LocalDateTime newExpiry);
 
     /**
      * Find posts expiring within specified days (for renewal notifications)

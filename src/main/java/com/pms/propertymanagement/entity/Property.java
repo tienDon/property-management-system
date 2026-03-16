@@ -44,13 +44,14 @@ public class Property {
     @JoinColumn(name = "category_id")
     private Category category;
 
-//    //Vĩ độ
-//    private Double latitude;
-//
-//    //Kinh độ
-//    private Double longitude;
+    //Vĩ độ
+    private Double latitude;
 
+    //Kinh độ
+    private Double longitude;
 
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyRule> rules = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ward_code")
@@ -98,8 +99,8 @@ public class Property {
 
     // === NEW ARCHITECTURE: Property Status Management ===
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(255) DEFAULT 'ACTIVE'")
-    private PropertyStatus status = PropertyStatus.ACTIVE;
+    @Column(columnDefinition = "varchar(255) DEFAULT 'DRAFT'")
+    private PropertyStatus status = PropertyStatus.DRAFT;
 
     @Column(name = "management_locked_at")
     private LocalDateTime managementLockedAt;
@@ -109,27 +110,27 @@ public class Property {
 
     // === Property Status Management Methods ===
     public void lockByPlan() {
-        this.status = PropertyStatus.PLAN_LOCKED;
+        this.status = PropertyStatus.TEMPORARILY_LOCKED;
         this.managementLockedAt = LocalDateTime.now();
     }
 
     public void unlockByPlan() {
-        if (this.status == PropertyStatus.PLAN_LOCKED) {
-            this.status = PropertyStatus.ACTIVE;
+        if (this.status == PropertyStatus.TEMPORARILY_LOCKED || this.status == PropertyStatus.PLAN_LOCKED) {
+            this.status = PropertyStatus.PUBLISHED;
             this.managementLockedAt = null;
         }
     }
 
     public boolean isActive() {
-        return status == PropertyStatus.ACTIVE;
+        return status == PropertyStatus.PUBLISHED || status == PropertyStatus.ACTIVE;
     }
 
     public boolean isPlanLocked() {
-        return status == PropertyStatus.PLAN_LOCKED;
+        return status == PropertyStatus.TEMPORARILY_LOCKED || status == PropertyStatus.PLAN_LOCKED;
     }
 
     public boolean isManageable() {
-        return status == PropertyStatus.ACTIVE;
+        return status == PropertyStatus.PUBLISHED || status == PropertyStatus.ACTIVE || status == PropertyStatus.DRAFT;
     }
 
 }

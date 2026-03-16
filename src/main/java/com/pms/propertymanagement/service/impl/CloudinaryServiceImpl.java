@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -68,6 +69,39 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         }
     }
 
+    @Override
+    public CloudinaryResponse uploadImage(File file) {
+        return uploadImage(file, null);
+    }
+
+    @Override
+    public CloudinaryResponse uploadImage(File file, String module) {
+        assertConfigured();
+        if (file == null || !file.exists() || !file.isFile()) {
+            throw new IllegalArgumentException("File không hợp lệ");
+        }
+        try {
+            Map<String, Object> options = new HashMap<>();
+            options.put("resource_type", "image");
+            String folder = buildFolder(module);
+            if (folder != null && !folder.isBlank()) {
+                options.put("folder", folder);
+            }
+
+            Map<?, ?> result = cloudinary.uploader().upload(file, options);
+            String publicId = String.valueOf(result.get("public_id"));
+            Object secureUrl = result.get("secure_url");
+            String url = secureUrl != null ? String.valueOf(secureUrl) : String.valueOf(result.get("url"));
+
+            return CloudinaryResponse.builder()
+                    .publicId(publicId)
+                    .url(url)
+                    .build();
+        } catch (IOException e) {
+            throw new IllegalStateException("Upload Cloudinary thất bại", e);
+        }
+    }
+
     private String buildFolder(String module) {
         String normalizedModule = normalizeModule(module);
         if (defaultFolder == null || defaultFolder.isBlank()) {
@@ -87,6 +121,12 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                 .toLowerCase(Locale.ROOT)
                 .replace('-', '_')
                 .replace(' ', '_');
+        if ("reviews".equals(normalized) || "review".equals(normalized)) {
+            return "reviews";
+        }
+        if ("ekyc".equals(normalized) || "e_kyc".equals(normalized)) {
+            return "ekyc";
+        }
         if ("reports".equals(normalized)
                 || "report".equals(normalized)
                 || "waste_report".equals(normalized)
@@ -117,7 +157,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             return "collectorReport";
         }
         throw new IllegalArgumentException(
-                "module không hợp lệ (chỉ chấp nhận: reports, requests, feedbacks, collectorReport)");
+                "module không hợp lệ (chỉ chấp nhận: reports, requests, feedbacks, collectorReport, reviews, ekyc)");
     }
 
     @Override

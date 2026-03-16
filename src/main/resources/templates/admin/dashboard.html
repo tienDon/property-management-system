@@ -85,6 +85,28 @@
             <p class="text-gray-600 text-sm mt-1">Tổng quan hoạt động hệ thống</p>
         </div>
 
+        <!-- Year over Year Comparison -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="stagger-item glass-effect card-hover metric-card rounded-2xl p-6">
+                <p class="text-gray-600 text-sm font-medium">Doanh thu năm nay</p>
+                <div class="stat-value mt-2 text-2xl"
+                     th:text="${#numbers.formatDecimal(stats.currentYearRevenue, 0, 'COMMA', 0, 'POINT')}">0</div>
+                <p class="text-gray-600 text-xs mt-1">VNĐ</p>
+            </div>
+            <div class="stagger-item glass-effect card-hover metric-card rounded-2xl p-6">
+                <p class="text-gray-600 text-sm font-medium">Doanh thu năm trước</p>
+                <div class="stat-value mt-2 text-2xl"
+                     th:text="${#numbers.formatDecimal(stats.lastYearRevenue, 0, 'COMMA', 0, 'POINT')}">0</div>
+                <p class="text-gray-600 text-xs mt-1">VNĐ</p>
+            </div>
+            <div class="stagger-item glass-effect card-hover metric-card rounded-2xl p-6">
+                <p class="text-gray-600 text-sm font-medium">Tăng trưởng năm nay so với năm trước</p>
+                <div class="stat-value mt-2 text-2xl"
+                     th:text="${#numbers.formatDecimal(stats.yearOverYearGrowth, 1, 0)} + '%'">0%</div>
+                <p class="text-gray-600 text-xs mt-1">(% theo doanh thu)</p>
+            </div>
+        </div>
+
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Card 1: Revenue -->
@@ -104,6 +126,32 @@
                 </div>
                 <div class="pt-4 border-t border-gray-100">
                     <p class="text-gray-600 text-xs">Dự kiến: 50,000,000 VNĐ</p>
+                </div>
+            </div>
+
+            <!-- Card 2b: So sánh tháng trước -->
+            <div class="stagger-item glass-effect card-hover metric-card rounded-2xl p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">So với tháng trước</p>
+                        <div class="stat-value mt-2 text-xl"
+                             th:text="${#numbers.formatDecimal(stats.monthOverMonthGrowth, 1, 0)} + '%'">0%</div>
+                        <p class="text-gray-600 text-xs mt-1">
+                            <span>Tháng trước: </span>
+                            <span th:text="${#numbers.formatDecimal(stats.previousMonthRevenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M5 10l4-4 4 4m0 4l4-4-4-4"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="pt-4">
+                    <div class="progress-bar">
+                        <div class="progress-fill" th:style="'width: ' + (${stats.monthOverMonthGrowth} > 0 ? (stats.monthOverMonthGrowth > 100 ? 100 : stats.monthOverMonthGrowth) : 0) + '%;'"></div>
+                    </div>
                 </div>
             </div>
 

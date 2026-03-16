@@ -20,7 +20,8 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Override
     @Transactional
     public void applyPlanLimits(Long userId, ManagementPlan plan) {
-        List<Property> activeProperties = propertyRepository.findByOwnerIdAndStatus(userId, PropertyStatus.ACTIVE);
+        List<Property> activeProperties = propertyRepository.findByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.PUBLISHED, PropertyStatus.ACTIVE));
         if (plan.isUnlimitedProperties()) return;
         int maxAllowed = plan.getMaxProperties();
         if (activeProperties.size() > maxAllowed) {
@@ -33,8 +34,8 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Override
     @Transactional
     public void lockSelectedProperties(Long userId, List<Long> propertyIdsToLock) {
-        List<Property> propertiesToLock = propertyRepository.findByIdInAndOwnerIdAndStatus(
-                propertyIdsToLock, userId, PropertyStatus.ACTIVE);
+        List<Property> propertiesToLock = propertyRepository.findByIdInAndOwnerIdAndStatusIn(
+                propertyIdsToLock, userId, List.of(PropertyStatus.PUBLISHED, PropertyStatus.ACTIVE));
         propertiesToLock.forEach(Property::lockByPlan);
         propertyRepository.saveAll(propertiesToLock);
     }
@@ -43,8 +44,8 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Transactional
     public void unlockSelectedProperties(Long userId, List<Long> propertyIdsToUnlock) {
         if (propertyIdsToUnlock == null || propertyIdsToUnlock.isEmpty()) return;
-        List<Property> propertiesToUnlock = propertyRepository.findByIdInAndOwnerIdAndStatus(
-                propertyIdsToUnlock, userId, PropertyStatus.PLAN_LOCKED);
+        List<Property> propertiesToUnlock = propertyRepository.findByIdInAndOwnerIdAndStatusIn(
+                propertyIdsToUnlock, userId, List.of(PropertyStatus.TEMPORARILY_LOCKED, PropertyStatus.PLAN_LOCKED));
         propertiesToUnlock.forEach(Property::unlockByPlan);
         propertyRepository.saveAll(propertiesToUnlock);
     }
@@ -56,8 +57,10 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
             unlockAllPlanLockedProperties(userId);
             return;
         }
-        List<Property> lockedProperties = propertyRepository.findByOwnerIdAndStatus(userId, PropertyStatus.PLAN_LOCKED);
-        int currentActiveCount = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.ACTIVE);
+        List<Property> lockedProperties = propertyRepository.findByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.TEMPORARILY_LOCKED, PropertyStatus.PLAN_LOCKED));
+        int currentActiveCount = propertyRepository.countByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.PUBLISHED, PropertyStatus.ACTIVE));
         int maxCanUnlock = Math.max(0, newPlan.getMaxProperties() - currentActiveCount);
         lockedProperties.stream()
                 .limit(maxCanUnlock)
@@ -71,7 +74,9 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Transactional
     public void lockAllActiveProperties(Long userId) {
         int updatedCount = propertyRepository.updateStatusByOwnerIdAndCurrentStatus(
-                userId, PropertyStatus.ACTIVE, PropertyStatus.PLAN_LOCKED);
+                userId, PropertyStatus.PUBLISHED, PropertyStatus.TEMPORARILY_LOCKED);
+        updatedCount += propertyRepository.updateStatusByOwnerIdAndCurrentStatus(
+                userId, PropertyStatus.ACTIVE, PropertyStatus.TEMPORARILY_LOCKED);
         if (updatedCount > 0) {
             System.out.printf("Locked %d properties for user %d due to plan expiration%n", updatedCount, userId);
         }
@@ -81,7 +86,9 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Transactional
     public void unlockAllPlanLockedProperties(Long userId) {
         int updatedCount = propertyRepository.updateStatusByOwnerIdAndCurrentStatus(
-                userId, PropertyStatus.PLAN_LOCKED, PropertyStatus.ACTIVE);
+                userId, PropertyStatus.TEMPORARILY_LOCKED, PropertyStatus.PUBLISHED);
+        updatedCount += propertyRepository.updateStatusByOwnerIdAndCurrentStatus(
+                userId, PropertyStatus.PLAN_LOCKED, PropertyStatus.PUBLISHED);
         if (updatedCount > 0) {
             System.out.printf("Unlocked %d properties for user %d due to plan upgrade%n", updatedCount, userId);
         }
@@ -90,7 +97,8 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
     @Override
     public boolean canCreateNewProperty(Long userId, ManagementPlan currentPlan) {
         if (currentPlan.isUnlimitedProperties()) return true;
-        int currentActiveCount = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.ACTIVE);
+        int currentActiveCount = propertyRepository.countByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.PUBLISHED, PropertyStatus.ACTIVE));
         return currentActiveCount < currentPlan.getMaxProperties();
     }
 
@@ -101,8 +109,10 @@ public class PropertyPolicyServiceImpl implements PropertyPolicyService {
 
     @Override
     public PropertyCounts getPropertyCounts(Long userId) {
-        int active = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.ACTIVE);
-        int planLocked = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.PLAN_LOCKED);
+        int active = propertyRepository.countByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.PUBLISHED, PropertyStatus.ACTIVE));
+        int planLocked = propertyRepository.countByOwnerIdAndStatusIn(
+                userId, List.of(PropertyStatus.TEMPORARILY_LOCKED, PropertyStatus.PLAN_LOCKED));
         int adminLocked = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.ADMIN_LOCKED);
         int suspended = propertyRepository.countByOwnerIdAndStatus(userId, PropertyStatus.SUSPENDED);
         return new PropertyCounts(active, planLocked, adminLocked, suspended);

@@ -1,0 +1,96 @@
+<div>
+  <!-- Page title -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Đánh giá chờ duyệt</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        <span th:text="${reviews.size()}">0</span> đánh giá
+      </p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div th:if="${#lists.isEmpty(reviews)}"
+       class="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
+    <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
+    <p class="text-sm text-gray-500 italic">Không có đánh giá nào đang chờ duyệt.</p>
+  </div>
+
+  <!-- Table -->
+  <div th:if="${!#lists.isEmpty(reviews)}"
+       class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 border-b border-gray-100 text-gray-500 text-[11px] uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-4 font-bold">Người thuê</th>
+          <th class="px-6 py-4 font-bold">Bất động sản</th>
+          <th class="px-6 py-4 font-bold">Đánh giá</th>
+          <th class="px-6 py-4 font-bold">Nội dung</th>
+          <th class="px-6 py-4 font-bold text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <tr th:each="r : ${reviews}" class="hover:bg-blue-50/30 transition-colors">
+          <td class="px-6 py-4">
+            <p class="font-semibold text-gray-900" th:text="${r.tenantName}"></p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="text-xs text-gray-500" th:text="'ID: ' + ${r.propertyId}"></p>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex text-yellow-400 text-[10px]">
+              <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                 th:class="${i <= r.averageRating} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1" th:text="${#numbers.formatDecimal(r.averageRating, 1, 1)}"></p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="text-xs text-gray-600 line-clamp-2" th:text="${r.comment}"></p>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex justify-end gap-2">
+              <form th:action="@{|/moderator/reviews/${r.id}/approve|}" method="post" class="inline">
+                <button type="submit" class="text-green-600 hover:text-green-700 font-medium">Duyệt</button>
+              </form>
+              <button th:onclick="'openRejectModal(' + ${r.id} + ', \'reviews\')'" 
+                      class="text-red-600 hover:text-red-700 font-medium ml-2">Từ chối</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reject Modal -->
+  <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-900">Từ chối nội dung</h3>
+        <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <form id="rejectForm" method="post" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Lý do từ chối</label>
+          <textarea name="reason" rows="4" required class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeRejectModal()" class="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition">Hủy</button>
+          <button type="submit" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition">Xác nhận từ chối</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openRejectModal(id, type) {
+      const form = document.getElementById('rejectForm');
+      form.action = `/moderator/${type}/${id}/reject`;
+      document.getElementById('rejectModal').classList.remove('hidden');
+    }
+    function closeRejectModal() {
+      document.getElementById('rejectModal').classList.add('hidden');
+    }
+  </script>
+</div>

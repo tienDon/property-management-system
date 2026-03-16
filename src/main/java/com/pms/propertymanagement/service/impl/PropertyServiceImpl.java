@@ -1,10 +1,12 @@
 package com.pms.propertymanagement.service.impl;
 
 import com.pms.propertymanagement.dto.request.PropertyRequest;
+import com.pms.propertymanagement.dto.request.ServiceItemDTO;
 import com.pms.propertymanagement.dto.response.IconResponse;
 import com.pms.propertymanagement.dto.response.PropertyDetailResponse;
 import com.pms.propertymanagement.dto.response.PropertyOwnerResponse;
 import com.pms.propertymanagement.dto.response.PropertyResponse;
+import com.pms.propertymanagement.enums.PropertyStatus;
 import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.entity.*;
 import com.pms.propertymanagement.exception.ResourceNotFoundException;
@@ -115,6 +117,21 @@ public class PropertyServiceImpl implements PropertyService {
         if (request.getPrice() != null) property.setPrice(request.getPrice());
         property.setOwner(owner);
 
+        // Set lat/long
+        if (request.getLatitude() != null) property.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null) property.setLongitude(request.getLongitude());
+
+        // Set status
+        if (request.getStatus() != null) {
+            try {
+                property.setStatus(PropertyStatus.valueOf(request.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                property.setStatus(PropertyStatus.DRAFT);
+            }
+        } else {
+            property.setStatus(PropertyStatus.DRAFT);
+        }
+
         if (request.getCategoryId() != null) categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
         if (request.getWardCode() != null && !request.getWardCode().isEmpty()) wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
 
@@ -126,6 +143,31 @@ public class PropertyServiceImpl implements PropertyService {
         }
         if (request.getTargetIds() != null) {
             property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
+        }
+
+        // Rules
+        if (request.getRules() != null) {
+            List<PropertyRule> rules = request.getRules().stream().map(r -> {
+                PropertyRule rule = new PropertyRule();
+                rule.setContent(r);
+                rule.setProperty(property);
+                return rule;
+            }).collect(Collectors.toList());
+            property.setRules(rules);
+        }
+
+        // Service Items
+        if (request.getServiceItems() != null) {
+            List<ServiceItem> serviceItems = request.getServiceItems().stream().map(dto -> {
+                ServiceItem item = new ServiceItem();
+                item.setName(dto.getName());
+                item.setPrice(dto.getPrice());
+                item.setUnit(dto.getUnit());
+                item.setType(dto.getType());
+                item.setProperty(property);
+                return item;
+            }).collect(Collectors.toList());
+            property.setServiceItems(serviceItems);
         }
 
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
@@ -188,6 +230,19 @@ public class PropertyServiceImpl implements PropertyService {
         if (request.getAcreage() != null) property.setAcreage(request.getAcreage());
         property.setAddressNumber(request.getAddressNumber());
 
+        // Update lat/long
+        if (request.getLatitude() != null) property.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null) property.setLongitude(request.getLongitude());
+
+        // Update status
+        if (request.getStatus() != null) {
+            try {
+                property.setStatus(PropertyStatus.valueOf(request.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // ignore invalid status
+            }
+        }
+
         if (request.getCategoryId() != null) categoryRepository.findById(request.getCategoryId()).ifPresent(property::setCategory);
         if (request.getWardCode() != null && !request.getWardCode().isEmpty()) wardRepository.findById(request.getWardCode()).ifPresent(property::setWard);
 
@@ -199,6 +254,33 @@ public class PropertyServiceImpl implements PropertyService {
         }
         if (request.getTargetIds() != null) {
             property.setTargetTenants(new HashSet<>(targetRepository.findAllById(request.getTargetIds())));
+        }
+
+        // Update Rules
+        if (request.getRules() != null) {
+            property.getRules().clear();
+            List<PropertyRule> rules = request.getRules().stream().map(r -> {
+                PropertyRule rule = new PropertyRule();
+                rule.setContent(r);
+                rule.setProperty(property);
+                return rule;
+            }).collect(Collectors.toList());
+            property.getRules().addAll(rules);
+        }
+
+        // Update Service Items
+        if (request.getServiceItems() != null) {
+            property.getServiceItems().clear();
+            List<ServiceItem> serviceItems = request.getServiceItems().stream().map(dto -> {
+                ServiceItem item = new ServiceItem();
+                item.setName(dto.getName());
+                item.setPrice(dto.getPrice());
+                item.setUnit(dto.getUnit());
+                item.setType(dto.getType());
+                item.setProperty(property);
+                return item;
+            }).collect(Collectors.toList());
+            property.getServiceItems().addAll(serviceItems);
         }
 
         if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
@@ -328,6 +410,17 @@ public class PropertyServiceImpl implements PropertyService {
                 .categoryName(p.getCategory().getName())
                 .acreage(p.getAcreage())
                 .numberOfRooms(p.getNumberOfRooms())
+                .latitude(p.getLatitude())
+                .longitude(p.getLongitude())
+                .rules(p.getRules().stream().map(PropertyRule::getContent).toList())
+                .serviceItems(p.getServiceItems().stream().map(item -> {
+                    ServiceItemDTO dto = new ServiceItemDTO();
+                    dto.setName(item.getName());
+                    dto.setPrice(item.getPrice());
+                    dto.setUnit(item.getUnit());
+                    dto.setType(item.getType());
+                    return dto;
+                }).toList())
                 .build();
     }
 

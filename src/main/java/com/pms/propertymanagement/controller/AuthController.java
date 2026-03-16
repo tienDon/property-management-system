@@ -103,6 +103,18 @@ public class AuthController {
     }
 
     private String resolveRoleTarget(User user) {
+        // Nếu cần eKYC nhưng chưa xác thực, luôn đưa vào luồng eKYC trước
+        if (requiresEkyc(user) && !user.isEkycVerified()) {
+            return "/ekyc?next=" + resolvePostEkycTarget(user);
+        }
+
+        return resolvePostEkycTarget(user);
+    }
+
+    /**
+     * Đích đến sau khi đã hoàn tất eKYC (hoặc không bắt buộc eKYC).
+     */
+    private String resolvePostEkycTarget(User user) {
         if (user.getRoles().stream().anyMatch(role -> role.getName().equals("ADMIN"))) {
             return "/admin/dashboard";
         }

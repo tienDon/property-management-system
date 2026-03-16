@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chọn vai trò</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+<div class="w-full max-w-lg bg-white p-8 rounded-xl shadow-lg">
+    <h1 class="text-3xl font-bold text-center mb-2">Chọn vai trò</h1>
+    <p class="text-sm text-gray-600 text-center mb-6">Bạn muốn sử dụng hệ thống với vai trò nào?</p>
+
+    <form th:action="@{/ekyc/choose-role}" method="post" class="space-y-4">
+        <input type="hidden" name="next" th:value="${next}"/>
+
+        <label class="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input type="radio" name="accountType" value="TENANT" class="h-4 w-4" required>
+            <div>
+                <div class="font-semibold">Người thuê (Tenant)</div>
+                <div class="text-sm text-gray-600">Tìm phòng, thuê phòng, quản lý hợp đồng.</div>
+            </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input type="radio" name="accountType" value="OWNER" class="h-4 w-4" required>
+            <div>
+                <div class="font-semibold">Chủ trọ (Owner)</div>
+                <div class="text-sm text-gray-600">Đăng tin, quản lý phòng và khách thuê.</div>
+            </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input type="radio" name="accountType" value="BOTH" class="h-4 w-4" required>
+            <div>
+                <div class="font-semibold">Cả hai</div>
+                <div class="text-sm text-gray-600">Vừa là người thuê vừa là chủ trọ.</div>
+            </div>
+        </label>
+
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            Tiếp tục
+        </button>
+    </form>
+</div>
+</body>
+</html>
+

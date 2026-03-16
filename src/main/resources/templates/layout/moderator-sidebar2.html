@@ -66,6 +66,75 @@
         </a>
       </div>
     </div>
+
+    <!-- Đánh giá group -->
+    <div class="pt-2">
+      <button
+        class="w-full flex items-center justify-between p-3 text-[#0054a5] font-bold"
+      >
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-star w-5"></i>
+          <span>Đánh giá</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+      </button>
+
+      <div class="ml-11 space-y-1 mt-1">
+        <a
+          href="/moderator/reviews/pending"
+          class="flex items-center justify-between p-2 pl-4 hover:text-[#0054a5]"
+          th:classappend="${activeMenu == 'reviews' and activeTab == 'pending'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+        >
+          <span>Chờ duyệt</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bình luận group -->
+    <div class="pt-2">
+      <button
+        class="w-full flex items-center justify-between p-3 text-[#0054a5] font-bold"
+      >
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-comments w-5"></i>
+          <span>Bình luận</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+      </button>
+
+      <div class="ml-11 space-y-1 mt-1">
+        <a
+          href="/moderator/comments/pending"
+          class="flex items-center justify-between p-2 pl-4 hover:text-[#0054a5]"
+          th:classappend="${activeMenu == 'comments' and activeTab == 'pending'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+        >
+          <span>Chờ duyệt</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Báo cáo group -->
+    <div class="pt-2">
+      <button
+        class="w-full flex items-center justify-between p-3 text-[#0054a5] font-bold"
+      >
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation w-5"></i>
+          <span>Báo cáo</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-xs"></i>
+      </button>
+
+      <div class="ml-11 space-y-1 mt-1">
+        <a
+          href="/moderator/reports/pending"
+          class="flex items-center justify-between p-2 pl-4 hover:text-[#0054a5]"
+          th:classappend="${activeMenu == 'reports' and activeTab == 'pending'} ? ' text-blue-500 font-semibold' : ' text-gray-500'"
+        >
+          <span>Chờ xử lý</span>
+        </a>
+      </div>
+    </div>
   </nav>
 
   <!-- ── CHAT section ── -->
