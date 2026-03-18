@@ -91,4 +91,9 @@ public interface PropertyRepository extends JpaRepository<Property,Long> {
            "AND NOT EXISTS (SELECT 1 FROM Post post WHERE post.property.id = p.id) " +
            "ORDER BY p.createdAt DESC")
     List<Property> findActivePropertiesWithoutPost(@Param("ownerId") Long ownerId);
+
+    @Query(value = "SELECT p.* FROM properties p " +
+            "WHERE p.category_id IS NULL " +
+            "OR NOT EXISTS (SELECT 1 FROM categories c WHERE c.id = p.category_id)", nativeQuery = true)
+    List<Property> findPropertiesWithInvalidCategory();
 }

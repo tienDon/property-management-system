@@ -38,7 +38,11 @@ public class UserInitializer {
     }
 
     private void createOwner1() {
-        if (userRepository.findByUsername("owner1").isPresent()) return;
+        var existing = userRepository.findByUsername("owner1");
+        if (existing.isPresent()) {
+            ensureRole(existing.get(), "OWNER");
+            return;
+        }
 
         User owner = new User();
         owner.setUsername("owner1");
@@ -53,7 +57,11 @@ public class UserInitializer {
     }
 
     private void createTenant1() {
-        if (userRepository.findByUsername("tenant1").isPresent()) return;
+        var existing = userRepository.findByUsername("tenant1");
+        if (existing.isPresent()) {
+            ensureRole(existing.get(), "USER");
+            return;
+        }
 
         User tenant = new User();
         tenant.setUsername("tenant1");
@@ -68,7 +76,11 @@ public class UserInitializer {
     }
 
     private void createStaff1() {
-        if (userRepository.findByUsername("staff1").isPresent()) return;
+        var existing = userRepository.findByUsername("staff1");
+        if (existing.isPresent()) {
+            ensureRole(existing.get(), "STAFF");
+            return;
+        }
 
         User staff = new User();
         staff.setUsername("staff1");
@@ -80,6 +92,13 @@ public class UserInitializer {
         staff.getRoles().add(roleRepository.findByName("STAFF").get());
 
         userRepository.save(staff);
+    }
+
+    private void ensureRole(User user, String roleName) {
+        boolean hasRole = user.getRoles() != null && user.getRoles().stream().anyMatch(r -> roleName.equals(r.getName()));
+        if (hasRole) return;
+        user.getRoles().add(roleRepository.findByName(roleName).orElseThrow());
+        userRepository.save(user);
     }
 
     private void createModerator1() {

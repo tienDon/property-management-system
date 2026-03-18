@@ -2,7 +2,7 @@ package com.pms.propertymanagement.controller.advice;
 
 import com.pms.propertymanagement.entity.User;
 import com.pms.propertymanagement.entity.Role;
-import com.pms.propertymanagement.repository.UserRepository;
+import com.pms.propertymanagement.service.EkycService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.Set;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class EkycUploadExceptionHandler {
-    private final UserRepository userRepository;
+    private final EkycService ekycService;
 
     @ExceptionHandler({
             MaxUploadSizeExceededException.class,
@@ -58,7 +58,7 @@ public class EkycUploadExceptionHandler {
         User sessionUser = (User) session.getAttribute("user");
         if (sessionUser == null) return "/home";
 
-        User user = userRepository.findById(sessionUser.getId()).orElse(sessionUser);
+        User user = ekycService.refreshUser(sessionUser.getId()).orElse(sessionUser);
         session.setAttribute("user", user);
 
         Set<Role> roles = user.getRoles();

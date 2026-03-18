@@ -5,6 +5,7 @@ import com.pms.propertymanagement.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -14,13 +15,22 @@ public class CategoryInitializer {
     private final CategoryRepository categoryRepository;
 
     public void init() {
-        if (!categoryRepository.findAll().isEmpty()) return;
+        List<String> requiredNames = List.of(
+                "Nhà trọ",
+                "Nhà nguyên căn",
+                "Căn hộ",
+                "Ký túc xá"
+        );
 
-        categoryRepository.saveAll(List.of(
-                new Category("Nhà trọ"),
-                new Category("Nhà nguyên căn"),
-                new Category("Căn hộ"),
-                new Category("Ký túc xá")
-        ));
+        List<Category> toInsert = new ArrayList<>();
+        for (String name : requiredNames) {
+            if (categoryRepository.findByName(name) == null) {
+                toInsert.add(new Category(name));
+            }
+        }
+
+        if (!toInsert.isEmpty()) {
+            categoryRepository.saveAll(toInsert);
+        }
     }
 }

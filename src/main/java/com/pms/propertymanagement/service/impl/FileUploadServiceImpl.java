@@ -6,7 +6,7 @@ import com.pms.propertymanagement.repository.UploadFileRepository;
 import com.pms.propertymanagement.service.FileUploadService;
 import com.pms.propertymanagement.utils.ImageUtil;
 import com.pms.propertymanagement.utils.VnptErrorUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class FileUploadServiceImpl implements FileUploadService {
 
     @Value("${vnpt.access-token}")
@@ -39,8 +40,8 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Value("${vnpt.base-url}")
     private String baseUrl;
 
-    @Autowired
-    private UploadFileRepository uploadFileRepository;
+    private final UploadFileRepository uploadFileRepository;
+    private final RestTemplate restTemplate;
 
     @Override
     public String uploadToVNPT(MultipartFile file, String title) throws IOException {
@@ -48,8 +49,6 @@ public class FileUploadServiceImpl implements FileUploadService {
         try {
 
             File resizedFile = ImageUtil.resizeImage(file);
-
-            RestTemplate restTemplate = new RestTemplate();
 
             HttpHeaders headers = new HttpHeaders();
             String raw = accessToken == null ? "" : accessToken.trim();

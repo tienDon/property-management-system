@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 import static com.pms.propertymanagement.utils.SlugUtil.makeSlug;
 
 @Component
@@ -67,6 +69,22 @@ public class DataInitializer implements CommandLineRunner {
         surroundingInitializer.init();
         targetTenantInitializer.init();
         propertyInitializer.init();
+
+        Category defaultCategory = categoryRepository.findByName("Nhà trọ");
+        if (defaultCategory == null) {
+            List<Category> categories = categoryRepository.findAll();
+            defaultCategory = categories.isEmpty() ? null : categories.get(0);
+        }
+        if (defaultCategory != null) {
+            List<Property> invalidCategoryProperties = propertyRepository.findPropertiesWithInvalidCategory();
+            if (!invalidCategoryProperties.isEmpty()) {
+                for (Property p : invalidCategoryProperties) {
+                    p.setCategory(defaultCategory);
+                }
+                propertyRepository.saveAll(invalidCategoryProperties);
+            }
+        }
+
         serviceInitializer.init();
         roomInitializer.init();
         tenantInitializer.init();

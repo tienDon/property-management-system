@@ -60,7 +60,7 @@ public class Property {
     private Double longitude;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true, columnDefinition = "varchar(255) default 'PENDING'")
+    @Column(name = "geocode_status", nullable = true, columnDefinition = "varchar(255) default 'PENDING'")
     private GeocodeStatus geocodeStatus = GeocodeStatus.PENDING;
 
     @ManyToOne(fetch = FetchType.LAZY)

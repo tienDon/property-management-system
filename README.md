@@ -115,6 +115,20 @@ src/main/java/com/pms/propertymanagement
 └── PropertyManagementSystemApplication.java  # Main class
 ```
 
+## 3-Layer Architecture (Public Review)
+
+This project follows a classic 3-layer architecture:
+
+- **Presentation layer (Controller):** receives HTTP requests, validates basic inputs, prepares view models, and returns views/JSON. Controllers should not contain persistence code.
+- **Business layer (Service):** contains business rules and orchestrates flows across multiple components (e.g., VNPT AI calls + persistence updates).
+- **Data access layer (Repository):** encapsulates database access using Spring Data JPA.
+
+### eKYC Flow Mapping
+
+- **Controller:** [EkycController.java](file:///d:/Documents/HSF/property-management-system/src/main/java/com/pms/propertymanagement/controller/EkycController.java) keeps request/session handling and view rendering.
+- **Service:** [EkycServiceImpl.java](file:///d:/Documents/HSF/property-management-system/src/main/java/com/pms/propertymanagement/service/impl/EkycServiceImpl.java) owns the OCR → liveness → compare → persist flow.
+- **Repository:** `UserRepository` + `EkycSubmissionRepository` handle persistence for user verification state and submission history.
+
 ## Notes
 
 - **Default Port:** 8080.
