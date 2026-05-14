@@ -33,9 +33,13 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          test -n "${{ secrets.EC2_HOST }}"
+          test -n "${{ secrets.EC2_USER }}"
+          test -n "${{ secrets.EC2_SSH_KEY }}"
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          grep -q "BEGIN OPENSSH PRIVATE KEY" ~/.ssh/id_rsa
+          ssh-keyscan -T 30 -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Upload artifact
         run: |
