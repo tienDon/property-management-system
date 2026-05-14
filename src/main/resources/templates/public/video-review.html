@@ -1,0 +1,175 @@
+<div class="space-y-14 pb-8">
+  <section class="reveal video-hero relative overflow-hidden rounded-[36px] px-6 py-10 md:px-10 md:py-14">
+    <div class="hero-orb hero-orb-three"></div>
+    <div class="hero-orb hero-orb-four"></div>
+
+    <div class="relative grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+      <div class="space-y-6">
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-rose-100 backdrop-blur">
+          <i class="fa-solid fa-circle-play text-rose-300"></i>
+          Video Review
+        </div>
+
+        <div class="space-y-4">
+          <h1 class="max-w-3xl text-4xl font-extrabold leading-tight text-white md:text-5xl">
+            Mot khong gian dep can duoc xem bang video, khong chi bang anh.
+          </h1>
+          <p class="max-w-2xl text-base leading-8 text-slate-200">
+            Trang nay mo ta huong phat trien cho khu vuc video review: can ho mini, phong tro, nha nguyen can
+            duoc gioi thieu bang clip ngan, bo cuc sang va de chot lich xem phong.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-4">
+          <a href="/" class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-sky-100">
+            <i class="fa-solid fa-house"></i>
+            Ve trang chu
+          </a>
+          <a href="/login/owner" class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">
+            <i class="fa-solid fa-video"></i>
+            Dang ky quay review
+          </a>
+        </div>
+      </div>
+
+      <div class="reveal rounded-[32px] border border-white/10 bg-white/10 p-5 backdrop-blur-xl shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+        <div class="relative overflow-hidden rounded-[28px]">
+          <img
+            th:src="${featuredProperty != null ? featuredProperty.imageUrl : '/images/no-image.jpg'}"
+            alt="Video review cover"
+            class="h-[360px] w-full object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent"></div>
+          <button class="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl text-rose-500 shadow-[0_20px_60px_rgba(255,255,255,0.28)] transition hover:scale-105">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <div class="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4">
+            <div class="text-white">
+              <p class="text-xs font-bold uppercase tracking-[0.24em] text-sky-100">Preview</p>
+              <h2 class="mt-2 text-2xl font-extrabold" th:text="${featuredProperty != null ? featuredProperty.title : 'Khu tro review thuc te'}">
+                Khu tro review thuc te
+              </h2>
+            </div>
+            <span class="rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white backdrop-blur">
+              Sap hoan thien
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal grid gap-5 md:grid-cols-3">
+    <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+        <i class="fa-solid fa-film"></i>
+      </div>
+      <h3 class="mt-5 text-xl font-extrabold text-slate-900">Clip ngan, thong tin ro</h3>
+      <p class="mt-3 text-sm leading-7 text-slate-500">
+        Video du kien tap trung vao loi vao, phong ngu, bep, nha ve sinh va khu vuc xung quanh.
+      </p>
+    </div>
+
+    <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
+      <h3 class="mt-5 text-xl font-extrabold text-slate-900">Review theo khu vuc</h3>
+      <p class="mt-3 text-sm leading-7 text-slate-500">
+        Moi video co the gan voi ward, province va bai dang cu the de nguoi xem de doi chieu.
+      </p>
+    </div>
+
+    <div class="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+        <i class="fa-solid fa-calendar-check"></i>
+      </div>
+      <h3 class="mt-5 text-xl font-extrabold text-slate-900">Dat lich xem phong</h3>
+      <p class="mt-3 text-sm leading-7 text-slate-500">
+        Sau khi xem clip, nguoi thue co the chuyen sang bai dang chi tiet de chat va hen xem phong.
+      </p>
+    </div>
+  </section>
+
+  <section class="space-y-6">
+    <div class="reveal flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-rose-600">De xuat review</p>
+        <h2 class="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">Nhung diem den nen duoc quay review dau tien.</h2>
+      </div>
+      <p class="max-w-xl text-sm leading-7 text-slate-500">
+        Trong luc chua co module video backend rieng, trang nay van co the lam diem den truyen thong va CTA cho tinh nang sap ra mat.
+      </p>
+    </div>
+
+    <div class="grid gap-5 lg:grid-cols-3">
+      <article
+        th:each="item : ${videoHighlights}"
+        class="reveal overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.06)] transition hover:-translate-y-1.5 hover:shadow-[0_24px_60px_rgba(244,63,94,0.14)]"
+      >
+        <div class="relative">
+          <img th:src="${item.imageUrl}" th:alt="${item.title}" class="h-56 w-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 to-transparent"></div>
+          <div class="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold text-white backdrop-blur">
+            <i class="fa-solid fa-play"></i>
+            Review de xuat
+          </div>
+        </div>
+
+        <div class="space-y-4 p-5">
+          <div class="flex items-center justify-between gap-3">
+            <span class="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-amber-700" th:text="${item.categoryName}">
+              Nha tro
+            </span>
+            <span class="text-sm font-semibold text-slate-500" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' d/thang'}">
+              3,500,000 d/thang
+            </span>
+          </div>
+
+          <h3 class="text-xl font-extrabold text-slate-900" th:text="${item.title}">Phong can review</h3>
+          <p class="text-sm leading-7 text-slate-500" th:text="${item.wardName + ', ' + item.provinceName}">
+            Khu vuc review
+          </p>
+
+          <a
+            th:href="@{/public/property/{slug}(slug=${item.slug})}"
+            class="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+          >
+            Xem bai dang
+            <i class="fa-solid fa-arrow-right-long"></i>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div th:if="${#lists.isEmpty(videoHighlights)}" class="reveal rounded-[28px] border border-dashed border-slate-300 bg-white px-6 py-14 text-center shadow-sm">
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+        <i class="fa-solid fa-video text-2xl"></i>
+      </div>
+      <h3 class="mt-5 text-2xl font-extrabold text-slate-900">Chua co noi dung review</h3>
+      <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+        Ban co the dung trang nay nhu mot landing page thong bao tinh nang video review sap hoan thien, trong khi module du lieu video duoc xay dung sau.
+      </p>
+    </div>
+  </section>
+
+  <section class="reveal rounded-[36px] border border-slate-200 bg-white px-6 py-10 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:px-10">
+    <div class="grid gap-6 lg:grid-cols-3">
+      <div class="timeline-card">
+        <span class="timeline-step">01</span>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Quay khong gian that</h3>
+        <p class="mt-3 text-sm leading-7 text-slate-500">Clip nen cho thay loi vao, ket cau phong, anh sang va cac tien nghi trong bai dang.</p>
+      </div>
+      <div class="timeline-card">
+        <span class="timeline-step">02</span>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Dong bo voi bai dang</h3>
+        <p class="mt-3 text-sm leading-7 text-slate-500">Video can dan thang den bai dang chi tiet de nguoi xem chuyen doi muot hon.</p>
+      </div>
+      <div class="timeline-card">
+        <span class="timeline-step">03</span>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Nhan yeu cau xem phong</h3>
+        <p class="mt-3 text-sm leading-7 text-slate-500">Sau khi xem clip, CTA duoc dat noi bat de nguoi dung dat lich xem phong ngay.</p>
+      </div>
+    </div>
+  </section>
+</div>

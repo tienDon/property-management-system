@@ -1,0 +1,174 @@
+:root {
+  --public-bg: #f8fbff;
+  --public-text: #0f172a;
+  --public-muted: #475569;
+  --public-card: rgba(255, 255, 255, 0.82);
+  --public-border: rgba(148, 163, 184, 0.2);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.public-body {
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 30%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #f7fafc 45%, #eef5ff 100%);
+  color: var(--public-text);
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+}
+
+.public-header {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.hero-surface {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+    linear-gradient(120deg, rgba(56, 189, 248, 0.08), rgba(14, 165, 233, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.1);
+}
+
+.hero-orb {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(8px);
+  opacity: 0.9;
+}
+
+.hero-orb-one {
+  right: -2rem;
+  top: -3rem;
+  height: 12rem;
+  width: 12rem;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.28), transparent 68%);
+  animation: float-orb 12s ease-in-out infinite;
+}
+
+.hero-orb-two {
+  bottom: -4rem;
+  left: -2rem;
+  height: 11rem;
+  width: 11rem;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.24), transparent 68%);
+  animation: float-orb 16s ease-in-out infinite reverse;
+}
+
+.hero-orb-three {
+  right: -1rem;
+  top: -2rem;
+  height: 12rem;
+  width: 12rem;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.3), transparent 68%);
+  animation: float-orb 13s ease-in-out infinite;
+}
+
+.hero-orb-four {
+  bottom: -3rem;
+  left: -2rem;
+  height: 10rem;
+  width: 10rem;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 68%);
+  animation: float-orb 17s ease-in-out infinite reverse;
+}
+
+.hero-feature-card {
+  position: relative;
+}
+
+.video-hero {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88)),
+    radial-gradient(circle at top right, rgba(244, 63, 94, 0.28), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.2), transparent 28%);
+  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.22);
+}
+
+.cta-panel {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(14, 116, 144, 0.88)),
+    radial-gradient(circle at top right, rgba(125, 211, 252, 0.24), transparent 30%);
+  box-shadow: 0 30px 90px rgba(14, 116, 144, 0.26);
+}
+
+.timeline-card {
+  border: 1px solid rgba(226, 232, 240, 1);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.75rem;
+  box-shadow: 0 16px 45px rgba(15, 23, 42, 0.06);
+}
+
+.timeline-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  min-height: 3rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.22);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes float-orb {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb,
+  .reveal,
+  .group img,
+  .group span,
+  .group a {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

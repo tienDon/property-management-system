@@ -1,28 +1,36 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <title>Property Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${pageTitle != null ? pageTitle + ' | PMS' : 'Property Management System'}">Property Management System</title>
 
-    <!-- FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
     <script
       src="https://kit.fontawesome.com/a37ac37445.js"
       crossorigin="anonymous"
     ></script>
-
-    <!-- Tailwind -->
-    <!--    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>-->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/public-site.css}" />
   </head>
-  <body>
-    <div th:replace="~{layout/header :: header-main}"></div>
+  <body class="public-body">
+    <div class="public-shell min-h-screen">
+      <div th:replace="~{layout/header :: header-main}"></div>
 
-    <main class="container mx-auto px-4 py-6">
-      <div th:replace="${content}"></div>
-    </main>
+      <main class="container mx-auto px-4 py-6 md:px-6 lg:px-8">
+        <div th:replace="${content}"></div>
+      </main>
 
-    <div th:replace="~{layout/footer :: footer-main}"></div>
+      <div th:replace="~{layout/footer :: footer-main}"></div>
+      <div th:replace="~{layout/parts/chat-widget :: chat-widget}"></div>
+    </div>
 
-    <div th:replace="~{layout/parts/chat-widget :: chat-widget}"></div>
+    <script th:src="@{/js/public-site.js}"></script>
   </body>
 </html>

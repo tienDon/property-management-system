@@ -40,16 +40,16 @@ public class EkycServiceImpl implements EkycService {
     @Value("${vnpt.unit}")
     private String vnptUnit;
 
-    @Value("${vnpt.ekyc.client-session:ANDROID_nokia7.2_28_Simulator_2.4.2_08d2d8686ee5fa0e_1581910116532}")
+    @Value("${vnpt.ekyc.client-session}")
     private String clientSession;
 
-    @Value("${vnpt.ekyc.token:123456}")
+    @Value("${vnpt.ekyc.token}")
     private String token;
 
-    @Value("${vnpt.ekyc.crop-param:0.14,0.3}")
+    @Value("${vnpt.ekyc.crop-param}")
     private String cropParam;
 
-    @Value("${vnpt.ekyc.ocr-type:-1}")
+    @Value("${vnpt.ekyc.ocr-type}")
     private Integer ocrType;
 
     @Override

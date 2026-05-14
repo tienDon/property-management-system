@@ -1,0 +1,52 @@
+name: Deploy EC2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_JAR: property-management-0.0.1-SNAPSHOT.jar
+      REMOTE_APP_DIR: /opt/pms/app
+      REMOTE_SERVICE_NAME: pms
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "24"
+
+      - name: Build jar
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload artifact
+        run: |
+          scp "target/${APP_JAR}" "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/${APP_JAR}"
+
+      - name: Restart service
+        run: |
+          ssh "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
+            sudo mv /tmp/${APP_JAR} ${REMOTE_APP_DIR}/${APP_JAR} &&
+            sudo chown pms:pms ${REMOTE_APP_DIR}/${APP_JAR} &&
+            sudo systemctl restart ${REMOTE_SERVICE_NAME} &&
+            sleep 10 &&
+            curl --fail --silent http://127.0.0.1:8080/health
+          "

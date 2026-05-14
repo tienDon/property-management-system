@@ -25,9 +25,9 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     public CloudinaryServiceImpl(
             Cloudinary cloudinary,
             @Value("${cloudinary.folder:}") String defaultFolder,
-            @Value("${cloudinary.cloud-name:ddloigkh2}") String cloudName,
-            @Value("${cloudinary.api-key:272519623212178}") String apiKey,
-            @Value("${cloudinary.api-secret:Dzuj-FHcoaVaP4-HKDp1A8ZhA4Q}") String apiSecret) {
+            @Value("${cloudinary.cloud-name:}") String cloudName,
+            @Value("${cloudinary.api-key:}") String apiKey,
+            @Value("${cloudinary.api-secret:}") String apiSecret) {
         this.cloudinary = cloudinary;
         this.defaultFolder = defaultFolder;
         this.cloudName = cloudName;
