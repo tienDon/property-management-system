@@ -29,7 +29,7 @@ public class PublicController {
                 .stream().map(PostPublicResponse::from).toList();
 
         addCommonAttributes(model);
-        model.addAttribute("pageTitle", "Tim phong tro, can ho mini va nha nguyen can");
+        model.addAttribute("pageTitle", "Tìm phòng trọ, căn hộ mini và nhà nguyên căn");
         model.addAttribute("content", "public/home");
         model.addAttribute("properties", properties);
         model.addAttribute("featuredProperty", properties.isEmpty() ? null : properties.get(0));
@@ -74,7 +74,7 @@ public class PublicController {
         model.addAttribute("allAmenities", propertyService.getAllAmenities());
         model.addAttribute("categoryId", categoryId);
         addCommonAttributes(model);
-        model.addAttribute("pageTitle", "Danh sach phong tro va nha cho thue");
+        model.addAttribute("pageTitle", "Danh sách phòng trọ và nhà cho thuê");
 
         model.addAttribute("content", "public/property-list");
         return "layout/public-main";
@@ -104,7 +104,7 @@ public class PublicController {
                 .stream().map(PostPublicResponse::from).toList();
 
         addCommonAttributes(model);
-        model.addAttribute("pageTitle", "Video review phong tro va can ho mini");
+        model.addAttribute("pageTitle", "Video review phòng trọ và căn hộ mini");
         model.addAttribute("content", "public/video-review");
         model.addAttribute("videoHighlights", properties.stream().limit(3).toList());
         model.addAttribute("featuredProperty", properties.isEmpty() ? null : properties.get(0));

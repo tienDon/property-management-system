@@ -7,16 +7,16 @@
       <div class="space-y-8">
         <div class="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-semibold text-sky-800 shadow-sm backdrop-blur">
           <i class="fa-solid fa-sparkles text-amber-500"></i>
-          Nen tang tim phong tro, can ho mini va nha nguyen can
+          Nền tảng tìm phòng trọ, căn hộ mini và nhà nguyên căn
         </div>
 
         <div class="space-y-5">
           <h1 class="max-w-3xl text-4xl font-extrabold leading-tight text-slate-950 md:text-5xl lg:text-6xl">
-            Tim cho o hop gu, xem bai dang that va ket noi chu tro nhanh hon.
+            Tìm chỗ ở hợp gu, xem bài đăng thật và kết nối chủ trọ nhanh hơn.
           </h1>
           <p class="max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
-            Giao dien moi tap trung vao nhu cau thue tro: xem hinh anh ro rang, gia phong minh bach, khu vuc noi bat
-            va lien he ngay khi thay phong phu hop.
+            Giao diện mới tập trung vào nhu cầu thuê trọ: xem hình ảnh rõ ràng, giá phòng minh bạch, khu vực nổi bật
+            và liên hệ ngay khi thấy phòng phù hợp.
           </p>
         </div>
 
@@ -25,7 +25,7 @@
             href="#latest-posts"
             class="inline-flex items-center gap-2 rounded-full bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white shadow-xl shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-blue-700"
           >
-            Xem tin moi
+            Xem tin mới
             <i class="fa-solid fa-arrow-right-long"></i>
           </a>
           <a
@@ -33,23 +33,23 @@
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-blue-700"
           >
             <i class="fa-solid fa-circle-play text-rose-500"></i>
-            Video Review
+            Video review
           </a>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-3">
           <div class="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm backdrop-blur">
-            <p class="text-sm font-semibold text-slate-500">Tin dang dang hoat dong</p>
+            <p class="text-sm font-semibold text-slate-500">Tin đăng đang hoạt động</p>
             <p class="mt-3 text-3xl font-extrabold text-slate-950" th:text="${postCount}">128</p>
           </div>
           <div class="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm backdrop-blur">
-            <p class="text-sm font-semibold text-slate-500">Khu vuc dang co phong</p>
+            <p class="text-sm font-semibold text-slate-500">Khu vực đang có phòng</p>
             <p class="mt-3 text-3xl font-extrabold text-slate-950" th:text="${provinceCount}">12</p>
           </div>
           <div class="rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-sm backdrop-blur">
-            <p class="text-sm font-semibold text-slate-500">Gia khoi diem</p>
+            <p class="text-sm font-semibold text-slate-500">Giá khởi điểm</p>
             <p class="mt-3 text-3xl font-extrabold text-slate-950">
-              <span th:text="${startingPrice > 0 ? #numbers.formatDecimal(startingPrice, 0, 'COMMA', 0, 'POINT') + ' d' : 'Lien he'}">2,500,000 d</span>
+              <span th:text="${startingPrice > 0 ? #numbers.formatDecimal(startingPrice, 0, 'COMMA', 0, 'POINT') + ' đ' : 'Liên hệ'}">2,500,000 đ</span>
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@
         <div class="flex flex-wrap gap-3">
           <span class="rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm" th:each="location : ${featuredLocations}">
             <i class="fa-solid fa-location-dot mr-2 text-rose-500"></i>
-            <span th:text="${location}">Phuong, Tinh</span>
+              <span th:text="${location}">Phường, Tỉnh</span>
           </span>
         </div>
       </div>
@@ -74,10 +74,10 @@
 
             <div class="absolute left-5 right-5 top-5 flex items-start justify-between gap-4">
               <span class="rounded-full bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-700">
-                Bai dang noi bat
+                Bài đăng nổi bật
               </span>
               <span class="rounded-full bg-amber-400/95 px-4 py-2 text-sm font-bold text-slate-950 shadow-lg">
-                <span th:text="${#numbers.formatDecimal(featuredProperty.price, 0, 'COMMA', 0, 'POINT') + ' d/thang'}">4,500,000 d/thang</span>
+                <span th:text="${#numbers.formatDecimal(featuredProperty.price, 0, 'COMMA', 0, 'POINT') + ' đ/tháng'}">4,500,000 đ/tháng</span>
               </span>
             </div>
 
@@ -92,14 +92,14 @@
               <p class="mt-3 flex items-center gap-2 text-sm text-slate-200">
                 <i class="fa-solid fa-location-dot text-rose-300"></i>
                 <span th:text="${featuredProperty.addressNumber + ', ' + featuredProperty.wardName + ', ' + featuredProperty.provinceName}">
-                  Dia chi chi tiet
+                  Địa chỉ chi tiết
                 </span>
               </p>
               <a
                 th:href="@{/public/property/{slug}(slug=${featuredProperty.slug})}"
                 class="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-sky-100"
               >
-                Xem chi tiet bai dang
+                Xem chi tiết bài đăng
                 <i class="fa-solid fa-arrow-right-long"></i>
               </a>
             </div>
@@ -110,9 +110,9 @@
           <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-700">
             <i class="fa-solid fa-bed text-2xl"></i>
           </div>
-          <h2 class="mt-5 text-2xl font-extrabold text-slate-900">Dang cho bai dang dau tien</h2>
+          <h2 class="mt-5 text-2xl font-extrabold text-slate-900">Đang chờ bài đăng đầu tiên</h2>
           <p class="mt-3 text-sm leading-7 text-slate-500">
-            Khi co bai dang duoc kich hoat, khu vuc noi bat nay se hien hinh anh, gia thue va thong tin tong quan de nguoi xem ra quyet dinh nhanh hon.
+            Khi có bài đăng được kích hoạt, khu vực nổi bật này sẽ hiện hình ảnh, giá thuê và thông tin tổng quan để người xem ra quyết định nhanh hơn.
           </p>
         </div>
       </div>
@@ -121,10 +121,10 @@
 
   <section class="reveal grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
     <div class="rounded-[32px] border border-slate-200 bg-white p-7 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
-      <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Danh muc nhanh</p>
-      <h2 class="mt-4 text-3xl font-extrabold text-slate-950">Chon dung loai phong ngay tu dau.</h2>
+      <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Danh mục nhanh</p>
+      <h2 class="mt-4 text-3xl font-extrabold text-slate-950">Chọn đúng loại phòng ngay từ đầu.</h2>
       <p class="mt-4 text-sm leading-7 text-slate-500">
-        Tu phong tro gia mem den can ho mini hoan chinh, nguoi thue co the bat dau bang danh muc phu hop nhat voi nhu cau cua minh.
+        Từ phòng trọ giá mềm đến căn hộ mini hoàn chỉnh, người thuê có thể bắt đầu bằng danh mục phù hợp nhất với nhu cầu của mình.
       </p>
 
       <div class="mt-6 flex flex-wrap gap-3">
@@ -147,9 +147,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-sky-200">
           <i class="fa-solid fa-camera-retro"></i>
         </div>
-        <h3 class="mt-5 text-xl font-extrabold">Hinh anh ro rang</h3>
+        <h3 class="mt-5 text-xl font-extrabold">Hình ảnh rõ ràng</h3>
         <p class="mt-3 text-sm leading-7 text-slate-300">
-          Bai dang uu tien hinh anh day du, goc chup that va thong tin co the doi chieu khi den xem phong.
+          Bài đăng ưu tiên hình ảnh đầy đủ, góc chụp thật và thông tin có thể đối chiếu khi đến xem phòng.
         </p>
       </div>
 
@@ -157,9 +157,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
           <i class="fa-solid fa-bolt-lightning"></i>
         </div>
-        <h3 class="mt-5 text-xl font-extrabold">Lien he nhanh</h3>
+        <h3 class="mt-5 text-xl font-extrabold">Liên hệ nhanh</h3>
         <p class="mt-3 text-sm leading-7 text-sky-50">
-          Xem chi tiet bai dang, lien he chu tro va dat lich xem phong nhanh hon ngay tren trang.
+          Xem chi tiết bài đăng, liên hệ chủ trọ và đặt lịch xem phòng nhanh hơn ngay trên trang.
         </p>
       </div>
 
@@ -167,9 +167,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
           <i class="fa-solid fa-sliders"></i>
         </div>
-        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Loc theo nhu cau</h3>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Lọc theo nhu cầu</h3>
         <p class="mt-3 text-sm leading-7 text-slate-500">
-          Nguoi thue co the di qua danh muc, muc gia va khu vuc de thu hep lua chon nhanh hon.
+          Người thuê có thể đi qua danh mục, mức giá và khu vực để thu hẹp lựa chọn nhanh hơn.
         </p>
       </div>
 
@@ -177,9 +177,9 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
           <i class="fa-solid fa-circle-play"></i>
         </div>
-        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Video Review</h3>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Video review thực tế</h3>
         <p class="mt-3 text-sm leading-7 text-slate-500">
-          Them trai nghiem review thuc te de nguoi xem cam nhan khong gian ro hon truoc khi den noi.
+          Thêm trải nghiệm review thực tế để người xem cảm nhận không gian rõ hơn trước khi đến nơi.
         </p>
       </div>
     </div>
@@ -188,22 +188,22 @@
   <section id="latest-posts" class="space-y-6">
     <div class="reveal flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Tin dang moi nhat</p>
-        <h2 class="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">Danh sach bai dang dang duoc quan tam.</h2>
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Tin đăng mới nhất</p>
+        <h2 class="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">Danh sách bài đăng đang được quan tâm.</h2>
       </div>
       <p class="max-w-xl text-sm leading-7 text-slate-500">
-        Bo sung giao dien dang bai dam chat marketplace: de xem, de so sanh, de click sang trang chi tiet.
+        Bổ sung giao diện đậm chất marketplace: dễ xem, dễ so sánh và dễ chuyển sang trang chi tiết.
       </p>
     </div>
 
     <div th:if="${session.user == null}" class="reveal flex flex-col gap-3 sm:flex-row">
       <a href="/login" class="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700">
         <i class="fa-solid fa-right-to-bracket"></i>
-        Dang nhap
+        Đăng nhập
       </a>
       <a href="/register" class="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:text-blue-700">
         <i class="fa-solid fa-user-plus"></i>
-        Dang ky
+        Đăng ký
       </a>
     </div>
 
@@ -217,9 +217,9 @@
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-700">
         <i class="fa-solid fa-house-circle-check text-2xl"></i>
       </div>
-      <h3 class="mt-5 text-2xl font-extrabold text-slate-900">Chua co bai dang nao</h3>
+      <h3 class="mt-5 text-2xl font-extrabold text-slate-900">Chưa có bài đăng nào</h3>
       <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-        Khi chu tro bat dau dang bai, muc nay se tu dong hien cac bai dang moi nhat de nguoi xem co the kham pha ngay tren trang chu.
+        Khi chủ trọ bắt đầu đăng bài, mục này sẽ tự động hiện các bài đăng mới nhất để người xem có thể khám phá ngay trên trang chủ.
       </p>
     </div>
   </section>
@@ -227,36 +227,36 @@
   <section class="reveal rounded-[36px] border border-slate-200 bg-white px-6 py-10 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:px-10">
     <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
       <div>
-        <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Hanh trinh tim phong</p>
-        <h2 class="mt-3 text-3xl font-extrabold text-slate-950">Ba buoc de chon duoc phong hop y.</h2>
+        <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">Hành trình tìm phòng</p>
+        <h2 class="mt-3 text-3xl font-extrabold text-slate-950">Ba bước để chọn được phòng hợp ý.</h2>
       </div>
       <p class="max-w-2xl text-sm leading-7 text-slate-500">
-        Giao dien moi duoc sap xep quanh hanh vi thuc te cua nguoi thue: xem nhanh, so sanh nhanh va lien he nhanh.
+        Giao diện mới được sắp xếp quanh hành vi thực tế của người thuê: xem nhanh, so sánh nhanh và liên hệ nhanh.
       </p>
     </div>
 
     <div class="mt-10 grid gap-5 lg:grid-cols-3">
       <div class="timeline-card">
         <span class="timeline-step">01</span>
-        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Loc khu vuc va danh muc</h3>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Lọc khu vực và danh mục</h3>
         <p class="mt-3 text-sm leading-7 text-slate-500">
-          Bat dau tu nhu cau that: gan truong, gan cho lam hoac can nha rieng de o theo nhom.
+          Bắt đầu từ nhu cầu thật: gần trường, gần chỗ làm hoặc cần nhà riêng để ở theo nhóm.
         </p>
       </div>
 
       <div class="timeline-card">
         <span class="timeline-step">02</span>
-        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Xem hinh, gia va thong tin chi tiet</h3>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Xem hình, giá và thông tin chi tiết</h3>
         <p class="mt-3 text-sm leading-7 text-slate-500">
-          Trang bai dang moi noi bat hinh anh, gia thue, dien tich, dia chi va cac tien nghi de so sanh nhanh hon.
+          Trang bài đăng mới nổi bật hình ảnh, giá thuê, diện tích, địa chỉ và các tiện nghi để so sánh nhanh hơn.
         </p>
       </div>
 
       <div class="timeline-card">
         <span class="timeline-step">03</span>
-        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Lien he chu tro va hen xem phong</h3>
+        <h3 class="mt-5 text-xl font-extrabold text-slate-900">Liên hệ chủ trọ và hẹn xem phòng</h3>
         <p class="mt-3 text-sm leading-7 text-slate-500">
-          Khi da thay bai dang phu hop, nguoi xem co the di thang vao thong tin chi tiet va ket noi ngay.
+          Khi đã thấy bài đăng phù hợp, người xem có thể đi thẳng vào thông tin chi tiết và kết nối ngay.
         </p>
       </div>
     </div>
@@ -264,21 +264,21 @@
 
   <section class="reveal cta-panel grid gap-8 rounded-[36px] px-6 py-10 text-white md:px-10 lg:grid-cols-[1fr_auto] lg:items-center">
     <div>
-      <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-100">Dich vu cho chu tro</p>
-      <h2 class="mt-3 text-3xl font-extrabold md:text-4xl">Ban co phong trong? Dang bai len PMS de tiep can nguoi thue nhanh hon.</h2>
+      <p class="text-sm font-bold uppercase tracking-[0.3em] text-sky-100">Dịch vụ cho chủ trọ</p>
+      <h2 class="mt-3 text-3xl font-extrabold md:text-4xl">Bạn có phòng trống? Đăng bài lên PMS để tiếp cận người thuê nhanh hơn.</h2>
       <p class="mt-4 max-w-3xl text-sm leading-7 text-sky-50/90">
-        Giao dien moi duoc thiet ke de bai dang trong sang, de tin hon va huong nguoi xem tap trung vao thong tin quan trong nhat.
+        Giao diện mới được thiết kế để bài đăng trong sáng, dễ tin hơn và hướng người xem tập trung vào thông tin quan trọng nhất.
       </p>
     </div>
 
     <div class="flex flex-wrap gap-3">
       <a href="/login/owner" class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:bg-sky-100">
         <i class="fa-solid fa-building"></i>
-        Dang bai ngay
+        Đăng bài ngay
       </a>
       <a href="/video-review" class="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">
         <i class="fa-solid fa-circle-play"></i>
-        Xem y tuong video review
+        Xem ý tưởng video review
       </a>
     </div>
   </section>

@@ -8,7 +8,7 @@
           </div>
           <div>
             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-700">PMS Marketplace</p>
-            <p class="text-2xl font-extrabold tracking-tight text-slate-900">Tro Moi</p>
+            <p class="text-2xl font-extrabold tracking-tight text-slate-900">Trọ Mới</p>
           </div>
         </a>
 
@@ -18,7 +18,7 @@
           class="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-blue-700 lg:hidden"
         >
           <i class="fa-solid fa-plus"></i>
-          Dang nha tro
+          Đăng nhà trọ
         </a>
       </div>
 
@@ -35,7 +35,7 @@
           </th:block>
         </th:block>
         <a href="/video-review" class="group relative text-sm font-semibold text-slate-700 transition hover:text-blue-700">
-          Video Review
+          Video review
           <span class="absolute -bottom-2 left-0 h-0.5 w-full origin-left scale-x-0 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition duration-300 group-hover:scale-x-100"></span>
         </a>
       </nav>
@@ -47,7 +47,7 @@
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-200 hover:text-blue-700"
           >
             <i class="fa-solid fa-right-to-bracket"></i>
-            Dang nhap
+            Đăng nhập
           </a>
 
           <a
@@ -55,14 +55,14 @@
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-200 hover:text-blue-700"
           >
             <i class="fa-solid fa-user-plus"></i>
-            Dang ky
+            Đăng ký
           </a>
         </div>
 
         <div th:if="${session.user != null}" class="flex flex-wrap items-center gap-3">
           <div class="rounded-full bg-white/90 px-4 py-2 text-sm text-slate-700 shadow-sm">
-            Xin chao,
-            <span class="font-semibold" th:text="${session.user.fullName != null ? session.user.fullName : session.user.username}">Nguoi dung</span>
+            Xin chào,
+            <span class="font-semibold" th:text="${session.user.fullName != null ? session.user.fullName : session.user.username}">Người dùng</span>
           </div>
 
           <a
@@ -70,7 +70,7 @@
             href="/owner"
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:text-blue-700"
           >
-            Quan ly
+            Quản lý
           </a>
 
           <a
@@ -78,7 +78,7 @@
             href="/staff/maintenance"
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:text-blue-700"
           >
-            Cong viec
+            Công việc
           </a>
 
           <a
@@ -86,7 +86,7 @@
             href="/tenant/rooms"
             class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:text-blue-700"
           >
-            Phong cua toi
+            Phòng của tôi
           </a>
 
           <form th:action="@{/logout}" method="post">
@@ -95,7 +95,7 @@
               class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-rose-200 hover:text-rose-600"
             >
               <i class="fa-solid fa-right-from-bracket"></i>
-              Dang xuat
+              Đăng xuất
             </button>
           </form>
         </div>
@@ -106,7 +106,7 @@
           class="hidden items-center gap-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-700 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/30 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-sky-500/40 lg:inline-flex"
         >
           <i class="fa-solid fa-building"></i>
-          Dang nha tro
+          Đăng nhà trọ
         </a>
       </div>
     </div>
@@ -124,7 +124,7 @@
         </th:block>
       </th:block>
       <a href="/video-review" class="whitespace-nowrap rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 shadow-sm">
-        Video Review
+        Video review
       </a>
     </div>
   </div>
