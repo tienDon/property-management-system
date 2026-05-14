@@ -4,6 +4,7 @@ import com.pms.propertymanagement.dto.chat.PropertySummaryForChat;
 import com.pms.propertymanagement.entity.Post;
 import com.pms.propertymanagement.entity.Property;
 import com.pms.propertymanagement.entity.Room;
+import com.pms.propertymanagement.enums.PostStatus;
 import com.pms.propertymanagement.enums.RoomStatus;
 import com.pms.propertymanagement.model.ChatSessionState;
 import com.pms.propertymanagement.repository.PostRepository;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -39,6 +41,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PropertyRecommendationServiceImpl implements PropertyRecommendationService {
 
+    private static final List<PostStatus> RECOMMENDATION_FALLBACK_STATUSES =
+            List.of(PostStatus.ACTIVE, PostStatus.EXPIRED);
+
     private final PostRepository postRepository;
 
     @Value("${chat.recommendation.max-results:5}")
@@ -52,12 +57,28 @@ public class PropertyRecommendationServiceImpl implements PropertyRecommendation
     // =========================================================================
 
     @Override
+    @Transactional(readOnly = true)
     public long countProvinceResults(ChatSessionState state) {
-        return postRepository.countByProvinceAndBudget(
+        long liveCount = postRepository.countByProvinceAndBudget(
                 LocalDateTime.now(), state.getBudget(), state.getProvinceCode());
+        if (liveCount > 0 || state.getProvinceCode() == null) {
+            return liveCount;
+        }
+
+        long fallbackCount = postRepository.findByStatusIn(RECOMMENDATION_FALLBACK_STATUSES).stream()
+                .filter(post -> matchesProvinceBudgetFallback(post, state.getProvinceCode(), state.getBudget()))
+                .count();
+        if (fallbackCount > 0) {
+            log.warn(
+                    "Recommendation count fallback activated for province={} because demo posts are expired",
+                    state.getProvinceCode()
+            );
+        }
+        return fallbackCount;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PropertySummaryForChat> findRecommendations(ChatSessionState state) {
         LocalDateTime now = LocalDateTime.now();
         Double budget = state.getBudget();
@@ -95,6 +116,23 @@ public class PropertyRecommendationServiceImpl implements PropertyRecommendation
             double relaxedBudget = budget * relaxedBudgetMultiplier;
             posts = postRepository.findRelaxedRecommendedPosts(now, relaxedBudget, state.getProvinceCode());
             log.debug("Tier3 province-wide → {} posts", posts.size());
+        }
+
+        if (posts.isEmpty()) {
+            posts = findFallbackPosts(state, budget, true, false);
+            log.debug("Tier4 fallback-live-demo -> {} posts", posts.size());
+        }
+
+        if (posts.isEmpty()) {
+            double relaxedBudget = budget * relaxedBudgetMultiplier;
+            posts = findFallbackPosts(state, relaxedBudget, false, false);
+            log.debug("Tier5 fallback-relaxed -> {} posts", posts.size());
+        }
+
+        if (posts.isEmpty()) {
+            double relaxedBudget = budget * relaxedBudgetMultiplier;
+            posts = findFallbackPosts(state, relaxedBudget, false, true);
+            log.debug("Tier6 fallback-province-wide -> {} posts", posts.size());
         }
 
         if (posts.isEmpty()) {
@@ -170,6 +208,93 @@ public class PropertyRecommendationServiceImpl implements PropertyRecommendation
                     return true;
                 })
                 .toList();
+    }
+
+    private List<Post> findFallbackPosts(
+            ChatSessionState state,
+            Double effectiveBudget,
+            boolean requireAmenityMatch,
+            boolean provinceOnly
+    ) {
+        return postRepository.findByStatusIn(RECOMMENDATION_FALLBACK_STATUSES).stream()
+                .filter(post -> matchesFallbackFilters(post, state, effectiveBudget, requireAmenityMatch, provinceOnly))
+                .toList();
+    }
+
+    private boolean matchesFallbackFilters(
+            Post post,
+            ChatSessionState state,
+            Double effectiveBudget,
+            boolean requireAmenityMatch,
+            boolean provinceOnly
+    ) {
+        Property prop = post.getProperty();
+        if (prop == null || prop.getWard() == null || prop.getWard().getProvince() == null) {
+            return false;
+        }
+
+        if (state.getProvinceCode() != null
+                && !state.getProvinceCode().equals(prop.getWard().getProvince().getCode())) {
+            return false;
+        }
+
+        if (!hasMatchingAvailableRoom(prop, effectiveBudget)) {
+            return false;
+        }
+
+        if (state.getCategoryId() != null
+                && (prop.getCategory() == null || !state.getCategoryId().equals(prop.getCategory().getId()))) {
+            return false;
+        }
+
+        if (requireAmenityMatch && state.getAmenityIds() != null && !state.getAmenityIds().isEmpty()) {
+            Set<Long> propertyAmenityIds = prop.getAmenities().stream()
+                    .map(amenity -> amenity.getId())
+                    .collect(Collectors.toSet());
+            if (!propertyAmenityIds.containsAll(state.getAmenityIds())) {
+                return false;
+            }
+        }
+
+        if (provinceOnly) {
+            return true;
+        }
+
+        if (state.hasCoordinates() && state.getSearchRadiusKm() != null) {
+            if (prop.getLatitude() == null || prop.getLongitude() == null) {
+                return false;
+            }
+            double distanceKm = haversine(
+                    state.getCenterLat(),
+                    state.getCenterLng(),
+                    prop.getLatitude(),
+                    prop.getLongitude()
+            );
+            return distanceKm <= state.getSearchRadiusKm();
+        }
+
+        if (state.getResolvedWardCodes() != null && !state.getResolvedWardCodes().isEmpty()) {
+            return state.getResolvedWardCodes().contains(prop.getWard().getCode());
+        }
+
+        return true;
+    }
+
+    private boolean matchesProvinceBudgetFallback(Post post, String provinceCode, Double maxPrice) {
+        Property prop = post.getProperty();
+        if (prop == null || prop.getWard() == null || prop.getWard().getProvince() == null) {
+            return false;
+        }
+        if (provinceCode == null || !provinceCode.equals(prop.getWard().getProvince().getCode())) {
+            return false;
+        }
+        return hasMatchingAvailableRoom(prop, maxPrice);
+    }
+
+    private boolean hasMatchingAvailableRoom(Property prop, Double maxPrice) {
+        return prop.getRooms().stream()
+                .anyMatch(room -> room.getStatus() == RoomStatus.AVAILABLE
+                        && (maxPrice == null || room.getPrice() <= maxPrice));
     }
 
     // =========================================================================

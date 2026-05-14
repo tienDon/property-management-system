@@ -18,11 +18,14 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.net.http.HttpClient;
+import java.text.Normalizer;
 import java.time.Duration;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Calls Google Gemini 1.5 Flash API to extract search params (Phase 1)
@@ -38,6 +41,19 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class GeminiServiceImpl implements GeminiService {
+
+    private static final Pattern RANGE_BUDGET_PATTERN = Pattern.compile(
+            "(\\d+(?:[\\.,]\\d+)?)\\s*(?:-|den|toi)\\s*(\\d+(?:[\\.,]\\d+)?)\\s*(tr|trieu|m|k|nghin|ngan)?"
+    );
+    private static final Pattern SINGLE_BUDGET_PATTERN = Pattern.compile(
+            "(\\d+(?:[\\.,]\\d+)?)\\s*(tr|trieu|m|k|nghin|ngan|vnd|dong)"
+    );
+    private static final List<String> EXIT_KEYWORDS = List.of(
+            "thoat", "tam biet", "cam on", "khong can nua", "dung lai", "stop"
+    );
+    private static final List<String> NEW_SEARCH_KEYWORDS = List.of(
+            "doi khu vuc", "doi sang", "chuyen sang", "tim lai", "tim o", "khu vuc khac", "noi khac"
+    );
 
     private final GeminiProperties props;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -66,21 +82,21 @@ public class GeminiServiceImpl implements GeminiService {
                                               List<Amenity> amenities, List<Surrounding> surroundings,
                                               List<TargetTenant> targetTenants, List<Category> categories,
                                               List<Province> provinces) {
-        String prompt = buildPhase1Prompt(userMessage, state,
-                toIdNameJson(categories, Category::getId, Category::getName),
-                toIdNameJson(amenities, Amenity::getId, Amenity::getName),
-                toIdNameJson(surroundings, Surrounding::getId, Surrounding::getName),
-                toIdNameJson(targetTenants, TargetTenant::getId, TargetTenant::getName),
-                toCodeNameJson(provinces));
-
-        String raw = callGemini(prompt);
         try {
+            String prompt = buildPhase1Prompt(userMessage, state,
+                    toIdNameJson(categories, Category::getId, Category::getName),
+                    toIdNameJson(amenities, Amenity::getId, Amenity::getName),
+                    toIdNameJson(surroundings, Surrounding::getId, Surrounding::getName),
+                    toIdNameJson(targetTenants, TargetTenant::getId, TargetTenant::getName),
+                    toCodeNameJson(provinces));
+
+            String raw = callGemini(prompt);
             GeminiExtractResult result = objectMapper.readValue(raw, GeminiExtractResult.class);
             log.debug("Gemini extractParams intent={}, missing={}", result.getIntent(), result.getMissingRequired());
             return result;
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse Gemini extractParams response: {}", raw, e);
-            throw new RuntimeException("Gemini response parse error (extractParams)", e);
+        } catch (Exception e) {
+            log.warn("Gemini extractParams failed, falling back to rule-based parser: {}", e.getMessage());
+            return fallbackExtractParams(userMessage, state, amenities, categories, provinces);
         }
     }
 
@@ -88,16 +104,16 @@ public class GeminiServiceImpl implements GeminiService {
     public GeminiActionResult detectAction(String userMessage, ChatSessionState state,
                                             List<PropertySummaryForChat> cachedResults,
                                             String provinceName, List<Amenity> allAmenities) {
-        String prompt = buildPhase2Prompt(userMessage, state, cachedResults, provinceName, allAmenities);
-
-        String raw = callGemini(prompt);
         try {
+            String prompt = buildPhase2Prompt(userMessage, state, cachedResults, provinceName, allAmenities);
+
+            String raw = callGemini(prompt);
             GeminiActionResult result = objectMapper.readValue(raw, GeminiActionResult.class);
             log.debug("Gemini detectAction action={}", result.getAction());
             return result;
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse Gemini detectAction response: {}", raw, e);
-            throw new RuntimeException("Gemini response parse error (detectAction)", e);
+        } catch (Exception e) {
+            log.warn("Gemini detectAction failed, falling back to rule-based parser: {}", e.getMessage());
+            return fallbackDetectAction(userMessage, state, cachedResults, allAmenities);
         }
     }
 
@@ -110,6 +126,10 @@ public class GeminiServiceImpl implements GeminiService {
      * responseMimeType="application/json" ensures clean JSON output with no markdown.
      */
     private String callGemini(String prompt) {
+        if (props.getApi().getKey() == null || props.getApi().getKey().isBlank()) {
+            throw new RuntimeException("Gemini API key is missing");
+        }
+
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of(
                         "role", "user",
@@ -285,6 +305,343 @@ public class GeminiServiceImpl implements GeminiService {
                 formatHistory(state.getHistoryAsList()),
                 userMessage
         );
+    }
+
+    // =========================================================================
+    // Rule-based fallback
+    // =========================================================================
+
+    private GeminiExtractResult fallbackExtractParams(
+            String userMessage,
+            ChatSessionState state,
+            List<Amenity> amenities,
+            List<Category> categories,
+            List<Province> provinces
+    ) {
+        String normalizedMessage = normalizeText(userMessage);
+
+        GeminiExtractResult result = new GeminiExtractResult();
+        GeminiExtractResult.Extracted extracted = new GeminiExtractResult.Extracted();
+        result.setExtracted(extracted);
+
+        Double budget = parseBudget(userMessage);
+        if (budget != null) {
+            extracted.setBudget(budget);
+        }
+
+        Long categoryId = detectCategoryId(userMessage, categories);
+        if (categoryId != null) {
+            extracted.setCategoryId(categoryId);
+        }
+
+        String provinceCode = detectProvinceCode(userMessage, provinces);
+        if (provinceCode != null) {
+            extracted.setProvinceCode(provinceCode);
+            extracted.setLocationType("province_only");
+        }
+
+        List<Long> amenityIds = detectAmenityIds(userMessage, amenities);
+        if (!amenityIds.isEmpty()) {
+            extracted.setAmenityIds(amenityIds);
+        }
+
+        boolean hasBudget = state.getBudget() != null || extracted.getBudget() != null;
+        boolean hasLocation = state.getProvinceCode() != null || extracted.getProvinceCode() != null;
+        List<String> missing = new ArrayList<>();
+        if (!hasBudget) {
+            missing.add("budget");
+        }
+        if (!hasLocation) {
+            missing.add("location");
+        }
+        result.setMissingRequired(missing);
+
+        boolean hasSearchSignal = budget != null
+                || categoryId != null
+                || provinceCode != null
+                || !amenityIds.isEmpty()
+                || looksLikeSearchRequest(normalizedMessage);
+
+        if (!hasSearchSignal) {
+            result.setIntent("ambiguous");
+            result.setClarificationNeeded("Bạn muốn tìm phòng ở khu vực nào và ngân sách khoảng bao nhiêu một tháng ạ?");
+            return result;
+        }
+
+        result.setIntent("find_room");
+        return result;
+    }
+
+    private GeminiActionResult fallbackDetectAction(
+            String userMessage,
+            ChatSessionState state,
+            List<PropertySummaryForChat> cachedResults,
+            List<Amenity> allAmenities
+    ) {
+        String normalizedMessage = normalizeText(userMessage);
+        GeminiActionResult result = new GeminiActionResult();
+
+        if (containsAny(normalizedMessage, EXIT_KEYWORDS)) {
+            result.setAction("exit");
+            result.setReply("Cảm ơn bạn đã sử dụng trợ lý tìm phòng. Khi nào cần tìm thêm, cứ nhắn mình nhé!");
+            return result;
+        }
+
+        Integer interestIndex = detectInterestIndex(normalizedMessage, cachedResults.size());
+        if (interestIndex != null) {
+            result.setAction("interest");
+            result.setTargetPropertyIndex(interestIndex);
+            result.setReply("Mình đã đánh dấu đúng phòng bạn chọn rồi. Bạn bấm \"Xem chi tiết\" để xem thêm nhé!");
+            return result;
+        }
+
+        if (containsAny(normalizedMessage, NEW_SEARCH_KEYWORDS)) {
+            result.setAction("new_search");
+            result.setReply("Mình chuyển sang lượt tìm kiếm mới cho bạn nhé.");
+            return result;
+        }
+
+        GeminiActionResult.Refinement refinement = buildFallbackRefinement(userMessage, state, allAmenities);
+        if (hasRefinement(refinement)) {
+            result.setAction("refine");
+            result.setRefinement(refinement);
+            result.setReply("Mình đang lọc lại danh sách theo yêu cầu mới của bạn nhé.");
+            return result;
+        }
+
+        result.setAction("question");
+        result.setReply(
+                "Mình đang bám theo danh sách hiện tại. Nếu bạn muốn lọc lại theo ngân sách, tiện nghi hoặc chọn số phòng trong danh sách thì cứ nói mình nhé."
+        );
+        return result;
+    }
+
+    private GeminiActionResult.Refinement buildFallbackRefinement(
+            String userMessage,
+            ChatSessionState state,
+            List<Amenity> allAmenities
+    ) {
+        String normalizedMessage = normalizeText(userMessage);
+        GeminiActionResult.Refinement refinement = new GeminiActionResult.Refinement();
+
+        Double newBudget = parseBudget(userMessage);
+        if (newBudget != null) {
+            refinement.setNewBudget(newBudget);
+        }
+
+        List<Long> matchedAmenityIds = detectAmenityIds(userMessage, allAmenities);
+        if (!matchedAmenityIds.isEmpty()) {
+            if (containsAny(normalizedMessage, List.of("khong can", "bo", "loai bo", "xoa"))) {
+                refinement.setRemoveAmenityIds(matchedAmenityIds);
+            } else {
+                refinement.setAddAmenityIds(matchedAmenityIds);
+            }
+        }
+
+        if (refinement.getNewBudget() == null
+                && matchedAmenityIds.isEmpty()
+                && containsAny(normalizedMessage, List.of("re hon", "thap hon", "duoi ngan sach"))
+                && state.getBudget() != null) {
+            refinement.setNewBudget(state.getBudget() * 0.85);
+        }
+
+        return refinement;
+    }
+
+    private boolean hasRefinement(GeminiActionResult.Refinement refinement) {
+        return refinement.getNewBudget() != null
+                || refinement.getNewCategoryId() != null
+                || (refinement.getAddAmenityIds() != null && !refinement.getAddAmenityIds().isEmpty())
+                || (refinement.getRemoveAmenityIds() != null && !refinement.getRemoveAmenityIds().isEmpty());
+    }
+
+    private Double parseBudget(String message) {
+        String normalizedMessage = normalizeText(message).replace("mot", "1");
+
+        Matcher rangeMatcher = RANGE_BUDGET_PATTERN.matcher(normalizedMessage);
+        if (rangeMatcher.find()) {
+            double upper = parseNumber(rangeMatcher.group(2));
+            String unit = rangeMatcher.group(3);
+            return toCurrency(upper, unit);
+        }
+
+        Matcher singleMatcher = SINGLE_BUDGET_PATTERN.matcher(normalizedMessage);
+        if (singleMatcher.find()) {
+            double amount = parseNumber(singleMatcher.group(1));
+            String unit = singleMatcher.group(2);
+            return toCurrency(amount, unit);
+        }
+
+        return null;
+    }
+
+    private double parseNumber(String raw) {
+        return Double.parseDouble(raw.replace(",", "."));
+    }
+
+    private Double toCurrency(double amount, String unit) {
+        if (unit == null || unit.isBlank()) {
+            return null;
+        }
+        return switch (unit) {
+            case "k", "nghin", "ngan" -> amount * 1_000;
+            case "tr", "trieu", "m" -> amount * 1_000_000;
+            case "vnd", "dong" -> amount;
+            default -> null;
+        };
+    }
+
+    private Long detectCategoryId(String message, List<Category> categories) {
+        String normalizedMessage = normalizeText(message);
+
+        for (Category category : categories) {
+            String categoryName = normalizeText(category.getName());
+            if (normalizedMessage.contains(categoryName)) {
+                return category.getId();
+            }
+        }
+
+        if (normalizedMessage.contains("can ho")) {
+            return findCategoryIdByKeyword(categories, List.of("can ho"));
+        }
+        if (normalizedMessage.contains("ktx") || normalizedMessage.contains("ky tuc xa")) {
+            return findCategoryIdByKeyword(categories, List.of("ktx", "ky tuc xa"));
+        }
+        if (normalizedMessage.contains("nha tro") || normalizedMessage.contains("phong tro")) {
+            return findCategoryIdByKeyword(categories, List.of("nha tro", "phong tro"));
+        }
+        if (normalizedMessage.contains("nha nguyen can")) {
+            return findCategoryIdByKeyword(categories, List.of("nha nguyen can"));
+        }
+
+        return null;
+    }
+
+    private Long findCategoryIdByKeyword(List<Category> categories, List<String> keywords) {
+        for (Category category : categories) {
+            String categoryName = normalizeText(category.getName());
+            if (keywords.stream().anyMatch(categoryName::contains)) {
+                return category.getId();
+            }
+        }
+        return null;
+    }
+
+    private String detectProvinceCode(String message, List<Province> provinces) {
+        String normalizedMessage = normalizeText(message);
+
+        for (Province province : provinces.stream()
+                .sorted(Comparator.comparingInt((Province province) -> province.getName().length()).reversed())
+                .toList()) {
+            String normalizedProvinceName = normalizeText(province.getName());
+            if (normalizedMessage.contains(normalizedProvinceName)
+                    || normalizedMessage.contains(stripProvincePrefix(normalizedProvinceName))) {
+                return province.getCode();
+            }
+
+            if (normalizedProvinceName.contains("ho chi minh")
+                    && (normalizedMessage.contains("hcm") || normalizedMessage.contains("sai gon"))) {
+                return province.getCode();
+            }
+            if (normalizedProvinceName.contains("ha noi") && normalizedMessage.contains("hn")) {
+                return province.getCode();
+            }
+            if (normalizedProvinceName.contains("da nang") && normalizedMessage.contains("dn")) {
+                return province.getCode();
+            }
+        }
+
+        return null;
+    }
+
+    private String stripProvincePrefix(String normalizedProvinceName) {
+        return normalizedProvinceName
+                .replaceFirst("^thanh pho ", "")
+                .replaceFirst("^tp ", "")
+                .replaceFirst("^tinh ", "")
+                .trim();
+    }
+
+    private List<Long> detectAmenityIds(String message, List<Amenity> amenities) {
+        String normalizedMessage = normalizeText(message);
+        return amenities.stream()
+                .filter(amenity -> matchesAmenity(amenity, normalizedMessage))
+                .map(Amenity::getId)
+                .distinct()
+                .toList();
+    }
+
+    private boolean matchesAmenity(Amenity amenity, String normalizedMessage) {
+        String amenityName = normalizeText(amenity.getName());
+        if (normalizedMessage.contains(amenityName)) {
+            return true;
+        }
+
+        if (amenityName.contains("dieu hoa") && normalizedMessage.contains("may lanh")) {
+            return true;
+        }
+        if (amenityName.contains("wifi") && normalizedMessage.contains("internet")) {
+            return true;
+        }
+        if (amenityName.contains("ve sinh") && (normalizedMessage.contains("wc") || normalizedMessage.contains("toilet"))) {
+            return true;
+        }
+        if (amenityName.contains("phong tam") && normalizedMessage.contains("nha tam")) {
+            return true;
+        }
+        if (amenityName.contains("giuong") && normalizedMessage.contains("nem")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private Integer detectInterestIndex(String normalizedMessage, int maxIndex) {
+        Matcher matcher = Pattern.compile("\\b(\\d{1,2})\\b").matcher(normalizedMessage);
+        while (matcher.find()) {
+            int candidate = Integer.parseInt(matcher.group(1));
+            if (candidate < 1 || candidate > maxIndex) {
+                continue;
+            }
+
+            if (normalizedMessage.matches("^\\d{1,2}$")
+                    || normalizedMessage.contains("so " + candidate)
+                    || normalizedMessage.contains("phong " + candidate)
+                    || normalizedMessage.contains("tin " + candidate)
+                    || normalizedMessage.contains("can " + candidate)
+                    || normalizedMessage.contains("chon " + candidate)
+                    || normalizedMessage.contains("lay " + candidate)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean looksLikeSearchRequest(String normalizedMessage) {
+        return containsAny(
+                normalizedMessage,
+                List.of("tim", "thue", "phong", "tro", "can ho", "ktx", "nha tro", "nha nguyen can")
+        );
+    }
+
+    private boolean containsAny(String normalizedMessage, Collection<String> keywords) {
+        return keywords.stream().anyMatch(normalizedMessage::contains);
+    }
+
+    private String normalizeText(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'd')
+                .toLowerCase(Locale.ROOT);
+
+        return normalized.replaceAll("[^a-z0-9\\s]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     // =========================================================================

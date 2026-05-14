@@ -39,6 +39,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PostServiceImpl implements PostService {
 
+    private static final List<PostStatus> MARKETPLACE_FALLBACK_STATUSES =
+            List.of(PostStatus.ACTIVE, PostStatus.EXPIRED);
+
     private final PostRepository postRepository;
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
@@ -371,7 +374,17 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public Optional<Post> getMarketplacePostBySlug(String slug) {
-        return postRepository.findMarketplacePostBySlug(slug, LocalDateTime.now());
+        Optional<Post> livePost = postRepository.findMarketplacePostBySlug(slug, LocalDateTime.now());
+        if (livePost.isPresent()) {
+            return livePost;
+        }
+
+        Optional<Post> fallbackPost = postRepository.findBySlugAndStatusIn(slug, MARKETPLACE_FALLBACK_STATUSES);
+        fallbackPost.ifPresent(post -> log.warn(
+                "Falling back to demo marketplace post for slug={} because no active non-expired post was found",
+                slug
+        ));
+        return fallbackPost;
     }
 
     @Override
@@ -413,13 +426,37 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public List<Post> getAllMarketplacePosts() {
-        return postRepository.findMarketplacePosts(LocalDateTime.now());
+        List<Post> livePosts = postRepository.findMarketplacePosts(LocalDateTime.now());
+        if (!livePosts.isEmpty()) {
+            return livePosts;
+        }
+
+        List<Post> fallbackPosts = postRepository.findByStatusInOrderByCreatedAtDesc(MARKETPLACE_FALLBACK_STATUSES);
+        if (!fallbackPosts.isEmpty()) {
+            log.warn("Marketplace fallback activated: showing ACTIVE/EXPIRED demo posts because no live post is currently visible");
+        }
+        return fallbackPosts;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Post> getMarketplacePostsByCategory(Long categoryId) {
-        return postRepository.findMarketplacePostsByCategory(categoryId, LocalDateTime.now());
+        List<Post> livePosts = postRepository.findMarketplacePostsByCategory(categoryId, LocalDateTime.now());
+        if (!livePosts.isEmpty()) {
+            return livePosts;
+        }
+
+        List<Post> fallbackPosts = postRepository.findByStatusInAndProperty_Category_IdOrderByCreatedAtDesc(
+                MARKETPLACE_FALLBACK_STATUSES,
+                categoryId
+        );
+        if (!fallbackPosts.isEmpty()) {
+            log.warn(
+                    "Marketplace category fallback activated for categoryId={}: showing ACTIVE/EXPIRED demo posts",
+                    categoryId
+            );
+        }
+        return fallbackPosts;
     }
 
     // === HELPER METHODS ===

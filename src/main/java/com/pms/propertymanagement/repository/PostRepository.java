@@ -45,6 +45,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
      */
     Optional<Post> findBySlug(String slug);
 
+    List<Post> findByStatusIn(List<PostStatus> statuses);
+
+    List<Post> findByStatusInOrderByCreatedAtDesc(List<PostStatus> statuses);
+
+    List<Post> findByStatusInAndProperty_Category_IdOrderByCreatedAtDesc(List<PostStatus> statuses, Long categoryId);
+
+    Optional<Post> findBySlugAndStatusIn(String slug, List<PostStatus> statuses);
+
     /**
      * Find visible marketplace post by slug (for public detail page)
      * OPTIMIZED: Checks status for marketplace visibility
