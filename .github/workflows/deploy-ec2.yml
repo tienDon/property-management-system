@@ -65,6 +65,11 @@ jobs:
             sudo mv /tmp/${APP_JAR} ${REMOTE_APP_DIR}/${APP_JAR} &&
             sudo chown pms:pms ${REMOTE_APP_DIR}/${APP_JAR} &&
             sudo systemctl restart ${REMOTE_SERVICE_NAME} &&
-            sleep 10 &&
-            curl --fail --silent http://127.0.0.1:8080/health
+            for i in {1..12}; do
+              curl --fail --silent http://127.0.0.1:8080/health && exit 0
+              sleep 5
+            done &&
+            sudo systemctl status ${REMOTE_SERVICE_NAME} --no-pager &&
+            journalctl -u ${REMOTE_SERVICE_NAME} -n 120 --no-pager &&
+            exit 1
           "
